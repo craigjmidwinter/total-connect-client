@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
   name = 'total_connect_client',
   py_modules = ['total_connect_client'],
-  version = '0.03',
+  version = '0.05',
   description = 'Interact with Total Connect 2 alarm systems',
   author = 'Craig J. Ward',
   author_email = 'ward.craig.j@gmail.com',
@@ -11,10 +11,10 @@ setup(
   download_url = 'https://github.com/wardcraigj/total-connect-client',
   keywords = ['alarm','TotalConnect'],
   package_data = {'': ['data/*.json']},
-  requires = ['requests', 'zeep', 'pprint', 'logging', 'logging.handlers', 'sys'],
-  install_requires = [],
+  requires = ['zeep', 'pprint', 'logging', 'logging.handlers', 'sys'],
+  install_requires = ['zeep'],
 #  packages=find_packages(exclude=['tests', 'tests.*']),
-  packages=['total-connect-client'],
+  packages=['total_connect_client'],
   include_package_data=True, # use MANIFEST.in during install
   zip_safe=False
 )
