@@ -12,10 +12,9 @@ setup(
   keywords = ['alarm','TotalConnect'],
   package_data = {'': ['data/*.json']},
   requires = ['requests', 'zeep', 'pprint', 'logging', 'logging.handlers', 'sys'],
-  provides = ['total-connect-client'],
   install_requires = [],
 #  packages=find_packages(exclude=['tests', 'tests.*']),
   packages=['total-connect-client'],
   include_package_data=True, # use MANIFEST.in during install
-  zip_safe=False,
+  zip_safe=False
 )
