@@ -10,14 +10,13 @@ class TotalConnectClient():
     ARMED_STAY = 10203
     ARMED_AWAY = 10201
 
-    def __init__(self, username, password, panel_code):
+    def __init__(self, username, password):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
 
         self.applicationId = "14588"
         self.applicationVersion = "1.0.34"
         self.username = username
         self.password = password
-        self.panel_code = panel_code
         self.token = False
 
         self.locations = []
