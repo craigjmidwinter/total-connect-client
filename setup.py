@@ -11,7 +11,7 @@ setup(
   download_url = 'https://github.com/wardcraigj/total-connect-client',
   keywords = ['alarm','TotalConnect'],
   package_data = {'': ['data/*.json']},
-  requires = ['requests', 'zeep', 'pprint', 'logging', 'logging.handlers', 'sys', 'json', 'collections'],
+  requires = ['requests', 'zeep', 'pprint', 'logging', 'logging.handlers', 'sys'],
   provides = ['total-connect-client'],
   install_requires = [],
 #  packages=find_packages(exclude=['tests', 'tests.*']),
