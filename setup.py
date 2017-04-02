@@ -1,9 +1,9 @@
 #from distutils.core import setup
 from setuptools import setup, find_packages
 setup(
-  name = 'total-connect-client',
-  py_modules = ['total-connect-client'],
-  version = '0.02',
+  name = 'total_connect_client',
+  py_modules = ['total_connect_client'],
+  version = '0.03',
   description = 'Interact with Total Connect 2 alarm systems',
   author = 'Craig J. Ward',
   author_email = 'ward.craig.j@gmail.com',

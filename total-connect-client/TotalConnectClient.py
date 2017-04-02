@@ -115,7 +115,6 @@ class TotalConnectClient():
         else:
             return False
 
-
     def disarm(self, location_name=False):
         """disarm the system"""
 
@@ -123,4 +122,3 @@ class TotalConnectClient():
         deviceId = self.get_security_panel_device_id(location)
 
         self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
-
