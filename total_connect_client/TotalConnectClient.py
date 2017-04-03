@@ -5,7 +5,7 @@ ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 
 
-class TotalConnectClient():
+class TotalConnectClient:
     DISARMED = 10200
     ARMED_STAY = 10203
     ARMED_AWAY = 10201
