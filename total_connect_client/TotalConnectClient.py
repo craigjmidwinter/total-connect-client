@@ -3,12 +3,22 @@ import logging
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
+"""ARM_TYPE_NIGHT = ? """
 
 
 class TotalConnectClient:
     DISARMED = 10200
-    ARMED_STAY = 10203
+    DISARMED_BYPASS = 10211
     ARMED_AWAY = 10201
+    ARMED_AWAY_BYPASS = 10202
+    ARMED_AWAY_INSTANT = 10205
+    ARMED_AWAY_INSTANT_BYPASS = 10206
+    ARMED_STAY = 10203
+    ARMED_STAY_BYPASS = 10204
+    ARMED_STAY_INSTANT = 10209
+    ARMED_STAY_INSTANT_BYPASS = 10210
+    ARMING = 10307
+    DISARMING = 10308
 
     def __init__(self, username, password):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
