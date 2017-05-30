@@ -5,7 +5,6 @@ ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 ARM_TYPE_NIGHT = 2
 
-
 class TotalConnectClient:
     DISARMED = 10200
     DISARMED_BYPASS = 10211
@@ -34,7 +33,7 @@ class TotalConnectClient:
         self.authenticate()
 
     def authenticate(self):
-        """login to the system"""
+        """Login to the system"""
 
         response = self.soapClient.service.AuthenticateUserLogin(self.username, self.password, self.applicationId,
                                                                  self.applicationVersion)
@@ -45,7 +44,7 @@ class TotalConnectClient:
             Exception('Authentication Error')
 
     def populate_details(self):
-        """populates system details"""
+        """Populates system details"""
 
         response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
 
@@ -55,18 +54,23 @@ class TotalConnectClient:
 
         logging.info('Populated locations')
 
-    def arm_stay(self, location_name=False):
-        """arm - stay"""
-
-        self.arm(ARM_TYPE_STAY, location_name)
-
     def arm_away(self, location_name=False):
-        """arm - away"""
+        """Arm (Away)"""
 
         self.arm(ARM_TYPE_AWAY, location_name)
 
+    def arm_stay(self, location_name=False):
+        """Arm (Stay)"""
+
+        self.arm(ARM_TYPE_STAY, location_name)
+
+    def arm_night(self, location_name=False):
+        """Arm (Night)"""
+
+        self.arm(ARM_TYPE_NIGHT, location_name)
+
     def arm(self, arm_type, location_name=False):
-        """arm system"""
+        """Arm System"""
 
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
@@ -77,7 +81,7 @@ class TotalConnectClient:
         logging.info('armed')
 
     def get_security_panel_device_id(self, location):
-        """find the device id of the security panel"""
+        """Find the device id of the security panel"""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
             if device['DeviceName'] == 'Security Panel':
@@ -89,7 +93,7 @@ class TotalConnectClient:
         return deviceId
 
     def get_location_by_location_name(self, location_name=False):
-        """get the location object for a given name (or the default location if none is provided"""
+        """Get the location object for a given name (or the default location if none is provided)"""
 
         location = False
 
@@ -117,16 +121,30 @@ class TotalConnectClient:
         return alarm_code
 
     def is_armed(self, location_name=False):
-        """return True or False if the system is alarmed in any way"""
+        """Return True or False if the system is armed in any way"""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10201 or alarm_code == 10203:
+        if alarm_code == 10201:
+            return True
+        elif alarm_code == 10202;
+            return True
+        elif alarm_code == 10205;
+            return True
+        elif alarm_code == 10206;
+            return True
+        elif alarm_code == 10203;
+            return True
+        elif alarm_code == 10204;
+            return True
+        elif alarm_code == 10209;
+            return True
+        elif alarm_code == 10210;
             return True
         else:
             return False
 
     def disarm(self, location_name=False):
-        """disarm the system"""
+        """Disarm the system"""
 
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
