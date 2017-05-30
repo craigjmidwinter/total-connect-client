@@ -3,7 +3,7 @@ import logging
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
-"""ARM_TYPE_NIGHT = ? """
+ARM_TYPE_NIGHT = 2
 
 
 class TotalConnectClient:
