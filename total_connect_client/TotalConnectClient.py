@@ -33,10 +33,9 @@ class TotalConnectClient:
         self.authenticate()
 
     def authenticate(self):
-        """Login to the system"""
+        """Login to the system."""
 
-        response = self.soapClient.service.AuthenticateUserLogin(self.username, self.password, self.applicationId,
-                                                                 self.applicationVersion)
+        response = self.soapClient.service.AuthenticateUserLogin(self.username, self.password, self.applicationId, self.applicationVersion)
         if response.ResultData == 'Success':
             self.token = response.SessionID
             self.populate_details()
@@ -44,7 +43,7 @@ class TotalConnectClient:
             Exception('Authentication Error')
 
     def populate_details(self):
-        """Populates system details"""
+        """Populates system details."""
 
         response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
 
@@ -55,33 +54,32 @@ class TotalConnectClient:
         logging.info('Populated locations')
 
     def arm_away(self, location_name=False):
-        """Arm (Away)"""
+        """Arm (Away)."""
 
         self.arm(ARM_TYPE_AWAY, location_name)
 
     def arm_stay(self, location_name=False):
-        """Arm (Stay)"""
+        """Arm (Stay)."""
 
         self.arm(ARM_TYPE_STAY, location_name)
 
     def arm_night(self, location_name=False):
-        """Arm (Night)"""
+        """Arm (Night)."""
 
         self.arm(ARM_TYPE_NIGHT, location_name)
 
     def arm(self, arm_type, location_name=False):
-        """Arm System"""
+        """Arm System."""
 
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type,
-                                                  '-1')  # Quickarm
+        self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
 
         logging.info('armed')
 
     def get_security_panel_device_id(self, location):
-        """Find the device id of the security panel"""
+        """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
             if device['DeviceName'] == 'Security Panel':
@@ -93,7 +91,7 @@ class TotalConnectClient:
         return deviceId
 
     def get_location_by_location_name(self, location_name=False):
-        """Get the location object for a given name (or the default location if none is provided)"""
+        """Get the location object for a given name (or the default location if none is provided)."""
 
         location = False
 
@@ -109,7 +107,7 @@ class TotalConnectClient:
         return location
 
     def get_armed_status(self, location_name=False):
-        """Get the status of the panel"""
+        """Get the status of the panel."""
         location = self.get_location_by_location_name(location_name)
 
         response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
@@ -126,25 +124,36 @@ class TotalConnectClient:
 
         if alarm_code == 10201:
             return True
-        elif alarm_code == 10202;
+        elif alarm_code == 10202:
             return True
-        elif alarm_code == 10205;
+        elif alarm_code == 10205:
             return True
-        elif alarm_code == 10206;
+        elif alarm_code == 10206:
             return True
-        elif alarm_code == 10203;
+        elif alarm_code == 10203:
             return True
-        elif alarm_code == 10204;
+        elif alarm_code == 10204:
             return True
-        elif alarm_code == 10209;
+        elif alarm_code == 10209:
             return True
-        elif alarm_code == 10210;
+        elif alarm_code == 10210:
             return True
         else:
             return False
 
+    def is_pending(self, location_name=False):
+        """Return true or false is the system is pending an action."""
+        alarm_code = self.get_armed_status(location_name)
+        
+        if alarm_code == 10307:
+            return True
+        if alarm_code == 10308:
+            return True
+        else:
+            return False
+        
     def disarm(self, location_name=False):
-        """Disarm the system"""
+        """Disarm the system."""
 
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
