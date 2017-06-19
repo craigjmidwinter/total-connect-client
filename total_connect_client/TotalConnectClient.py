@@ -57,32 +57,32 @@ class TotalConnectClient:
         logging.info('Populated locations')
 
     def arm_away(self, location_name=False):
-        """Arm (Away)."""
+        """Arm the system (Away)."""
 
         self.arm(ARM_TYPE_AWAY, location_name)
 
     def arm_stay(self, location_name=False):
-        """Arm (Stay)."""
+        """Arm the system (Stay)."""
 
         self.arm(ARM_TYPE_STAY, location_name)
 
     def arm_stay_instant(self, location_name=False):
-        """Arm (Stay - Instant)."""
+        """Arm the system (Stay - Instant)."""
 
         self.arm(ARM_TYPE_STAY_INSTANT, location_name)
 
     def arm_away_instant(self, location_name=False):
-        """Arm (Away - Instant)."""
+        """Arm the system (Away - Instant)."""
 
         self.arm(ARM_TYPE_AWAY_INSTANT, location_name)
 
     def arm_stay_night(self, location_name=False):
-        """Arm (Stay - Night)."""
+        """Arm the system (Stay - Night)."""
 
         self.arm(ARM_TYPE_STAY_NIGHT, location_name)
 
     def arm(self, arm_type, location_name=False):
-        """Arm System."""
+        """Arm the system."""
 
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
