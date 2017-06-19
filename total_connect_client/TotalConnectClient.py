@@ -3,7 +3,9 @@ import logging
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
-ARM_TYPE_NIGHT = 2
+ARM_TYPE_STAY_INSTANT = 2
+ARM_TYPE_AWAY_INSTANT = 3
+ARM_TYPE_STAY_NIGHT = 4
 
 class TotalConnectClient:
     DISARMED = 10200
@@ -16,6 +18,7 @@ class TotalConnectClient:
     ARMED_STAY_BYPASS = 10204
     ARMED_STAY_INSTANT = 10209
     ARMED_STAY_INSTANT_BYPASS = 10210
+    ARMED_STAY_NIGHT = 10218
     ARMING = 10307
     DISARMING = 10308
 
@@ -63,10 +66,20 @@ class TotalConnectClient:
 
         self.arm(ARM_TYPE_STAY, location_name)
 
-    def arm_night(self, location_name=False):
-        """Arm (Night)."""
+    def arm_stay_instant(self, location_name=False):
+        """Arm (Stay - Instant)."""
 
-        self.arm(ARM_TYPE_NIGHT, location_name)
+        self.arm(ARM_TYPE_STAY_INSTANT, location_name)
+
+    def arm_away_instant(self, location_name=False):
+        """Arm (Away - Instant)."""
+
+        self.arm(ARM_TYPE_AWAY_INSTANT, location_name)
+
+    def arm_stay_night(self, location_name=False):
+        """Arm (Stay - Night)."""
+
+        self.arm(ARM_TYPE_STAY_NIGHT, location_name)
 
     def arm(self, arm_type, location_name=False):
         """Arm System."""
@@ -138,20 +151,38 @@ class TotalConnectClient:
             return True
         elif alarm_code == 10210:
             return True
+        elif alarm_code == 10218:
+            return True
+        else:
+            return False
+
+    def is_arming(self, location_name=False):
+        """Return true or false is the system is in the process of arming."""
+        alarm_code = self.get_armed_status(location_name)
+
+        if alarm_code == 10307:
+            return True
+        else:
+            return False
+
+    def is_disarming(self, location_name=False):
+        """Return true or false is the system is in the process of disarming."""
+        alarm_code = self.get_armed_status(location_name)
+
+        if alarm_code == 10308:
+            return True
         else:
             return False
 
     def is_pending(self, location_name=False):
         """Return true or false is the system is pending an action."""
         alarm_code = self.get_armed_status(location_name)
-        
-        if alarm_code == 10307:
-            return True
-        if alarm_code == 10308:
+
+        if alarm_code == 10307 or alarm_code == 10308:
             return True
         else:
             return False
-        
+
     def disarm(self, location_name=False):
         """Disarm the system."""
 
