@@ -1,9 +1,9 @@
-#from distutils.core import setup
+from distutils.core import setup
 from setuptools import setup, find_packages
 setup(
   name = 'total_connect_client',
   py_modules = ['total_connect_client'],
-  version = '0.07',
+  version = '0.12',
   description = 'Interact with Total Connect 2 alarm systems',
   author = 'Craig J. Ward',
   author_email = 'ward.craig.j@gmail.com',
@@ -11,7 +11,6 @@ setup(
   download_url = 'https://github.com/wardcraigj/total-connect-client',
   keywords = ['alarm','TotalConnect'],
   package_data = {'': ['data/*.json']},
-  requires = ['zeep', 'pprint', 'logging', 'logging.handlers', 'sys'],
   install_requires = ['zeep'],
 #  packages=find_packages(exclude=['tests', 'tests.*']),
   packages=['total_connect_client'],
