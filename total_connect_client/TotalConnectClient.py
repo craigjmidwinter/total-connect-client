@@ -95,7 +95,7 @@ class TotalConnectClient:
         """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] == 'Security Panel':
+            if device['DeviceName'] == 'Security Panel' or device['DeviceName'] == 'Security System':
                 deviceId = device['DeviceID']
 
         if deviceId is False:
