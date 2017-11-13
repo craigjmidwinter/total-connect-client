@@ -119,6 +119,18 @@ class TotalConnectClient:
 
         return location
 
+    def get_zone_status(self, location_name=False):
+        """Get the status of all zones in a given location"""
+        location = self.get_location_by_location_name(location_name)
+        
+        response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
+
+        panel_meta_data = zeep.helpers.serialize_object(response)
+
+        zones = panel_meta_data['PanelMetadataAndStatus']['Zones']
+
+        return zones
+
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
         location = self.get_location_by_location_name(location_name)
