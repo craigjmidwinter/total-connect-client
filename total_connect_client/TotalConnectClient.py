@@ -14,6 +14,7 @@ class TotalConnectClient:
     ARMED_AWAY_BYPASS = 10202
     ARMED_AWAY_INSTANT = 10205
     ARMED_AWAY_INSTANT_BYPASS = 10206
+    ARMED_CUSTOM_BYPASS = 10223
     ARMED_STAY = 10203
     ARMED_STAY_BYPASS = 10204
     ARMED_STAY_INSTANT = 10209
@@ -164,6 +165,8 @@ class TotalConnectClient:
         elif alarm_code == 10210:
             return True
         elif alarm_code == 10218:
+            return True
+        elif alarm_code == 10223:
             return True
         else:
             return False
