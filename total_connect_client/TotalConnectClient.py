@@ -14,6 +14,7 @@ class TotalConnectClient:
     ARMED_AWAY_BYPASS = 10202
     ARMED_AWAY_INSTANT = 10205
     ARMED_AWAY_INSTANT_BYPASS = 10206
+    ARMED_CUSTOM_BYPASS = 10223
     ARMED_STAY = 10203
     ARMED_STAY_BYPASS = 10204
     ARMED_STAY_INSTANT = 10209
@@ -119,6 +120,18 @@ class TotalConnectClient:
 
         return location
 
+    def get_zone_status(self, location_name=False):
+        """Get the status of all zones in a given location"""
+        location = self.get_location_by_location_name(location_name)
+        
+        response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
+
+        panel_meta_data = zeep.helpers.serialize_object(response)
+
+        zones = panel_meta_data['PanelMetadataAndStatus']['Zones']
+
+        return zones
+
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
         location = self.get_location_by_location_name(location_name)
@@ -152,6 +165,8 @@ class TotalConnectClient:
         elif alarm_code == 10210:
             return True
         elif alarm_code == 10218:
+            return True
+        elif alarm_code == 10223:
             return True
         else:
             return False
