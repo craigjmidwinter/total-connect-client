@@ -128,7 +128,7 @@ class TotalConnectClient:
             response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
 
         if response.ResultCode != self.SUCCESS:
-            raise Exception('Could not disarm system')
+            raise Exception('Could not arm system')
         else:
             logging.info('System Armed')
 
