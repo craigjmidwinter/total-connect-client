@@ -203,25 +203,25 @@ class TotalConnectClient:
         """Return True or False if the system is armed in any way"""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10201:
+        if alarm_code == self.ARMED_AWAY:
             return True
-        elif alarm_code == 10202:
+        elif alarm_code == self.ARMED_AWAY_BYPASS:
             return True
-        elif alarm_code == 10205:
+        elif alarm_code == self.ARMED_AWAY_INSTANT:
             return True
-        elif alarm_code == 10206:
+        elif alarm_code == self.ARMED_AWAY_INSTANT_BYPASS:
             return True
-        elif alarm_code == 10203:
+        elif alarm_code == self.ARMED_STAY:
             return True
-        elif alarm_code == 10204:
+        elif alarm_code == self.ARMED_STAY_BYPASS:
             return True
-        elif alarm_code == 10209:
+        elif alarm_code == self.ARMED_STAY_INSTANT:
             return True
-        elif alarm_code == 10210:
+        elif alarm_code == self.ARMED_STAY_INSTANT_BYPASS:
             return True
-        elif alarm_code == 10218:
+        elif alarm_code == self.ARMED_STAY_NIGHT:
             return True
-        elif alarm_code == 10223:
+        elif alarm_code == self.ARMED_CUSTOM_BYPASS:
             return True
         else:
             return False
@@ -230,7 +230,7 @@ class TotalConnectClient:
         """Return true or false is the system is in the process of arming."""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10307:
+        if alarm_code == self.ARMING:
             return True
         else:
             return False
@@ -239,7 +239,7 @@ class TotalConnectClient:
         """Return true or false is the system is in the process of disarming."""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10308:
+        if alarm_code == self.DISARMING:
             return True
         else:
             return False
@@ -248,7 +248,7 @@ class TotalConnectClient:
         """Return true or false is the system is pending an action."""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10307 or alarm_code == 10308:
+        if alarm_code == self.ARMING or alarm_code == self.DISARMING:
             return True
         else:
             return False
