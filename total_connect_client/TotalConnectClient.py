@@ -7,6 +7,10 @@ ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
 
+class AuthenticationError(Exception):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
 class TotalConnectClient:
     DISARMED = 10200
     DISARMED_BYPASS = 10211
@@ -22,6 +26,9 @@ class TotalConnectClient:
     ARMED_STAY_NIGHT = 10218
     ARMING = 10307
     DISARMING = 10308
+
+    INVALID_SESSION = -102
+    SUCCESS = 0
 
     def __init__(self, username, password):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
@@ -39,23 +46,49 @@ class TotalConnectClient:
     def authenticate(self):
         """Login to the system."""
 
-        response = self.soapClient.service.AuthenticateUserLogin(self.username, self.password, self.applicationId, self.applicationVersion)
-        if response.ResultData == 'Success':
+        response = self.soapClient.service.LoginAndGetSessionDetails(self.username, self.password, self.applicationId, self.applicationVersion)
+        if response.ResultCode == self.SUCCESS:
+            logging.info('Login Successful')
             self.token = response.SessionID
-            self.populate_details()
+            self.populate_details(response)            
+            return self.SUCCESS
         else:
-            Exception('Authentication Error')
+            raise AuthenticationError('Unable to authenticate with Total Connect')
 
-    def populate_details(self):
-        """Populates system details."""
-
-        response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
+    def get_session_details(self):
+        """Gets Details for the given session"""
 
         logging.info('Getting session details')
 
-        self.locations = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']
+        response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
 
-        logging.info('Populated locations')
+        if response.ResultCode == self.INVALID_SESSION:
+            self.authenticate()
+            response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
+
+        if response.ResultCode != self.SUCCESS:
+            Exception('Unable to retrieve session details')
+
+        return response
+
+    def populate_details(self, response):
+        """Populates system details."""
+
+        logging.info('Populating locations')
+
+        self.locations = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']        
+
+    def keep_alive(self):
+        """Keeps the token alive to avoid server timeouts"""
+
+        logging.info('Initiating Keep Alive')
+
+        response = self.soapClient.service.KeepAlive(self.token)
+
+        if response.ResultCode != self.SUCCESS:
+            self.authenticate()
+
+        return response.ResultCode
 
     def arm_away(self, location_name=False):
         """Arm the system (Away)."""
@@ -88,9 +121,18 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
 
-        logging.info('armed')
+        if response.ResultCode == self.INVALID_SESSION:
+            self.authenticate()
+            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+
+        if response.ResultCode != self.SUCCESS:
+            raise Exception('Could not arm system')
+        else:
+            logging.info('System Armed')
+
+        return self.SUCCESS
 
     def get_security_panel_device_id(self, location):
         """Find the device id of the security panel."""
@@ -120,27 +162,40 @@ class TotalConnectClient:
 
         return location
 
-    def get_zone_status(self, location_name=False):
-        """Get the status of all zones in a given location"""
+    def get_panel_meta_data(self, location_name=False):
         location = self.get_location_by_location_name(location_name)
         
         response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
 
-        panel_meta_data = zeep.helpers.serialize_object(response)
+        if response.ResultCode == self.INVALID_SESSION:
+            self.authenticate()
+            response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
 
+        if response.ResultCode != self.SUCCESS:
+            raise Exception('Could not retrieve panel meta data')
+
+        return response
+
+
+    def get_zone_status(self, location_name=False):
+        """Get the status of all zones in a given location"""
+
+        response = self.get_panel_meta_data(location_name)
+
+        panel_meta_data = zeep.helpers.serialize_object(response)
+        
         zones = panel_meta_data['PanelMetadataAndStatus']['Zones']
 
         return zones
 
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
-        location = self.get_location_by_location_name(location_name)
 
-        response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
+        response = self.get_panel_meta_data(location_name)
 
-        status = zeep.helpers.serialize_object(response)
+        panel_meta_data = zeep.helpers.serialize_object(response)
 
-        alarm_code = status['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
+        alarm_code = panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
 
         return alarm_code
 
@@ -148,25 +203,25 @@ class TotalConnectClient:
         """Return True or False if the system is armed in any way"""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10201:
+        if alarm_code == self.ARMED_AWAY:
             return True
-        elif alarm_code == 10202:
+        elif alarm_code == self.ARMED_AWAY_BYPASS:
             return True
-        elif alarm_code == 10205:
+        elif alarm_code == self.ARMED_AWAY_INSTANT:
             return True
-        elif alarm_code == 10206:
+        elif alarm_code == self.ARMED_AWAY_INSTANT_BYPASS:
             return True
-        elif alarm_code == 10203:
+        elif alarm_code == self.ARMED_STAY:
             return True
-        elif alarm_code == 10204:
+        elif alarm_code == self.ARMED_STAY_BYPASS:
             return True
-        elif alarm_code == 10209:
+        elif alarm_code == self.ARMED_STAY_INSTANT:
             return True
-        elif alarm_code == 10210:
+        elif alarm_code == self.ARMED_STAY_INSTANT_BYPASS:
             return True
-        elif alarm_code == 10218:
+        elif alarm_code == self.ARMED_STAY_NIGHT:
             return True
-        elif alarm_code == 10223:
+        elif alarm_code == self.ARMED_CUSTOM_BYPASS:
             return True
         else:
             return False
@@ -175,7 +230,7 @@ class TotalConnectClient:
         """Return true or false is the system is in the process of arming."""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10307:
+        if alarm_code == self.ARMING:
             return True
         else:
             return False
@@ -184,7 +239,7 @@ class TotalConnectClient:
         """Return true or false is the system is in the process of disarming."""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10308:
+        if alarm_code == self.DISARMING:
             return True
         else:
             return False
@@ -193,7 +248,7 @@ class TotalConnectClient:
         """Return true or false is the system is pending an action."""
         alarm_code = self.get_armed_status(location_name)
 
-        if alarm_code == 10307 or alarm_code == 10308:
+        if alarm_code == self.ARMING or alarm_code == self.DISARMING:
             return True
         else:
             return False
@@ -204,4 +259,15 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+
+        if response.ResultCode == self.INVALID_SESSION:
+            self.authenticate()
+            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+
+        if response.ResultCode != self.SUCCESS:
+            raise Exception('Could not disarm system')
+        else:
+            logging.info('System Disarmed')
+
+        return SUCCESS
