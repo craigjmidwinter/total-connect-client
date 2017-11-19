@@ -29,6 +29,8 @@ class TotalConnectClient:
 
     INVALID_SESSION = -102
     SUCCESS = 0
+    ARM_SUCCESS = 4500
+    DISARM_SUCCESS = 4500
 
     def __init__(self, username, password):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
@@ -127,10 +129,12 @@ class TotalConnectClient:
             self.authenticate()
             response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
 
-        if response.ResultCode != self.SUCCESS:
-            raise Exception('Could not arm system')
-        else:
+        logging.info("Arm Result Code:" + str(response.ResultCode))
+
+        if (response.ResultCode == self.ARM_SUCCESS) or (response.ResultCode == self.SUCCESS):
             logging.info('System Armed')
+        else:
+            raise Exception('Could not disarm system')
 
         return self.SUCCESS
 
@@ -265,9 +269,11 @@ class TotalConnectClient:
             self.authenticate()
             response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
 
-        if response.ResultCode != self.SUCCESS:
-            raise Exception('Could not disarm system')
-        else:
-            logging.info('System Disarmed')
+        logging.info("Disarm Result Code:" + str(response.ResultCode))
 
-        return SUCCESS
+        if (response.ResultCode == self.DISARM_SUCCESS) or (response.ResultCode == self.SUCCESS):
+            logging.info('System Disarmed')
+        else:
+            raise Exception('Could not disarm system')
+
+        return self.SUCCESS
