@@ -31,6 +31,7 @@ class TotalConnectClient:
     SUCCESS = 0
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
+    CONNECTION_ERROR = 4101
 
     def __init__(self, username, password):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
@@ -183,15 +184,25 @@ class TotalConnectClient:
 
     def get_zone_status(self, location_name=False):
         """Get the status of all zones in a given location"""
-
         response = self.get_panel_meta_data(location_name)
-
-        panel_meta_data = zeep.helpers.serialize_object(response)
-        
-        zones = panel_meta_data['PanelMetadataAndStatus']['Zones']
-
+        zones = response['PanelMetadataAndStatus']['Zones']['ZoneInfo']
         return zones
 
+    def get_zone_list_in_state(self, location_name=False):
+        """Get the state of zones in a given location / get_zone_status does not report state changes from my L5100 panel"""
+        location = self.get_location_by_location_name(location_name)
+        response = self.soapClient.service.GetZonesListInState(self.token, location['LocationID'], 0, 0)
+        
+        if response.ResultCode == self.SUCCESS:
+            zone_list_in_state = response['ZoneStatus']['Zones']['ZoneStatusInfo']
+            return zone_list_in_state
+        elif response.ResultCode == self.CONNECTION_ERROR:
+            raise Exception('Unable to connect to security panel')
+        else:
+            raise Exception('An error occured')
+
+
+    
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
 
