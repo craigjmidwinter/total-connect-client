@@ -181,9 +181,19 @@ class TotalConnectClient:
 
         return response
 
-
     def get_zone_status(self, location_name=False):
         """Get the status of all zones in a given location"""
+
+        response = self.get_panel_meta_data(location_name)
+
+        panel_meta_data = zeep.helpers.serialize_object(response)
+        
+        zones = panel_meta_data['PanelMetadataAndStatus']['Zones']
+
+        return zones
+
+    def get_zone_state(self, location_name=False):
+        """Get the states of all zones in a given location"""
         response = self.get_panel_meta_data(location_name)
         zones = response['PanelMetadataAndStatus']['Zones']['ZoneInfo']
         return zones
