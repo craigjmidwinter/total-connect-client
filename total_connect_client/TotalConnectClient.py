@@ -192,11 +192,18 @@ class TotalConnectClient:
 
         return zones
 
+
     def get_zone_state(self, location_name=False):
         """Get the states of all zones in a given location"""
         response = self.get_panel_meta_data(location_name)
         zones = response['PanelMetadataAndStatus']['Zones']['ZoneInfo']
-        return zones
+        zone_list=[]
+        for item in self.get_zone_list_in_state():
+            for zones in zeep.helpers.serialize_object(self.get_panel_meta_data(location_name)['PanelMetadataAndStatus']['Zones']['ZoneInfo']):
+                if item['ZoneID']==zones['ZoneID']:
+                    d = {"ZoneID":zones['ZoneID'],"ZoneDescription":zones['ZoneDescription'],"ZoneStatus":item['ZoneStatus']}
+            zone_list.append(d)
+        return zone_list
 
     def get_zone_list_in_state(self, location_name=False):
         """Get the state of zones in a given location / get_zone_status does not report state changes from my L5100 panel"""
@@ -204,7 +211,7 @@ class TotalConnectClient:
         response = self.soapClient.service.GetZonesListInState(self.token, location['LocationID'], 0, 0)
         
         if response.ResultCode == self.SUCCESS:
-            zone_list_in_state = response['ZoneStatus']['Zones']['ZoneStatusInfo']
+            zone_list_in_state = zeep.helpers.serialize_object(response['ZoneStatus']['Zones']['ZoneStatusInfo'])
             return zone_list_in_state
         elif response.ResultCode == self.CONNECTION_ERROR:
             raise Exception('Unable to connect to security panel')
@@ -215,13 +222,9 @@ class TotalConnectClient:
     
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
-
         response = self.get_panel_meta_data(location_name)
-
         panel_meta_data = zeep.helpers.serialize_object(response)
-
         alarm_code = panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
-
         return alarm_code
 
     def is_armed(self, location_name=False):
