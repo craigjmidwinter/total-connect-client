@@ -1,5 +1,6 @@
 import zeep
 import logging
+import time
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
@@ -42,9 +43,11 @@ class TotalConnectClient:
         self.password = password
         self.token = False
 
+
         self.locations = []
 
         self.authenticate()
+        self.zones = self.get_zone_status()['ZoneInfo']
 
     def authenticate(self):
         """Login to the system."""
@@ -192,34 +195,33 @@ class TotalConnectClient:
 
         return zones
 
+    def connect_to_panel(self, location_name=False):
+        """Connect to the panel"""
+        location = False
+        location = self.get_location_by_location_name(location_name)
+        deviceId = self.get_security_panel_device_id(location)
+        response = self.soapClient.service.ConnectToPanel(self.token, location['LocationID'], deviceId )
+        if response.ResultCode != self.SUCCESS:
+            time.sleep(3)
+            self.connect_to_panel()
+            logging.error('Could not connect to panel, retrying')
+        return response
 
     def get_zone_state(self, location_name=False):
         """Get the states of all zones in a given location"""
-        response = self.get_panel_meta_data(location_name)
-        zones = response['PanelMetadataAndStatus']['Zones']['ZoneInfo']
+        self.connect_to_panel()
+        location = self.get_location_by_location_name(location_name)
+        response = self.soapClient.service.GetZonesListInState(self.token, location['LocationID'], 0, 0)
+        zone_list_in_state = zeep.helpers.serialize_object(response['ZoneStatus']['Zones']['ZoneStatusInfo'])
+
         zone_list=[]
-        for item in self.get_zone_list_in_state():
-            for zones in zeep.helpers.serialize_object(self.get_panel_meta_data(location_name)['PanelMetadataAndStatus']['Zones']['ZoneInfo']):
-                if item['ZoneID']==zones['ZoneID']:
-                    d = {"ZoneID":zones['ZoneID'],"ZoneDescription":zones['ZoneDescription'],"ZoneStatus":item['ZoneStatus']}
+        for item in zone_list_in_state:
+            for zone in self.zones:
+                if item['ZoneID']==zone['ZoneID']:
+                    d = {"ZoneID":zone['ZoneID'],"ZoneDescription":zone['ZoneDescription'],"ZoneStatus":item['ZoneStatus']}
             zone_list.append(d)
         return zone_list
 
-    def get_zone_list_in_state(self, location_name=False):
-        """Get the state of zones in a given location / get_zone_status does not report state changes from my L5100 panel"""
-        location = self.get_location_by_location_name(location_name)
-        response = self.soapClient.service.GetZonesListInState(self.token, location['LocationID'], 0, 0)
-        
-        if response.ResultCode == self.SUCCESS:
-            zone_list_in_state = zeep.helpers.serialize_object(response['ZoneStatus']['Zones']['ZoneStatusInfo'])
-            return zone_list_in_state
-        elif response.ResultCode == self.CONNECTION_ERROR:
-            raise Exception('Unable to connect to security panel')
-        else:
-            raise Exception('An error occured')
-
-
-    
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
         response = self.get_panel_meta_data(location_name)
