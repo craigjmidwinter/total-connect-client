@@ -142,7 +142,7 @@ class TotalConnectClient:
         """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] == 'Security Panel' or device['DeviceName'] == 'Security System' or device['DeviceName'] == 'L5100-WiFi' or device['DeviceName'] == 'Lynx Touch-WiFi':
+            if device['DeviceName'] == 'Security Panel' or device['DeviceName'] == 'Security System' or device['DeviceName'] == 'L5100-WiFi' or device['DeviceName'] == 'Lynx Touch-WiFi' or device['DeviceName'] == 'ILP5':
                 deviceId = device['DeviceID']
 
         if deviceId is False:
