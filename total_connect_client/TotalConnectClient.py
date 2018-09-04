@@ -32,13 +32,14 @@ class TotalConnectClient:
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, usercode='-1'):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
 
         self.applicationId = "14588"
         self.applicationVersion = "1.0.34"
         self.username = username
         self.password = password
+        self.usercode = usercode
         self.token = False
 
         self.locations = []
@@ -123,11 +124,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, usercode)
 
         logging.info("Arm Result Code:" + str(response.ResultCode))
 
@@ -263,11 +264,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, usercode)
 
         logging.info("Disarm Result Code:" + str(response.ResultCode))
 
