@@ -124,11 +124,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, usercode)
+        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, usercode)
+            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
 
         logging.info("Arm Result Code:" + str(response.ResultCode))
 
@@ -264,11 +264,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, usercode)
+        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, usercode)
+            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
 
         logging.info("Disarm Result Code:" + str(response.ResultCode))
 
