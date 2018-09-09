@@ -37,7 +37,7 @@ class TotalConnectClient:
                      'L5100-WiFi',
                      'Lynx Touch-WiFi',
                      'ILP5',
-                     'LTE-XV',                     
+                     'LTE-XV',
                      ]
 
     def __init__(self, username, password, usercode='-1'):
