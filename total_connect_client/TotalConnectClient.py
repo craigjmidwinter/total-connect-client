@@ -32,6 +32,14 @@ class TotalConnectClient:
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
 
+    VALID_DEVICES = ['Security Panel',
+                     'Security System',
+                     'L5100-WiFi',
+                     'Lynx Touch-WiFi',
+                     'ILP5',
+                     'LTE-XV',                     
+                     ]
+
     def __init__(self, username, password, usercode='-1'):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
 
@@ -143,8 +151,10 @@ class TotalConnectClient:
         """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] == 'Security Panel' or device['DeviceName'] == 'Security System' or device['DeviceName'] == 'L5100-WiFi' or device['DeviceName'] == 'Lynx Touch-WiFi' or device['DeviceName'] == 'ILP5':
+            if device['DeviceName'] in VALID_DEVICES:
                 deviceId = device['DeviceID']
+            else:
+                raise Exception('Device name "' + device['DeviceName'] + '" not in VALID_DEVICES list.')
 
         if deviceId is False:
             raise Exception('No security panel found')
