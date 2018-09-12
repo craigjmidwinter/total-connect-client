@@ -32,13 +32,22 @@ class TotalConnectClient:
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
 
-    def __init__(self, username, password):
+    VALID_DEVICES = ['Security Panel',
+                     'Security System',
+                     'L5100-WiFi',
+                     'Lynx Touch-WiFi',
+                     'ILP5',
+                     'LTE-XV',
+                     ]
+
+    def __init__(self, username, password, usercode='-1'):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
 
         self.applicationId = "14588"
         self.applicationVersion = "1.0.34"
         self.username = username
         self.password = password
+        self.usercode = usercode
         self.token = False
 
         self.locations = []
@@ -123,11 +132,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
 
         logging.info("Arm Result Code:" + str(response.ResultCode))
 
@@ -142,8 +151,10 @@ class TotalConnectClient:
         """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] == 'Security Panel' or device['DeviceName'] == 'Security System' or device['DeviceName'] == 'L5100-WiFi' or device['DeviceName'] == 'Lynx Touch-WiFi':
+            if device['DeviceName'] in VALID_DEVICES:
                 deviceId = device['DeviceID']
+            else:
+                raise Exception('Device name "' + device['DeviceName'] + '" not in VALID_DEVICES list.')
 
         if deviceId is False:
             raise Exception('No security panel found')
@@ -263,11 +274,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
 
         logging.info("Disarm Result Code:" + str(response.ResultCode))
 
