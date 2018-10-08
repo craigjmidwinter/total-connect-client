@@ -151,10 +151,11 @@ class TotalConnectClient:
         """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] in VALID_DEVICES:
+            if device['DeviceName'] in self.VALID_DEVICES:
                 deviceId = device['DeviceID']
             else:
-                raise Exception('Device name "' + device['DeviceName'] + '" not in VALID_DEVICES list.')
+                # can't raise exception because some devices should be silently ignored, like the "Wifi Doorbell" a.k.a. Skybell
+                logging.info('Device name "' + device['DeviceName'] + '" not in VALID_DEVICES list.')
 
         if deviceId is False:
             raise Exception('No security panel found')
