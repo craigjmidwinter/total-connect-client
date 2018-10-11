@@ -151,7 +151,7 @@ class TotalConnectClient:
         """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] in VALID_DEVICES:
+            if device['DeviceName'] in self.VALID_DEVICES:
                 deviceId = device['DeviceID']
             else:
                 raise Exception('Device name "' + device['DeviceName'] + '" not in VALID_DEVICES list.')
