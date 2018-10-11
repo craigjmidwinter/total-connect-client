@@ -6,6 +6,14 @@ ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
+VALID_DEVICES = ['Security Panel',
+                 'Security System',
+                 'L5100-WiFi',
+                 'Lynx Touch-WiFi',
+                 'ILP5',
+                 'LTE-XV',
+                 'GSMX4G'
+                 ]
 
 class AuthenticationError(Exception):
     def __init__(self,*args,**kwargs):
@@ -31,14 +39,6 @@ class TotalConnectClient:
     SUCCESS = 0
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
-
-    VALID_DEVICES = ['Security Panel',
-                     'Security System',
-                     'L5100-WiFi',
-                     'Lynx Touch-WiFi',
-                     'ILP5',
-                     'LTE-XV',
-                     ]
 
     def __init__(self, username, password, usercode='-1'):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
