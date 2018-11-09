@@ -12,7 +12,8 @@ VALID_DEVICES = ['Security Panel',
                  'Lynx Touch-WiFi',
                  'ILP5',
                  'LTE-XV',
-                 'GSMX4G'
+                 'GSMX4G',
+                 'GSMVLP5-4G'
                  ]
 
 class AuthenticationError(Exception):
