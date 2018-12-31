@@ -13,7 +13,8 @@ VALID_DEVICES = ['Security Panel',
                  'ILP5',
                  'LTE-XV',
                  'GSMX4G',
-                 'GSMVLP5-4G'
+                 'GSMVLP5-4G',
+                 '7874i',
                  ]
 
 class AuthenticationError(Exception):
