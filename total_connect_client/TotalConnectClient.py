@@ -53,6 +53,9 @@ class TotalConnectClient:
         self.password = password
         self.usercode = usercode
         self.token = False
+        self._panel_meta_data = []
+        self._ac_loss = False
+        self._low_battery = False
 
 
         self.locations = []
@@ -186,7 +189,7 @@ class TotalConnectClient:
 
     def get_panel_meta_data(self, location_name=False):
         location = self.get_location_by_location_name(location_name)
-        
+
         response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
 
         if response.ResultCode == self.INVALID_SESSION:
@@ -196,16 +199,45 @@ class TotalConnectClient:
         if response.ResultCode != self.SUCCESS:
             raise Exception('Could not retrieve panel meta data')
 
+        self._panel_meta_data = zeep.helpers.serialize_object(response)
+
+        self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus']['IsInACLoss']
+        self.low_battery = self._panel_meta_data['PanelMetadataAndStatus']['IsInLowBattery']
+
         return response
+
+    @property
+    def ac_loss(self):
+        """Get status of AC Loss."""
+        return self._ac_loss
+
+    @ac_loss.setter
+    def ac_loss(self, new_state):
+        """Set state of AC Loss flag"""
+        if new_state == 'False' or new_state == False:
+            self._ac_loss = False
+        else:
+            self._ac_loss = True
+
+    @property
+    def low_battery(self):
+        """Get status of low battery"""
+        return self._low_battery
+
+    @low_battery.setter
+    def low_battery(self, new_state):
+        """Set state of Low Battery flag"""
+        if new_state == 'False' or new_state == False:
+            self._low_battery = False
+        else:
+            self._low_battery = True
 
     def get_zone_status(self, location_name=False):
         """Get the status of all zones in a given location"""
 
-        response = self.get_panel_meta_data(location_name)
+        self.get_panel_meta_data(location_name)
 
-        panel_meta_data = zeep.helpers.serialize_object(response)
-        
-        zones = panel_meta_data['PanelMetadataAndStatus']['Zones']
+        zones = self.panel_meta_data['PanelMetadataAndStatus']['Zones']
 
         return zones
 
@@ -242,9 +274,11 @@ class TotalConnectClient:
 
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
-        response = self.get_panel_meta_data(location_name)
-        panel_meta_data = zeep.helpers.serialize_object(response)
-        alarm_code = panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
+
+        self.get_panel_meta_data(location_name)
+
+        alarm_code = self.panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
+
         return alarm_code
 
     def is_armed(self, location_name=False):
