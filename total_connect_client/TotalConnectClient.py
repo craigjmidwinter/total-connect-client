@@ -237,7 +237,7 @@ class TotalConnectClient:
 
         self.get_panel_meta_data(location_name)
 
-        zones = self.panel_meta_data['PanelMetadataAndStatus']['Zones']
+        zones = self._panel_meta_data['PanelMetadataAndStatus']['Zones']
 
         return zones
 
