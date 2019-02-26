@@ -209,16 +209,20 @@ class TotalConnectClient:
 
         return zones
 
-    def connect_to_panel(self, location_name=False):
+    def connect_to_panel(self, location_name=False, attempts=3):
         """Connect to the panel"""
         location = False
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
-        response = self.soapClient.service.ConnectToPanel(self.token, location['LocationID'], deviceId )
-        if response.ResultCode != self.SUCCESS:
-            time.sleep(3)
-            self.connect_to_panel()
-            logging.error('Could not connect to panel, retrying')
+        attempt =  0
+        while ( attempt < attempts ):
+            response = self.soapClient.service.ConnectToPanel(self.token, location['LocationID'], deviceId )
+            if response.ResultCode != self.SUCCESS:
+                attempt += attempt
+                logging.error('Could not connect to panel, retrying ' + str(attempt) + '/' + str(attempts) + '.')
+                time.sleep(3)
+            else:
+                break
         return response
 
     def get_zone_state(self, location_name=False):
