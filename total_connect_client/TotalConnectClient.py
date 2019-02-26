@@ -7,6 +7,16 @@ ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
+VALID_DEVICES = ['Security Panel',
+                 'Security System',
+                 'L5100-WiFi',
+                 'Lynx Touch-WiFi',
+                 'ILP5',
+                 'LTE-XV',
+                 'GSMX4G',
+                 'GSMVLP5-4G',
+                 '7874i',
+                 ]
 
 class AuthenticationError(Exception):
     def __init__(self,*args,**kwargs):
@@ -34,13 +44,14 @@ class TotalConnectClient:
     DISARM_SUCCESS = 4500
     CONNECTION_ERROR = 4101
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, usercode='-1'):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
 
         self.applicationId = "14588"
         self.applicationVersion = "1.0.34"
         self.username = username
         self.password = password
+        self.usercode = usercode
         self.token = False
 
 
@@ -127,11 +138,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, '-1')
+            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
 
         logging.info("Arm Result Code:" + str(response.ResultCode))
 
@@ -146,8 +157,11 @@ class TotalConnectClient:
         """Find the device id of the security panel."""
         deviceId = False
         for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] == 'Security Panel' or device['DeviceName'] == 'Security System' or device['DeviceName'] == 'L5100-WiFi':
+            if device['DeviceName'] in VALID_DEVICES:
                 deviceId = device['DeviceID']
+            else:
+                # can't raise exception because some devices should be silently ignored, like the "Wifi Doorbell" a.k.a. Skybell
+                logging.info('Device name "' + device['DeviceName'] + '" not in VALID_DEVICES list.')
 
         if deviceId is False:
             raise Exception('No security panel found')
@@ -289,11 +303,11 @@ class TotalConnectClient:
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
-        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, '-1')
+            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
 
         logging.info("Disarm Result Code:" + str(response.ResultCode))
 
