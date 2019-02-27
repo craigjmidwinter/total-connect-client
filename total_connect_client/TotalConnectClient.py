@@ -218,7 +218,7 @@ class TotalConnectClient:
         while ( attempt < attempts ):
             response = self.soapClient.service.ConnectToPanel(self.token, location['LocationID'], deviceId )
             if response.ResultCode != self.SUCCESS:
-                attempt += attempt
+                attempt += 1
                 logging.error('Could not connect to panel, retrying ' + str(attempt) + '/' + str(attempts) + '.')
                 time.sleep(3)
             else:
