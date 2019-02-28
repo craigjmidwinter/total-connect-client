@@ -1,5 +1,6 @@
 import zeep
 import logging
+import time
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
@@ -41,6 +42,7 @@ class TotalConnectClient:
     SUCCESS = 0
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
+    CONNECTION_ERROR = 4101
 
     def __init__(self, username, password, usercode='-1'):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
@@ -52,9 +54,11 @@ class TotalConnectClient:
         self.usercode = usercode
         self.token = False
 
+
         self.locations = []
 
         self.authenticate()
+        self.zones = self.get_zone_status()['ZoneInfo']
 
     def authenticate(self):
         """Login to the system."""
@@ -194,7 +198,6 @@ class TotalConnectClient:
 
         return response
 
-
     def get_zone_status(self, location_name=False):
         """Get the status of all zones in a given location"""
 
@@ -206,15 +209,42 @@ class TotalConnectClient:
 
         return zones
 
+    def connect_to_panel(self, location_name=False, attempts=3):
+        """Connect to the panel"""
+        location = False
+        location = self.get_location_by_location_name(location_name)
+        deviceId = self.get_security_panel_device_id(location)
+        attempt =  0
+        while ( attempt < attempts ):
+            response = self.soapClient.service.ConnectToPanel(self.token, location['LocationID'], deviceId )
+            if response.ResultCode != self.SUCCESS:
+                attempt += 1
+                logging.error('Could not connect to panel, retrying ' + str(attempt) + '/' + str(attempts) + '.')
+                time.sleep(3)
+            else:
+                break
+        return response
+
+    def get_zone_state(self, location_name=False):
+        """Get the states of all zones in a given location"""
+        self.connect_to_panel()
+        location = self.get_location_by_location_name(location_name)
+        response = self.soapClient.service.GetZonesListInState(self.token, location['LocationID'], 0, 0)
+        zone_list_in_state = zeep.helpers.serialize_object(response['ZoneStatus']['Zones']['ZoneStatusInfo'])
+
+        zone_list=[]
+        for item in zone_list_in_state:
+            for zone in self.zones:
+                if item['ZoneID']==zone['ZoneID']:
+                    d = {"ZoneID":zone['ZoneID'],"ZoneDescription":zone['ZoneDescription'],"ZoneStatus":item['ZoneStatus']}
+            zone_list.append(d)
+        return zone_list
+
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
-
         response = self.get_panel_meta_data(location_name)
-
         panel_meta_data = zeep.helpers.serialize_object(response)
-
         alarm_code = panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
-
         return alarm_code
 
     def is_armed(self, location_name=False):
