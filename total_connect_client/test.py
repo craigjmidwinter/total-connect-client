@@ -11,13 +11,23 @@ else:
 
   print('\n\n\n')
 
-#  print('--- all location/system data ---')
+  print('--- all location/system data ---')
   tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2])
   location = tc.get_location_by_location_name()
-#  pprint(location)
+  pprint(location)
+
+  print('\n\n\n')
+
+  print('--- panel meta data ---')
+  meta_data = tc.get_panel_meta_data()
+  pprint(meta_data)
 
   print('\n\n\n')
 
   print('--- Devices name(s) ---')
   for device in location['DeviceList']['DeviceInfoBasic']:
     print(device['DeviceName'])
+
+  print('--- Device Status ---')
+  print('Low Battery: ' + str(tc.low_battery))
+  print('AC Loss: ' + str(tc.ac_loss))
