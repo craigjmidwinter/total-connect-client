@@ -57,7 +57,6 @@ class TotalConnectClient:
         self._ac_loss = False
         self._low_battery = False
 
-
         self.locations = []
 
         self.authenticate()
@@ -70,7 +69,7 @@ class TotalConnectClient:
         if response.ResultCode == self.SUCCESS:
             logging.info('Login Successful')
             self.token = response.SessionID
-            self.populate_details(response)            
+            self.populate_details(response)
             return self.SUCCESS
         else:
             raise AuthenticationError('Unable to authenticate with Total Connect')
@@ -96,7 +95,7 @@ class TotalConnectClient:
 
         logging.info('Populating locations')
 
-        self.locations = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']        
+        self.locations = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']
 
     def keep_alive(self):
         """Keeps the token alive to avoid server timeouts"""
@@ -200,7 +199,6 @@ class TotalConnectClient:
             raise Exception('Could not retrieve panel meta data')
 
         self._panel_meta_data = zeep.helpers.serialize_object(response)
-
         self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus']['IsInACLoss']
         self.low_battery = self._panel_meta_data['PanelMetadataAndStatus']['IsInLowBattery']
 

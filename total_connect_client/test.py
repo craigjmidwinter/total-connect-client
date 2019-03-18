@@ -19,7 +19,6 @@ else:
   print('\n\n\n')
 
   print('--- panel meta data ---')
-  tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2])
   meta_data = tc.get_panel_meta_data()
   pprint(meta_data)
 
