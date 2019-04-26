@@ -199,8 +199,8 @@ class TotalConnectClient:
             raise Exception('Could not retrieve panel meta data')
 
         self._panel_meta_data = zeep.helpers.serialize_object(response)
-        self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus']['IsInACLoss']
-        self.low_battery = self._panel_meta_data['PanelMetadataAndStatus']['IsInLowBattery']
+        self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
+        self.low_battery = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
 
         return response
 
