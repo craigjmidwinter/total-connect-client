@@ -273,7 +273,7 @@ class TotalConnectClient:
 
         self.get_panel_meta_data(location_name)
 
-        alarm_code = self.panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
+        alarm_code = self._panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
 
         return alarm_code
 
