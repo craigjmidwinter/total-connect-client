@@ -64,7 +64,7 @@ class TotalConnectClient:
         self.locations = []
 
         self.authenticate()
-        self.zones = self.get_zone_status()['ZoneInfo']
+        self.get_panel_meta_data()
 
     def authenticate(self):
         """Login to the system."""
@@ -206,6 +206,10 @@ class TotalConnectClient:
         self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
         self.low_battery = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
 
+        zones = self._panel_meta_data['PanelMetadataAndStatus'].get('Zones')
+        if zones != None:
+            self.zones = zones.get('ZoneInfo')
+
         return response
 
     @property
@@ -233,15 +237,6 @@ class TotalConnectClient:
             self._low_battery = False
         else:
             self._low_battery = True
-
-    def get_zone_status(self, location_name=False):
-        """Get the status of all zones in a given location"""
-
-        self.get_panel_meta_data(location_name)
-
-        zones = self._panel_meta_data['PanelMetadataAndStatus']['Zones']
-
-        return zones
 
     def connect_to_panel(self, location_name=False, attempts=3):
         """Connect to the panel"""
