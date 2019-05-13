@@ -16,7 +16,8 @@ VALID_DEVICES = ['Security Panel',
                  'GSMX4G',
                  'GSMVLP5-4G',
                  '7874i',
-                 'GSMV4G'
+                 'GSMV4G',
+                 'VISTA-21IP4G'
                  ]
 
 class AuthenticationError(Exception):
