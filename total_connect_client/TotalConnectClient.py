@@ -16,6 +16,8 @@ VALID_DEVICES = ['Security Panel',
                  'GSMX4G',
                  'GSMVLP5-4G',
                  '7874i',
+                 'GSMV4G',
+                 'VISTA-21IP4G'
                  ]
 
 class AuthenticationError(Exception):
@@ -204,7 +206,7 @@ class TotalConnectClient:
         self._panel_meta_data = zeep.helpers.serialize_object(response)
         self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
         self.low_battery = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
-        
+
         zones = self._panel_meta_data['PanelMetadataAndStatus'].get('Zones')
         if zones != None:
             self.zones = zones.get('ZoneInfo')
