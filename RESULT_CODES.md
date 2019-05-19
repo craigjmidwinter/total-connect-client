@@ -3,7 +3,7 @@
 Information on ResultCodes returned from Total Connect.
 
 ResultCode | ResultData | Notes
-- | - | - 
+------------ | - | - 
 
 4500 | ARM_SUCCESS |
 4500 | DISARM_SUCCESS | 
