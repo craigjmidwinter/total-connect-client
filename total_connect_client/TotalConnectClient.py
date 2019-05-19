@@ -16,7 +16,8 @@ VALID_DEVICES = ['Security Panel',
                  'GSMX4G',
                  'GSMVLP5-4G',
                  '7874i',
-                 'GSMV4G'
+                 'GSMV4G',
+                 'VISTA-21IP4G'
                  ]
 
 class AuthenticationError(Exception):
@@ -76,7 +77,8 @@ class TotalConnectClient:
             self.populate_details(response)
             return self.SUCCESS
         else:
-            raise AuthenticationError('Unable to authenticate with Total Connect')
+            raise AuthenticationError('Unable to authenticate with Total Connect. ResultCode: ' + 
+                                      str(response.ResultCode) + '. ResultData: ' + str(response.ResultData))
 
     def get_session_details(self):
         """Gets Details for the given session"""
@@ -90,7 +92,8 @@ class TotalConnectClient:
             response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
 
         if response.ResultCode != self.SUCCESS:
-            Exception('Unable to retrieve session details')
+            Exception('Unable to retrieve session details. ResultCode: ' + str(response.ResultCode) +
+                            '. ResultData: ' + str(response.ResultData))
 
         return response
 
@@ -155,7 +158,8 @@ class TotalConnectClient:
         if (response.ResultCode == self.ARM_SUCCESS) or (response.ResultCode == self.SUCCESS):
             logging.info('System Armed')
         else:
-            raise Exception('Could not disarm system')
+            raise Exception('Could not arm system. ResultCode: ' + str(response.ResultCode) +
+                            '. ResultData: ' + str(response.ResultData))
 
         return self.SUCCESS
 
@@ -200,7 +204,8 @@ class TotalConnectClient:
             response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
 
         if response.ResultCode != self.SUCCESS:
-            raise Exception('Could not retrieve panel meta data')
+            raise Exception('Could not retrieve panel meta data. ResultCode: ' + str(response.ResultCode) +
+                            '. ResultData: ' + str(response.ResultData))
 
         self._panel_meta_data = zeep.helpers.serialize_object(response)
         self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
@@ -349,6 +354,7 @@ class TotalConnectClient:
         if (response.ResultCode == self.DISARM_SUCCESS) or (response.ResultCode == self.SUCCESS):
             logging.info('System Disarmed')
         else:
-            raise Exception('Could not disarm system')
+            raise Exception('Could not disarm system. ResultCode: ' + str(response.ResultCode) +
+                            '. ResultData: ' + str(response.ResultData))
 
         return self.SUCCESS
