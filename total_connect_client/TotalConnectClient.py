@@ -7,18 +7,6 @@ ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
-VALID_DEVICES = ['Security Panel',
-                 'Security System',
-                 'L5100-WiFi',
-                 'Lynx Touch-WiFi',
-                 'ILP5',
-                 'LTE-XV',
-                 'GSMX4G',
-                 'GSMVLP5-4G',
-                 '7874i',
-                 'GSMV4G',
-                 'VISTA-21IP4G'
-                 ]
 
 class AuthenticationError(Exception):
     def __init__(self,*args,**kwargs):
@@ -162,18 +150,12 @@ class TotalConnectClient:
 
     def get_security_panel_device_id(self, location):
         """Find the device id of the security panel."""
-        deviceId = False
-        for device in location['DeviceList']['DeviceInfoBasic']:
-            if device['DeviceName'] in VALID_DEVICES:
-                deviceId = device['DeviceID']
-            else:
-                # can't raise exception because some devices should be silently ignored, like the "Wifi Doorbell" a.k.a. Skybell
-                logging.info('Device name "' + device['DeviceName'] + '" not in VALID_DEVICES list.')
+        deviceID = location.get('SecurityDeviceID')
 
-        if deviceId is False:
+        if deviceID is False:
             raise Exception('No security panel found')
 
-        return deviceId
+        return deviceID
 
     def get_location_by_location_name(self, location_name=False):
         """Get the location object for a given name (or the default location if none is provided)."""
