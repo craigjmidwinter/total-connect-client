@@ -47,3 +47,7 @@ fabric.properties
 /example.py
 
 __pycache__/
+
+test.log
+
+.tox/
