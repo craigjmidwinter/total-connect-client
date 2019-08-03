@@ -50,4 +50,9 @@ __pycache__/
 
 test.log
 
+# tox 
 .tox/
+build/
+dist/
+.coverage
+total_connect_client.egg-info/

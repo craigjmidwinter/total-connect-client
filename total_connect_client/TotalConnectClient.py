@@ -28,7 +28,7 @@ class TotalConnectClient:
     ARMING = 10307
     DISARMING = 10308
     ALARMING = 10207
-    ALARMING_FIRE_SMOKE = 10212 
+    ALARMING_FIRE_SMOKE = 10212
     ALARMING_CARBON_MONOXIDE = 10213
 
     INVALID_SESSION = -102
@@ -36,6 +36,7 @@ class TotalConnectClient:
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
     CONNECTION_ERROR = 4101
+    BAD_USER_OR_PASSWORD = -50004
 
     def __init__(self, username, password, usercode='-1'):
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
@@ -64,8 +65,10 @@ class TotalConnectClient:
             self.token = response.SessionID
             self.populate_details(response)
             return self.SUCCESS
+        elif response.ResultCode == self.BAD_USER_OR_PASSWORD:
+            raise AuthenticationError('Unable to authenticate with Total Connect. Bad username or password.')
         else:
-            raise AuthenticationError('Unable to authenticate with Total Connect. ResultCode: ' + 
+            raise AuthenticationError('Unable to authenticate with Total Connect. ResultCode: ' +
                                       str(response.ResultCode) + '. ResultData: ' + str(response.ResultData))
 
     def get_session_details(self):
