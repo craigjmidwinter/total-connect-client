@@ -1,6 +1,7 @@
 # test total_connect_client
 
 import unittest
+from unittest.mock import Mock, patch
 
 #from total_connect_client import TotalConnectClient
 import TotalConnectClient
@@ -15,9 +16,9 @@ class TestTotalConnectClient(unittest.TestCase):
         pass
 
     def tearDown(self):
-        pass
+        self.client = None
 
     def tests_bad_credentials(self):
         with self.assertRaises(TotalConnectClient.AuthenticationError):
-            client = TotalConnectClient.TotalConnectClient(USERNAME_BAD, PASSWORD_BAD)
+            badclient = TotalConnectClient.TotalConnectClient(USERNAME_BAD, PASSWORD_BAD)
 

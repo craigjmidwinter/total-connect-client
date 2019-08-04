@@ -50,6 +50,7 @@ class TotalConnectClient:
         self._panel_meta_data = []
         self._ac_loss = False
         self._low_battery = False
+        self._is_cover_tampered = False
 
         self.locations = []
 
@@ -193,12 +194,21 @@ class TotalConnectClient:
                             '. ResultData: ' + str(response.ResultData))
 
         self._panel_meta_data = zeep.helpers.serialize_object(response)
-        self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
-        self.low_battery = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
 
-        zones = self._panel_meta_data['PanelMetadataAndStatus'].get('Zones')
-        if zones != None:
-            self.zones = zones.get('ZoneInfo')
+        if self._panel_meta_data is not None:
+            self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
+            self.low_battery = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
+            self.is_cover_tampered = self._panel_meta_data['PanelMetadataAndStatus'].get('IsCoverTampered')
+
+            zones = self._panel_meta_data['PanelMetadataAndStatus'].get('Zones')
+            if zones is not None:
+                self.zones = zones.get('ZoneInfo')
+
+        else:
+            self.ac_loss = None
+            self.low_battery = None
+            self.is_cover_tampered = None
+            self.zones = None
 
         return response
 
@@ -227,6 +237,19 @@ class TotalConnectClient:
             self._low_battery = False
         else:
             self._low_battery = True
+
+    @property
+    def is_cover_tampered(self):
+        """Get status of cover tamper."""
+        return self._is_cover_tampered
+
+    @is_cover_tampered.setter
+    def is_cover_tampered(self, new_state):
+        """Set state of IsCoverTampered flag."""
+        if new_state == 'False' or new_state == False:
+            self._is_cover_tampered = False
+        else:
+            self._is_cover_tampered = True
 
     def connect_to_panel(self, location_name=False, attempts=3):
         """Connect to the panel"""
