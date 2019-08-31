@@ -15,6 +15,7 @@ ZONE_STATUS_TROUBLE_LOW_BATTERY = 72
 ZONE_STATUS_TRIGGERED = 256
 
 ZONE_BYPASS_SUCCESS = 0
+GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 class AuthenticationError(Exception):
     def __init__(self,*args,**kwargs):
@@ -385,7 +386,7 @@ class TotalConnectClient:
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
+            response = self.soapClient.service.Bypass(self.token, location['LocationID'], deviceId, zoneID, self.usercode)
 
         logging.info("Bypass Result Code:" + str(response.ResultCode))
 
