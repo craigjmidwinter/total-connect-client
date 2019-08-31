@@ -8,6 +8,14 @@ ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
 
+ZONE_STATUS_NORMAL = 0
+ZONE_STATUS_BYPASSED = 1
+ZONE_STATUS_TAMPER = 8
+ZONE_STATUS_TROUBLE_LOW_BATTERY = 72
+ZONE_STATUS_TRIGGERED = 256
+
+ZONE_BYPASS_SUCCESS = 0
+
 class AuthenticationError(Exception):
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
@@ -363,6 +371,28 @@ class TotalConnectClient:
             logging.info('System Disarmed')
         else:
             raise Exception('Could not disarm system. ResultCode: ' + str(response.ResultCode) +
+                            '. ResultData: ' + str(response.ResultData))
+
+        return self.SUCCESS
+
+    def zoneBypass(self, zoneID, location_name=False):
+        """Bypass a zone"""
+    
+        location = self.get_location_by_location_name(location_name)
+        deviceId = self.get_security_panel_device_id(location)
+
+        response = self.soapClient.service.Bypass(self.token, location['LocationID'], deviceId, zoneID, self.usercode)
+
+        if response.ResultCode == self.INVALID_SESSION:
+            self.authenticate()
+            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
+
+        logging.info("Bypass Result Code:" + str(response.ResultCode))
+
+        if response.ResultCode == ZONE_BYPASS_SUCCESS:
+            logging.info('Zone ' + str(zoneID) + ' bypassed.')
+        else:
+            raise Exception('Could not bypass zone. ResultCode: ' + str(response.ResultCode) +
                             '. ResultData: ' + str(response.ResultData))
 
         return self.SUCCESS
