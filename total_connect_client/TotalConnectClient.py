@@ -2,6 +2,8 @@ import zeep
 import logging
 import time
 
+from TotalConnectZone import TotalConnectZone
+
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
@@ -10,6 +12,7 @@ ARM_TYPE_STAY_NIGHT = 4
 
 ZONE_STATUS_NORMAL = 0
 ZONE_STATUS_BYPASSED = 1
+ZONE_STATUS_FAULT = 1
 ZONE_STATUS_TAMPER = 8
 ZONE_STATUS_TROUBLE_LOW_BATTERY = 72
 ZONE_STATUS_TRIGGERED = 256
@@ -62,6 +65,7 @@ class TotalConnectClient:
         self._is_cover_tampered = False
 
         self.locations = []
+        self.zones = {}
 
         self.authenticate()
         self.get_panel_meta_data()
@@ -211,13 +215,18 @@ class TotalConnectClient:
 
             zones = self._panel_meta_data['PanelMetadataAndStatus'].get('Zones')
             if zones is not None:
-                self.zones = zones.get('ZoneInfo')
+                zone_info = zones.get('ZoneInfo')
+                if zone_info is not None:
+                    self.zones.clear()
+                    for zone in zone_info:
+                        if zone is not None:
+                            self.zones[zone.get('ZoneID')] = TotalConnectZone(zone)               
 
         else:
             self.ac_loss = None
             self.low_battery = None
             self.is_cover_tampered = None
-            self.zones = None
+            self.zones = {}
 
         return response
 
@@ -260,6 +269,15 @@ class TotalConnectClient:
         else:
             self._is_cover_tampered = True
 
+    def zone_status(self, location_id, zone_id):
+        """Get status of a zone"""
+        z = self.zones.get(zone_id)
+        if z is None:
+            logging.error('Zone {} does not exist.'.format(zone_id))
+            return None
+
+        return z.status
+
     def connect_to_panel(self, location_name=False, attempts=3):
         """Connect to the panel"""
         location = False
@@ -275,21 +293,6 @@ class TotalConnectClient:
             else:
                 break
         return response
-
-    def get_zone_state(self, location_name=False):
-        """Get the states of all zones in a given location"""
-        self.connect_to_panel()
-        location = self.get_location_by_location_name(location_name)
-        response = self.soapClient.service.GetZonesListInState(self.token, location['LocationID'], 0, 0)
-        zone_list_in_state = zeep.helpers.serialize_object(response['ZoneStatus']['Zones']['ZoneStatusInfo'])
-
-        zone_list=[]
-        for item in zone_list_in_state:
-            for zone in self.zones:
-                if item['ZoneID']==zone['ZoneID']:
-                    d = {"ZoneID":zone['ZoneID'],"ZoneDescription":zone['ZoneDescription'],"ZoneStatus":item['ZoneStatus']}
-            zone_list.append(d)
-        return zone_list
 
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
@@ -397,3 +400,4 @@ class TotalConnectClient:
                             '. ResultData: ' + str(response.ResultData))
 
         return self.SUCCESS
+
