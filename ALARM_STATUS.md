@@ -32,6 +32,9 @@ Code | Status
 ------------ | -------------
 0 | Normal
 1 | Bypassed
+2 | Fault
 8 | Tamper
 72 | Trouble (low battery)
 256 | Alarm/Triggered
+
+Fault is only returned when "Sensor Events" are enabled for a specific zone in Total Connect, otherwise Normal is returned.

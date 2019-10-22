@@ -36,3 +36,8 @@ else:
     print('Low Battery: ' + str(tc.low_battery))
     print('AC Loss: ' + str(tc.ac_loss))
     print('Is Cover Tampered: ' + str(tc.is_cover_tampered))
+
+    print('--- Zone Status ---')
+    print('Zone 1: ' + str(tc.zone_status('Home1', 1)))
+    print('Zone 2: ' + str(tc.zone_status('Home1', 2)))
+    print('Zone 3: ' + str(tc.zone_status('Home1', 3)))
