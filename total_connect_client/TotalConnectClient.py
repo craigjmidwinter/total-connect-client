@@ -1,3 +1,5 @@
+"""Total Connect Client."""
+
 import zeep
 import logging
 import time
@@ -21,10 +23,15 @@ ZONE_BYPASS_SUCCESS = 0
 GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 class AuthenticationError(Exception):
+    """Authentication Error class."""
+    
     def __init__(self,*args,**kwargs):
+        """Initialize."""
         Exception.__init__(self,*args,**kwargs)
 
 class TotalConnectClient:
+    """Client for Total Connect."""
+    
     DISARMED = 10200
     DISARMED_BYPASS = 10211
     ARMED_AWAY = 10201
@@ -51,6 +58,7 @@ class TotalConnectClient:
     BAD_USER_OR_PASSWORD = -50004
 
     def __init__(self, username, password, usercode='-1'):
+        """Initialize."""
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
 
         self.applicationId = "14588"
@@ -72,7 +80,6 @@ class TotalConnectClient:
 
     def authenticate(self):
         """Login to the system."""
-
         response = self.soapClient.service.LoginAndGetSessionDetails(self.username, self.password, self.applicationId, self.applicationVersion)
         if response.ResultCode == self.SUCCESS:
             logging.info('Login Successful')
@@ -86,8 +93,7 @@ class TotalConnectClient:
                                       str(response.ResultCode) + '. ResultData: ' + str(response.ResultData))
 
     def get_session_details(self):
-        """Gets Details for the given session"""
-
+        """Get Details for the given session."""
         logging.info('Getting session details')
 
         response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
@@ -103,15 +109,13 @@ class TotalConnectClient:
         return response
 
     def populate_details(self, response):
-        """Populates system details."""
-
+        """Populate system details."""
         logging.info('Populating locations')
 
         self.locations = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']
 
     def keep_alive(self):
-        """Keeps the token alive to avoid server timeouts"""
-
+        """Keep the token alive to avoid server timeouts."""
         logging.info('Initiating Keep Alive')
 
         response = self.soapClient.service.KeepAlive(self.token)
@@ -123,32 +127,26 @@ class TotalConnectClient:
 
     def arm_away(self, location_name=False):
         """Arm the system (Away)."""
-
         self.arm(ARM_TYPE_AWAY, location_name)
 
     def arm_stay(self, location_name=False):
         """Arm the system (Stay)."""
-
         self.arm(ARM_TYPE_STAY, location_name)
 
     def arm_stay_instant(self, location_name=False):
         """Arm the system (Stay - Instant)."""
-
         self.arm(ARM_TYPE_STAY_INSTANT, location_name)
 
     def arm_away_instant(self, location_name=False):
         """Arm the system (Away - Instant)."""
-
         self.arm(ARM_TYPE_AWAY_INSTANT, location_name)
 
     def arm_stay_night(self, location_name=False):
         """Arm the system (Stay - Night)."""
-
         self.arm(ARM_TYPE_STAY_NIGHT, location_name)
 
     def arm(self, arm_type, location_name=False):
         """Arm the system."""
-
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
@@ -179,7 +177,6 @@ class TotalConnectClient:
 
     def get_location_by_location_name(self, location_name=False):
         """Get the location object for a given name (or the default location if none is provided)."""
-
         location = False
 
         for loc in self.locations:
@@ -194,6 +191,7 @@ class TotalConnectClient:
         return location
 
     def get_panel_meta_data(self, location_name=False):
+        """Get all meta data about the alarm panel."""
         location = self.get_location_by_location_name(location_name)
 
         response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
@@ -237,7 +235,7 @@ class TotalConnectClient:
 
     @ac_loss.setter
     def ac_loss(self, new_state):
-        """Set state of AC Loss flag"""
+        """Set state of AC Loss flag."""
         if new_state == 'False' or new_state == False:
             self._ac_loss = False
         else:
@@ -245,12 +243,12 @@ class TotalConnectClient:
 
     @property
     def low_battery(self):
-        """Get status of low battery"""
+        """Get status of low battery."""
         return self._low_battery
 
     @low_battery.setter
     def low_battery(self, new_state):
-        """Set state of Low Battery flag"""
+        """Set state of Low Battery flag."""
         if new_state == 'False' or new_state == False:
             self._low_battery = False
         else:
@@ -270,7 +268,7 @@ class TotalConnectClient:
             self._is_cover_tampered = True
 
     def zone_status(self, location_id, zone_id):
-        """Get status of a zone"""
+        """Get status of a zone."""
         z = self.zones.get(zone_id)
         if z is None:
             logging.error('Zone {} does not exist.'.format(zone_id))
@@ -279,7 +277,7 @@ class TotalConnectClient:
         return z.status
 
     def connect_to_panel(self, location_name=False, attempts=3):
-        """Connect to the panel"""
+        """Connect to the panel."""
         location = False
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
@@ -296,7 +294,6 @@ class TotalConnectClient:
 
     def get_armed_status(self, location_name=False):
         """Get the status of the panel."""
-
         self.get_panel_meta_data(location_name)
 
         alarm_code = self._panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
@@ -304,7 +301,7 @@ class TotalConnectClient:
         return alarm_code
 
     def is_armed(self, location_name=False):
-        """Return True or False if the system is armed in any way"""
+        """Return True or False if the system is armed in any way."""
         alarm_code = self.get_armed_status(location_name)
 
         if alarm_code == self.ARMED_AWAY:
@@ -359,7 +356,6 @@ class TotalConnectClient:
 
     def disarm(self, location_name=False):
         """Disarm the system."""
-
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
@@ -380,8 +376,7 @@ class TotalConnectClient:
         return self.SUCCESS
 
     def zoneBypass(self, zoneID, location_name=False):
-        """Bypass a zone"""
-    
+        """Bypass a zone."""
         location = self.get_location_by_location_name(location_name)
         deviceId = self.get_security_panel_device_id(location)
 
@@ -400,4 +395,3 @@ class TotalConnectClient:
                             '. ResultData: ' + str(response.ResultData))
 
         return self.SUCCESS
-
