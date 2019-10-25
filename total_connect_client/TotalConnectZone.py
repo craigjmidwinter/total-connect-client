@@ -15,16 +15,11 @@ ZONE_TYPE_CARBON_MONOXIDE = 0
 class TotalConnectZone:
     """TotalConnectZone class."""
 
-        # ZoneTypeId
-        # 0 = security
-        # 9 = fire
-        #14 = carbon monoxide / gas
-
     
     def __init__(self, zone):
         """Initialize."""
         self.id = zone.get('ZoneID')
-        self.description = zone.get('PartitionID')
+        self.description = zone.get('ZoneDescription')
         self.status = zone.get('ZoneStatus')
         self.partition = zone.get('PartitionID')
         self.zone_type_id = zone.get('ZoneTypeId')
