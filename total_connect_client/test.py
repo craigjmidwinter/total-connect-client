@@ -15,29 +15,18 @@ else:
 
     print('\n\n\n')
 
-    print('--- all location/system data ---')
     tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2])
-    location = tc.get_location_by_location_name()
-    pprint(location)
+    location_id = next(iter(tc.locations))
 
     print('\n\n\n')
 
     print('--- panel meta data ---')
-    meta_data = tc.get_panel_meta_data()
+    meta_data = tc.get_panel_meta_data(location_id)
     pprint(meta_data)
 
     print('\n\n\n')
 
-    print('--- Devices name(s) ---')
-    for device in location['DeviceList']['DeviceInfoBasic']:
-        print(device['DeviceName'])
-
-    print('--- Device Status ---')
-    print('Low Battery: ' + str(tc.low_battery))
-    print('AC Loss: ' + str(tc.ac_loss))
-    print('Is Cover Tampered: ' + str(tc.is_cover_tampered))
-
-    print('--- Zone Status ---')
-    print('Zone 1: ' + str(tc.zone_status('Home1', 1)))
-    print('Zone 2: ' + str(tc.zone_status('Home1', 2)))
-    print('Zone 3: ' + str(tc.zone_status('Home1', 3)))
+    print(tc.locations[location_id])
+    
+    for z in tc.locations[location_id].zones:
+        print(tc.locations[location_id].zones[z])

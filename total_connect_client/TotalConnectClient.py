@@ -5,6 +5,7 @@ import logging
 import time
 
 from TotalConnectZone import TotalConnectZone
+from TotalConnectLocation import TotalConnectLocation
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
@@ -68,15 +69,10 @@ class TotalConnectClient:
         self.usercode = usercode
         self.token = False
         self._panel_meta_data = []
-        self._ac_loss = False
-        self._low_battery = False
-        self._is_cover_tampered = False
 
-        self.locations = []
-        self.zones = {}
+        self.locations = {}
 
         self.authenticate()
-        self.get_panel_meta_data()
 
     def authenticate(self):
         """Login to the system."""
@@ -92,27 +88,19 @@ class TotalConnectClient:
             raise AuthenticationError('Unable to authenticate with Total Connect. ResultCode: ' +
                                       str(response.ResultCode) + '. ResultData: ' + str(response.ResultData))
 
-    def get_session_details(self):
-        """Get Details for the given session."""
-        logging.info('Getting session details')
-
-        response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
-
-        if response.ResultCode == self.INVALID_SESSION:
-            self.authenticate()
-            response = self.soapClient.service.GetSessionDetails(self.token, self.applicationId, self.applicationVersion)
-
-        if response.ResultCode != self.SUCCESS:
-            Exception('Unable to retrieve session details. ResultCode: ' + str(response.ResultCode) +
-                            '. ResultData: ' + str(response.ResultData))
-
-        return response
-
     def populate_details(self, response):
         """Populate system details."""
         logging.info('Populating locations')
 
-        self.locations = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']
+        location_data = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']
+        
+        for location in location_data:
+            self.locations[location['LocationID']] = TotalConnectLocation(location)
+            self.get_zone_details(location['LocationID'])
+            self.get_panel_meta_data(location['LocationID'])
+ 
+        if len(self.locations) < 1:
+            Exception('No locations found!')
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
@@ -125,36 +113,33 @@ class TotalConnectClient:
 
         return response.ResultCode
 
-    def arm_away(self, location_name=False):
+    def arm_away(self, location_id):
         """Arm the system (Away)."""
-        self.arm(ARM_TYPE_AWAY, location_name)
+        self.arm(ARM_TYPE_AWAY, location_id)
 
-    def arm_stay(self, location_name=False):
+    def arm_stay(self, location_id):
         """Arm the system (Stay)."""
-        self.arm(ARM_TYPE_STAY, location_name)
+        self.arm(ARM_TYPE_STAY, location_id)
 
-    def arm_stay_instant(self, location_name=False):
+    def arm_stay_instant(self, location_id):
         """Arm the system (Stay - Instant)."""
-        self.arm(ARM_TYPE_STAY_INSTANT, location_name)
+        self.arm(ARM_TYPE_STAY_INSTANT, location_id)
 
-    def arm_away_instant(self, location_name=False):
+    def arm_away_instant(self, location_id):
         """Arm the system (Away - Instant)."""
-        self.arm(ARM_TYPE_AWAY_INSTANT, location_name)
+        self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
 
-    def arm_stay_night(self, location_name=False):
+    def arm_stay_night(self, location_id):
         """Arm the system (Stay - Night)."""
-        self.arm(ARM_TYPE_STAY_NIGHT, location_name)
+        self.arm(ARM_TYPE_STAY_NIGHT, location_id)
 
-    def arm(self, arm_type, location_name=False):
+    def arm(self, arm_type, location_id):
         """Arm the system."""
-        location = self.get_location_by_location_name(location_name)
-        deviceId = self.get_security_panel_device_id(location)
-
-        response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
+        response = self.soapClient.service.ArmSecuritySystem(self.token, location_id, self.locations[location_id].security_device_id, arm_type, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.ArmSecuritySystem(self.token, location['LocationID'], deviceId, arm_type, self.usercode)
+            response = self.soapClient.service.ArmSecuritySystem(self.token, location_id, self.locations[location_id].security_device_id, arm_type, self.usercode)
 
         logging.info("Arm Result Code:" + str(response.ResultCode))
 
@@ -166,124 +151,56 @@ class TotalConnectClient:
 
         return self.SUCCESS
 
-    def get_security_panel_device_id(self, location):
-        """Find the device id of the security panel."""
-        deviceID = location.get('SecurityDeviceID')
-
-        if deviceID is False:
-            raise Exception('No security panel found')
-
-        return deviceID
-
-    def get_location_by_location_name(self, location_name=False):
-        """Get the location object for a given name (or the default location if none is provided)."""
-        location = False
-
-        for loc in self.locations:
-            if location_name is False and location is False:
-                location = loc
-            elif loc['LocationName'] == location_name:
-                location = loc
-
-        if location is False:
-            raise Exception('Could not select location. Try using default location.')
-
-        return location
-
-    def get_panel_meta_data(self, location_name=False):
+    def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
-        location = self.get_location_by_location_name(location_name)
-
-        response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
+        response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location_id, 0, 0, 1)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location['LocationID'], 0, 0, 1)
+            response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location_id, 0, 0, 1)
 
         if response.ResultCode != self.SUCCESS:
             raise Exception('Could not retrieve panel meta data. ResultCode: ' + str(response.ResultCode) +
                             '. ResultData: ' + str(response.ResultData))
 
-        self._panel_meta_data = zeep.helpers.serialize_object(response)
+        panel_meta_data = zeep.helpers.serialize_object(response)
 
-        if self._panel_meta_data is not None:
-            self.ac_loss = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
-            self.low_battery = self._panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
-            self.is_cover_tampered = self._panel_meta_data['PanelMetadataAndStatus'].get('IsCoverTampered')
+        if panel_meta_data is not None:
+            self.locations[location_id].ac_loss = panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
+            self.locations[location_id].low_battery = panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
+            self.locations[location_id].is_cover_tampered = panel_meta_data['PanelMetadataAndStatus'].get('IsCoverTampered')
+            self.locations[location_id].last_updated_timestamp_ticks = panel_meta_data['PanelMetadataAndStatus'].get('LastUpdatedTimestampTicks')
+            self.locations[location_id].configuration_sequence_number = panel_meta_data['PanelMetadataAndStatus'].get('ConfigurationSequenceNumber')
 
-            zones = self._panel_meta_data['PanelMetadataAndStatus'].get('Zones')
+            zones = panel_meta_data['PanelMetadataAndStatus'].get('Zones')
             if zones is not None:
                 zone_info = zones.get('ZoneInfo')
                 if zone_info is not None:
-                    self.zones.clear()
                     for zone in zone_info:
                         if zone is not None:
-                            self.zones[zone.get('ZoneID')] = TotalConnectZone(zone)               
-
+                            zone_id = zone.get('ZoneID')
+                            self.locations[location_id].zones[zone_id].update(zone)
         else:
-            self.ac_loss = None
-            self.low_battery = None
-            self.is_cover_tampered = None
-            self.zones = {}
+            raise Exception('Panel_meta_data is empty.')
 
         return response
 
-    @property
-    def ac_loss(self):
-        """Get status of AC Loss."""
-        return self._ac_loss
-
-    @ac_loss.setter
-    def ac_loss(self, new_state):
-        """Set state of AC Loss flag."""
-        if new_state == 'False' or new_state == False:
-            self._ac_loss = False
-        else:
-            self._ac_loss = True
-
-    @property
-    def low_battery(self):
-        """Get status of low battery."""
-        return self._low_battery
-
-    @low_battery.setter
-    def low_battery(self, new_state):
-        """Set state of Low Battery flag."""
-        if new_state == 'False' or new_state == False:
-            self._low_battery = False
-        else:
-            self._low_battery = True
-
-    @property
-    def is_cover_tampered(self):
-        """Get status of cover tamper."""
-        return self._is_cover_tampered
-
-    @is_cover_tampered.setter
-    def is_cover_tampered(self, new_state):
-        """Set state of IsCoverTampered flag."""
-        if new_state == 'False' or new_state == False:
-            self._is_cover_tampered = False
-        else:
-            self._is_cover_tampered = True
-
     def zone_status(self, location_id, zone_id):
         """Get status of a zone."""
-        z = self.zones.get(zone_id)
+        z = self.locations[location_id].zones.get(zone_id)
         if z is None:
             logging.error('Zone {} does not exist.'.format(zone_id))
             return None
 
         return z.status
 
-    def connect_to_panel(self, location_name=False, attempts=3):
+    def connect_to_panel(self, location_id, attempts=3):
         """Connect to the panel."""
         location = False
-        location = self.get_location_by_location_name(location_name)
-        deviceId = self.get_security_panel_device_id(location)
+
         attempt =  0
         while ( attempt < attempts ):
-            response = self.soapClient.service.ConnectToPanel(self.token, location['LocationID'], deviceId )
+            response = self.soapClient.service.ConnectToPanel(self.token, location_id, self.locations[location_id].security_device_id )
             if response.ResultCode != self.SUCCESS:
                 attempt += 1
                 logging.error('Could not connect to panel, retrying ' + str(attempt) + '/' + str(attempts) + '.')
@@ -292,17 +209,17 @@ class TotalConnectClient:
                 break
         return response
 
-    def get_armed_status(self, location_name=False):
+    def get_armed_status(self, location_id):
         """Get the status of the panel."""
-        self.get_panel_meta_data(location_name)
-
+        self.get_panel_meta_data(location_id)
+        # UPDATE
         alarm_code = self._panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
 
         return alarm_code
 
-    def is_armed(self, location_name=False):
+    def is_armed(self, location_id):
         """Return True or False if the system is armed in any way."""
-        alarm_code = self.get_armed_status(location_name)
+        alarm_code = self.get_armed_status(location_id)
 
         if alarm_code == self.ARMED_AWAY:
             return True
@@ -327,43 +244,40 @@ class TotalConnectClient:
         else:
             return False
 
-    def is_arming(self, location_name=False):
+    def is_arming(self, location_id):
         """Return true or false is the system is in the process of arming."""
-        alarm_code = self.get_armed_status(location_name)
+        alarm_code = self.get_armed_status(location_id)
 
         if alarm_code == self.ARMING:
             return True
         else:
             return False
 
-    def is_disarming(self, location_name=False):
+    def is_disarming(self, location_id):
         """Return true or false is the system is in the process of disarming."""
-        alarm_code = self.get_armed_status(location_name)
+        alarm_code = self.get_armed_status(location_id)
 
         if alarm_code == self.DISARMING:
             return True
         else:
             return False
 
-    def is_pending(self, location_name=False):
+    def is_pending(self, location_id):
         """Return true or false is the system is pending an action."""
-        alarm_code = self.get_armed_status(location_name)
+        alarm_code = self.get_armed_status(location_id)
 
         if alarm_code == self.ARMING or alarm_code == self.DISARMING:
             return True
         else:
             return False
 
-    def disarm(self, location_name=False):
+    def disarm(self, location_id):
         """Disarm the system."""
-        location = self.get_location_by_location_name(location_name)
-        deviceId = self.get_security_panel_device_id(location)
-
-        response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
+        response = self.soapClient.service.DisarmSecuritySystem(self.token, location_id, self.locations[location_id].security_device_id, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.DisarmSecuritySystem(self.token, location['LocationID'], deviceId, self.usercode)
+            response = self.soapClient.service.DisarmSecuritySystem(self.token, location_id, self.locations[location_id].security_device_id, self.usercode)
 
         logging.info("Disarm Result Code:" + str(response.ResultCode))
 
@@ -375,16 +289,13 @@ class TotalConnectClient:
 
         return self.SUCCESS
 
-    def zoneBypass(self, zoneID, location_name=False):
+    def zone_bypass(self, zoneID, location_id):
         """Bypass a zone."""
-        location = self.get_location_by_location_name(location_name)
-        deviceId = self.get_security_panel_device_id(location)
-
-        response = self.soapClient.service.Bypass(self.token, location['LocationID'], deviceId, zoneID, self.usercode)
+        response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zoneID, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.Bypass(self.token, location['LocationID'], deviceId, zoneID, self.usercode)
+            response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zoneID, self.usercode)
 
         logging.info("Bypass Result Code:" + str(response.ResultCode))
 
@@ -394,4 +305,36 @@ class TotalConnectClient:
             raise Exception('Could not bypass zone. ResultCode: ' + str(response.ResultCode) +
                             '. ResultData: ' + str(response.ResultData))
 
+        return self.SUCCESS
+
+    def get_zone_details(self, location_id):
+        """Get Zone details."""
+        partitions={"int": ["1"]}
+        
+        response = self.soapClient.service.GetZonesListInStateEx_V1(self.token, location_id, partitions, 0)
+    
+        if response.ResultCode == self.INVALID_SESSION:
+            self.authenticate()
+            response = self.soapClient.service.GetZonesListInStateEx_V1(self.token, location_id, partitions, 0)
+    
+        logging.info("Get Zone Details Result Code:" + str(response.ResultCode))
+    
+        if response.ResultCode != self.SUCCESS:
+            logging.info('Zone details not received.')
+        
+        zone_status = zeep.helpers.serialize_object(response.ZoneStatus)
+
+        if zone_status is not None:
+            zones = zone_status.get('Zones')
+            if zones is not None:
+                zone_info = zones.get('ZoneStatusInfoWithPartitionId')
+                if zone_info is not None:
+                    self.locations[location_id].zones.clear()
+                    for zone in zone_info:
+                        if zone is not None:
+                            self.locations[location_id].zones[zone.get('ZoneID')] = TotalConnectZone(zone)                              
+        else:
+            raise Exception('Could not get zone details. ResultCode: ' + str(response.ResultCode) +
+                            '. ResultData: ' + str(response.ResultData))
+    
         return self.SUCCESS
