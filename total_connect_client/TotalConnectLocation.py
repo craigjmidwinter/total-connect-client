@@ -12,6 +12,7 @@ class TotalConnectLocation:
         self.ac_loss = None
         self.low_battery = None
         self.is_cover_tampered = None
+        self.arming_state = None
         self.zones = {}
 
     def __str__(self):
@@ -22,5 +23,6 @@ class TotalConnectLocation:
         text = text + 'AcLoss: ' + str(self.ac_loss) + '\n'
         text = text + 'LowBattery: ' + str(self.low_battery) + '\n'
         text = text + 'IsCoverTampered: ' + str(self.is_cover_tampered) + '\n'
+        text = text + 'Arming State: ' + str(self.arming_state) + '\n'
 
         return text

@@ -13,22 +13,15 @@ ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
 
-ZONE_STATUS_NORMAL = 0
-ZONE_STATUS_BYPASSED = 1
-ZONE_STATUS_FAULT = 2
-ZONE_STATUS_TAMPER = 8
-ZONE_STATUS_TROUBLE_LOW_BATTERY = 72
-ZONE_STATUS_TRIGGERED = 256
-
 ZONE_BYPASS_SUCCESS = 0
 GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 class AuthenticationError(Exception):
     """Authentication Error class."""
     
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize."""
-        Exception.__init__(self,*args,**kwargs)
+        Exception.__init__(self, *args, **kwargs)
 
 class TotalConnectClient:
     """Client for Total Connect."""
@@ -68,8 +61,6 @@ class TotalConnectClient:
         self.password = password
         self.usercode = usercode
         self.token = False
-        self._panel_meta_data = []
-
         self.locations = {}
 
         self.authenticate()
@@ -171,6 +162,7 @@ class TotalConnectClient:
             self.locations[location_id].is_cover_tampered = panel_meta_data['PanelMetadataAndStatus'].get('IsCoverTampered')
             self.locations[location_id].last_updated_timestamp_ticks = panel_meta_data['PanelMetadataAndStatus'].get('LastUpdatedTimestampTicks')
             self.locations[location_id].configuration_sequence_number = panel_meta_data['PanelMetadataAndStatus'].get('ConfigurationSequenceNumber')
+            self.locations[location_id].arming_state = panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
 
             zones = panel_meta_data['PanelMetadataAndStatus'].get('Zones')
             if zones is not None:
@@ -179,7 +171,8 @@ class TotalConnectClient:
                     for zone in zone_info:
                         if zone is not None:
                             zone_id = zone.get('ZoneID')
-                            self.locations[location_id].zones[zone_id].update(zone)
+                            if zone_id is not None:
+                                self.locations[location_id].zones[zone_id].update(zone)
         else:
             raise Exception('Panel_meta_data is empty.')
 
@@ -212,10 +205,7 @@ class TotalConnectClient:
     def get_armed_status(self, location_id):
         """Get the status of the panel."""
         self.get_panel_meta_data(location_id)
-        # UPDATE
-        alarm_code = self._panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
-
-        return alarm_code
+        return self.locations[location_id].arming_state
 
     def is_armed(self, location_id):
         """Return True or False if the system is armed in any way."""
@@ -334,7 +324,7 @@ class TotalConnectClient:
                         if zone is not None:
                             self.locations[location_id].zones[zone.get('ZoneID')] = TotalConnectZone(zone)                              
         else:
-            raise Exception('Could not get zone details. ResultCode: ' + str(response.ResultCode) +
+            logging.error('Could not get zone details. ResultCode: ' + str(response.ResultCode) +
                             '. ResultData: ' + str(response.ResultData))
     
         return self.SUCCESS

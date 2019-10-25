@@ -1,5 +1,17 @@
 """Zone for Total Connect."""
 
+
+ZONE_STATUS_NORMAL = 0
+ZONE_STATUS_BYPASSED = 1
+ZONE_STATUS_FAULT = 2
+ZONE_STATUS_TAMPER = 8
+ZONE_STATUS_TROUBLE_LOW_BATTERY = 72
+ZONE_STATUS_TRIGGERED = 256
+
+ZONE_TYPE_SECURITY = 0
+ZONE_TYPE_FIRE_SMOKE = 0
+ZONE_TYPE_CARBON_MONOXIDE = 0
+
 class TotalConnectZone:
     """TotalConnectZone class."""
 
@@ -12,7 +24,7 @@ class TotalConnectZone:
     def __init__(self, zone):
         """Initialize."""
         self.id = zone.get('ZoneID')
-        self.description = None
+        self.description = zone.get('PartitionID')
         self.status = zone.get('ZoneStatus')
         self.partition = zone.get('PartitionID')
         self.zone_type_id = zone.get('ZoneTypeId')
@@ -21,6 +33,7 @@ class TotalConnectZone:
         """Update the zone."""
         if self.id == zone.get('ZoneID'):
             self.description = zone.get('ZoneDescription')
+            self.partition = zone.get('PartitionID')
             self.status = zone.get('ZoneStatus')
         else:
             raise Exception('ZoneID does not match in TotalConnectZone.')
