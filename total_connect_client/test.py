@@ -30,3 +30,7 @@ else:
     
     for z in tc.locations[location_id].zones:
         print(tc.locations[location_id].zones[z])
+        
+    result = tc.request('GetZonesListInStateEx_V1(self.token, ' + str(location_id) + ', {"int": ["1"]}, 0)')
+    print('Result Code: {}\n'.format(result['ResultCode']))
+    pprint(result)

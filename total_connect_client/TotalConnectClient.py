@@ -51,6 +51,8 @@ class TotalConnectClient:
     CONNECTION_ERROR = 4101
     BAD_USER_OR_PASSWORD = -50004
 
+    MAX_REQUEST_ATTEMPTS = 10
+
     def __init__(self, username, password, usercode='-1'):
         """Initialize."""
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
@@ -64,6 +66,23 @@ class TotalConnectClient:
         self.locations = {}
 
         self.authenticate()
+
+    def request(self, request, attempts=0):
+        """Send a SOAP request"""
+        base = 'self.soapClient.service.'
+        response = eval(base + request)
+        attempts += 1
+
+        if attempts < self.MAX_REQUEST_ATTEMPTS:
+            if response.ResultCode == self.INVALID_SESSION:
+                logging.info('Invalid session (attempt number {}).'.format(attempts))
+                self.authenticate()
+                return self.request(request, attempts)
+            elif response.ResultCode == self.CONNECTION_ERROR:
+                logging.info('Connection error (attempt number {}).'.format(attempts))
+                return self.request(request, attempts)
+            return zeep.helpers.serialize_object(response)        
+        raise Exception('Could not execute request.  Maximum attempts tried.')
 
     def authenticate(self):
         """Login to the system."""
@@ -144,27 +163,22 @@ class TotalConnectClient:
 
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
-        response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location_id, 0, 0, 1)
+        
+        result = self.request('GetPanelMetaDataAndFullStatus(self.token, ' + str(location_id) + ', 0, 0, 1)')
 
-        if response.ResultCode == self.INVALID_SESSION:
-            self.authenticate()
-            response = self.soapClient.service.GetPanelMetaDataAndFullStatus(self.token, location_id, 0, 0, 1)
+        if result['ResultCode'] != self.SUCCESS:
+            raise Exception('Could not retrieve panel meta data. ResultCode: ' + str(result['ResultCode']) +
+                            '. ResultData: ' + str(result['ResultData']))
 
-        if response.ResultCode != self.SUCCESS:
-            raise Exception('Could not retrieve panel meta data. ResultCode: ' + str(response.ResultCode) +
-                            '. ResultData: ' + str(response.ResultData))
+        if result is not None:
+            self.locations[location_id].ac_loss = result['PanelMetadataAndStatus'].get('IsInACLoss')
+            self.locations[location_id].low_battery = result['PanelMetadataAndStatus'].get('IsInLowBattery')
+            self.locations[location_id].is_cover_tampered = result['PanelMetadataAndStatus'].get('IsCoverTampered')
+            self.locations[location_id].last_updated_timestamp_ticks = result['PanelMetadataAndStatus'].get('LastUpdatedTimestampTicks')
+            self.locations[location_id].configuration_sequence_number = result['PanelMetadataAndStatus'].get('ConfigurationSequenceNumber')
+            self.locations[location_id].arming_state = result['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
 
-        panel_meta_data = zeep.helpers.serialize_object(response)
-
-        if panel_meta_data is not None:
-            self.locations[location_id].ac_loss = panel_meta_data['PanelMetadataAndStatus'].get('IsInACLoss')
-            self.locations[location_id].low_battery = panel_meta_data['PanelMetadataAndStatus'].get('IsInLowBattery')
-            self.locations[location_id].is_cover_tampered = panel_meta_data['PanelMetadataAndStatus'].get('IsCoverTampered')
-            self.locations[location_id].last_updated_timestamp_ticks = panel_meta_data['PanelMetadataAndStatus'].get('LastUpdatedTimestampTicks')
-            self.locations[location_id].configuration_sequence_number = panel_meta_data['PanelMetadataAndStatus'].get('ConfigurationSequenceNumber')
-            self.locations[location_id].arming_state = panel_meta_data['PanelMetadataAndStatus']['Partitions']['PartitionInfo'][0]['ArmingState']
-
-            zones = panel_meta_data['PanelMetadataAndStatus'].get('Zones')
+            zones = result['PanelMetadataAndStatus'].get('Zones')
             if zones is not None:
                 zone_info = zones.get('ZoneInfo')
                 if zone_info is not None:
@@ -176,7 +190,7 @@ class TotalConnectClient:
         else:
             raise Exception('Panel_meta_data is empty.')
 
-        return response
+        return result
 
     def zone_status(self, location_id, zone_id):
         """Get status of a zone."""
@@ -299,20 +313,13 @@ class TotalConnectClient:
 
     def get_zone_details(self, location_id):
         """Get Zone details."""
-        partitions={"int": ["1"]}
-        
-        response = self.soapClient.service.GetZonesListInStateEx_V1(self.token, location_id, partitions, 0)
-    
-        if response.ResultCode == self.INVALID_SESSION:
-            self.authenticate()
-            response = self.soapClient.service.GetZonesListInStateEx_V1(self.token, location_id, partitions, 0)
-    
-        logging.info("Get Zone Details Result Code:" + str(response.ResultCode))
-    
-        if response.ResultCode != self.SUCCESS:
-            logging.info('Zone details not received.')
-        
-        zone_status = zeep.helpers.serialize_object(response.ZoneStatus)
+        result = self.request('GetZonesListInStateEx_V1(self.token, ' + str(location_id) + ', {"int": ["1"]}, 0)')
+
+        if result['ResultCode'] != self.SUCCESS:
+            raise Exception('Could not retrieve zone detail data. ResultCode: ' + str(result['ResultCode']) +
+                            '. ResultData: ' + str(result['ResultData']))
+
+        zone_status = result.get('ZoneStatus')
 
         if zone_status is not None:
             zones = zone_status.get('Zones')
@@ -324,7 +331,7 @@ class TotalConnectClient:
                         if zone is not None:
                             self.locations[location_id].zones[zone.get('ZoneID')] = TotalConnectZone(zone)                              
         else:
-            logging.error('Could not get zone details. ResultCode: ' + str(response.ResultCode) +
-                            '. ResultData: ' + str(response.ResultData))
+            logging.error('Could not get zone details. ResultCode: ' + str(result['ResultCode']) +
+                            '. ResultData: ' + str(result['ResultData']))
     
         return self.SUCCESS
