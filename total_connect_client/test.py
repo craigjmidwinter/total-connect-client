@@ -1,9 +1,10 @@
 """Test your system from the command line."""
-import TotalConnectClient
-import sys
-from pprint import pprint
 
+import sys
 import logging
+from pprint import pprint
+import TotalConnectClient
+
 logging.basicConfig(filename='test.log', level=logging.DEBUG)
 
 if len(sys.argv) != 3:
@@ -27,10 +28,10 @@ else:
     print('\n\n\n')
 
     print(tc.locations[location_id])
-    
+
     for z in tc.locations[location_id].zones:
         print(tc.locations[location_id].zones[z])
-        
+
     result = tc.request('GetZonesListInStateEx_V1(self.token, ' + str(location_id) + ', {"int": ["1"]}, 0)')
     print('Result Code: {}\n'.format(result['ResultCode']))
     pprint(result)

@@ -15,7 +15,6 @@ ZONE_TYPE_CARBON_MONOXIDE = 14
 class TotalConnectZone:
     """TotalConnectZone class."""
 
-    
     def __init__(self, zone):
         """Initialize."""
         self.id = zone.get('ZoneID')

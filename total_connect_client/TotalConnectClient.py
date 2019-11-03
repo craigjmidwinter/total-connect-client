@@ -1,8 +1,8 @@
 """Total Connect Client."""
 
-import zeep
 import logging
 import time
+import zeep
 
 from TotalConnectZone import TotalConnectZone
 from TotalConnectLocation import TotalConnectLocation
@@ -68,7 +68,7 @@ class TotalConnectClient:
         self.authenticate()
 
     def request(self, request, attempts=0):
-        """Send a SOAP request"""
+        """Send a SOAP request."""
         base = 'self.soapClient.service.'
         response = eval(base + request)
         attempts += 1
@@ -80,6 +80,7 @@ class TotalConnectClient:
                 return self.request(request, attempts)
             elif response.ResultCode == self.CONNECTION_ERROR:
                 logging.info('Connection error (attempt number {}).'.format(attempts))
+                time.sleep(3)
                 return self.request(request, attempts)
             return zeep.helpers.serialize_object(response)        
         raise Exception('Could not execute request.  Maximum attempts tried.')
@@ -163,7 +164,6 @@ class TotalConnectClient:
 
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
-        
         result = self.request('GetPanelMetaDataAndFullStatus(self.token, ' + str(location_id) + ', 0, 0, 1)')
 
         if result['ResultCode'] != self.SUCCESS:
@@ -201,21 +201,6 @@ class TotalConnectClient:
 
         return z.status
 
-    def connect_to_panel(self, location_id, attempts=3):
-        """Connect to the panel."""
-        location = False
-
-        attempt =  0
-        while ( attempt < attempts ):
-            response = self.soapClient.service.ConnectToPanel(self.token, location_id, self.locations[location_id].security_device_id )
-            if response.ResultCode != self.SUCCESS:
-                attempt += 1
-                logging.error('Could not connect to panel, retrying ' + str(attempt) + '/' + str(attempts) + '.')
-                time.sleep(3)
-            else:
-                break
-        return response
-
     def get_armed_status(self, location_id):
         """Get the status of the panel."""
         self.get_panel_meta_data(location_id)
@@ -245,26 +230,15 @@ class TotalConnectClient:
             return True
         elif alarm_code == self.ARMED_CUSTOM_BYPASS:
             return True
-        else:
-            return False
+        return False
 
     def is_arming(self, location_id):
         """Return true or false is the system is in the process of arming."""
-        alarm_code = self.get_armed_status(location_id)
-
-        if alarm_code == self.ARMING:
-            return True
-        else:
-            return False
+        return self.get_armed_status(location_id) == self.ARMING
 
     def is_disarming(self, location_id):
         """Return true or false is the system is in the process of disarming."""
-        alarm_code = self.get_armed_status(location_id)
-
-        if alarm_code == self.DISARMING:
-            return True
-        else:
-            return False
+        return self.get_armed_status(location_id) == self.DISARMING
 
     def is_pending(self, location_id):
         """Return true or false is the system is pending an action."""
@@ -293,18 +267,18 @@ class TotalConnectClient:
 
         return self.SUCCESS
 
-    def zone_bypass(self, zoneID, location_id):
+    def zone_bypass(self, zone_id, location_id):
         """Bypass a zone."""
-        response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zoneID, self.usercode)
+        response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zone_id, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zoneID, self.usercode)
+            response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zone_id, self.usercode)
 
         logging.info("Bypass Result Code:" + str(response.ResultCode))
 
         if response.ResultCode == ZONE_BYPASS_SUCCESS:
-            logging.info('Zone ' + str(zoneID) + ' bypassed.')
+            logging.info('Zone ' + str(zone_id) + ' bypassed.')
         else:
             raise Exception('Could not bypass zone. ResultCode: ' + str(response.ResultCode) +
                             '. ResultData: ' + str(response.ResultData))
@@ -313,11 +287,15 @@ class TotalConnectClient:
 
     def get_zone_details(self, location_id):
         """Get Zone details."""
-        result = self.request('GetZonesListInStateEx_V1(self.token, ' + str(location_id) + ', {"int": ["1"]}, 0)')
+        result = self.request('GetZonesListInStateEx_V1(self.token, ' + 
+                              str(location_id) + 
+                              ', {"int": ["1"]}, 0)')
 
         if result['ResultCode'] != self.SUCCESS:
-            raise Exception('Could not retrieve zone detail data. ResultCode: ' + str(result['ResultCode']) +
-                            '. ResultData: ' + str(result['ResultData']))
+            raise Exception('Could not retrieve zone detail data. ResultCode: ' + 
+                            str(result['ResultCode']) +
+                            '. ResultData: ' + 
+                            str(result['ResultData']))
 
         zone_status = result.get('ZoneStatus')
 
@@ -329,9 +307,8 @@ class TotalConnectClient:
                     self.locations[location_id].zones.clear()
                     for zone in zone_info:
                         if zone is not None:
-                            self.locations[location_id].zones[zone.get('ZoneID')] = TotalConnectZone(zone)                              
+                            self.locations[location_id].zones[zone.get('ZoneID')] = TotalConnectZone(zone)
         else:
-            logging.error('Could not get zone details. ResultCode: ' + str(result['ResultCode']) +
-                            '. ResultData: ' + str(result['ResultData']))
-    
+            logging.error('Could not get zone details. ResultCode: {}. ResultData: {}.'.format(result['ResultCode'], result['ResultData']))
+
         return self.SUCCESS
