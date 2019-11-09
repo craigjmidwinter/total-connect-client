@@ -1,9 +1,10 @@
 """Test your system from the command line."""
-import TotalConnectClient
-import sys
-from pprint import pprint
 
+import sys
 import logging
+from pprint import pprint
+import TotalConnectClient
+
 logging.basicConfig(filename='test.log', level=logging.DEBUG)
 
 if len(sys.argv) != 3:
@@ -15,29 +16,22 @@ else:
 
     print('\n\n\n')
 
-    print('--- all location/system data ---')
     tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2])
-    location = tc.get_location_by_location_name()
-    pprint(location)
+    location_id = next(iter(tc.locations))
 
     print('\n\n\n')
 
     print('--- panel meta data ---')
-    meta_data = tc.get_panel_meta_data()
+    meta_data = tc.get_panel_meta_data(location_id)
     pprint(meta_data)
 
     print('\n\n\n')
 
-    print('--- Devices name(s) ---')
-    for device in location['DeviceList']['DeviceInfoBasic']:
-        print(device['DeviceName'])
+    print(tc.locations[location_id])
 
-    print('--- Device Status ---')
-    print('Low Battery: ' + str(tc.low_battery))
-    print('AC Loss: ' + str(tc.ac_loss))
-    print('Is Cover Tampered: ' + str(tc.is_cover_tampered))
+    for z in tc.locations[location_id].zones:
+        print(tc.locations[location_id].zones[z])
 
-    print('--- Zone Status ---')
-    print('Zone 1: ' + str(tc.zone_status('Home1', 1)))
-    print('Zone 2: ' + str(tc.zone_status('Home1', 2)))
-    print('Zone 3: ' + str(tc.zone_status('Home1', 3)))
+    result = tc.request('GetZonesListInStateEx_V1(self.token, ' + str(location_id) + ', {"int": ["1"]}, 0)')
+    print('Result Code: {}\n'.format(result['ResultCode']))
+    pprint(result)
