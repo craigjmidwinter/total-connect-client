@@ -24,6 +24,7 @@ ZONE_TYPE_CARBON_MONOXIDE = 14
 ZONE_BYPASS_SUCCESS = 0
 GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
+
 class AuthenticationError(Exception):
     """Authentication Error class."""
     
@@ -31,9 +32,10 @@ class AuthenticationError(Exception):
         """Initialize."""
         Exception.__init__(self, *args, **kwargs)
 
+
 class TotalConnectClient:
     """Client for Total Connect."""
-    
+
     DISARMED = 10200
     DISARMED_BYPASS = 10211
     ARMED_AWAY = 10201
@@ -90,7 +92,7 @@ class TotalConnectClient:
                 logging.info('Connection error (attempt number {}).'.format(attempts))
                 time.sleep(3)
                 return self.request(request, attempts)
-            return zeep.helpers.serialize_object(response)        
+            return zeep.helpers.serialize_object(response)
         raise Exception('Could not execute request.  Maximum attempts tried.')
 
     def authenticate(self):
@@ -112,12 +114,12 @@ class TotalConnectClient:
         logging.info('Populating locations')
 
         location_data = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']
-        
+
         for location in location_data:
             self.locations[location['LocationID']] = TotalConnectLocation(location)
             self.get_zone_details(location['LocationID'])
             self.get_panel_meta_data(location['LocationID'])
- 
+
         if len(self.locations) < 1:
             Exception('No locations found!')
 
@@ -277,13 +279,19 @@ class TotalConnectClient:
 
     def zone_bypass(self, zone_id, location_id):
         """Bypass a zone."""
-        response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zone_id, self.usercode)
+        response = self.soapClient.service.Bypass(self.token,
+                                                  location_id,
+                                                  self.locations[location_id].security_device_id,
+                                                  zone_id, self.usercode)
 
         if response.ResultCode == self.INVALID_SESSION:
             self.authenticate()
-            response = self.soapClient.service.Bypass(self.token, location_id, self.locations[location_id].security_device_id, zone_id, self.usercode)
+            response = self.soapClient.service.Bypass(self.token,
+                                                      location_id,
+                                                      self.locations[location_id].security_device_id,
+                                                      zone_id, self.usercode)
 
-        logging.info("Bypass Result Code:" + str(response.ResultCode))
+        logging.info('Bypass Result Code: {}'.format(response.ResultCode))
 
         if response.ResultCode == ZONE_BYPASS_SUCCESS:
             logging.info('Zone ' + str(zone_id) + ' bypassed.')
@@ -295,14 +303,14 @@ class TotalConnectClient:
 
     def get_zone_details(self, location_id):
         """Get Zone details."""
-        result = self.request('GetZonesListInStateEx_V1(self.token, ' + 
-                              str(location_id) + 
+        result = self.request('GetZonesListInStateEx_V1(self.token, ' +
+                              str(location_id) +
                               ', {"int": ["1"]}, 0)')
 
         if result['ResultCode'] != self.SUCCESS:
-            raise Exception('Could not retrieve zone detail data. ResultCode: ' + 
+            raise Exception('Could not retrieve zone detail data. ResultCode: ' +
                             str(result['ResultCode']) +
-                            '. ResultData: ' + 
+                            '. ResultData: ' +
                             str(result['ResultData']))
 
         zone_status = result.get('ZoneStatus')
@@ -317,9 +325,11 @@ class TotalConnectClient:
                         if zone is not None:
                             self.locations[location_id].zones[zone.get('ZoneID')] = TotalConnectZone(zone)
         else:
-            logging.error('Could not get zone details. ResultCode: {}. ResultData: {}.'.format(result['ResultCode'], result['ResultData']))
+            logging.error('Could not get zone details. ResultCode: {}. ResultData: {}.'
+                          .format(result['ResultCode'], result['ResultData']))
 
         return self.SUCCESS
+
 
 class TotalConnectLocation:
     """TotalConnectLocation class."""
@@ -337,15 +347,16 @@ class TotalConnectLocation:
 
     def __str__(self):
         """Return a texting that is printable."""
-        text = 'LocationID: ' + str(self.location_id) + '\n'
-        text = text + 'LocationName: ' + str(self.location_name) + '\n'
-        text = text + 'SecurityDeviceID: ' + str(self.security_device_id) + '\n'
-        text = text + 'AcLoss: ' + str(self.ac_loss) + '\n'
-        text = text + 'LowBattery: ' + str(self.low_battery) + '\n'
-        text = text + 'IsCoverTampered: ' + str(self.is_cover_tampered) + '\n'
-        text = text + 'Arming State: ' + str(self.arming_state) + '\n'
+        text = 'LocationID: {}\n'.format(self.location_id)
+        text = text + 'LocationName: {}\n'.format(self.location_name)
+        text = text + 'SecurityDeviceID: {}\n'.format(self.security_device_id)
+        text = text + 'AcLoss: {}\n'.format(self.ac_loss)
+        text = text + 'LowBattery: {}\n'.format(self.low_battery)
+        text = text + 'IsCoverTampered: {}\n'.format(self.is_cover_tampered)
+        text = text + 'Arming State: {}\n'.format(self.arming_state)
 
         return text
+
 
 class TotalConnectZone:
     """TotalConnectZone class."""
@@ -374,5 +385,5 @@ class TotalConnectZone:
         text = text + 'ZoneStatus: ' + str(self.status) + '\n'
         text = text + 'ZonePartition: ' + str(self.partition) + '\n'
         text = text + 'ZoneTypeID: ' + str(self.zone_type_id) + '\n'
-    
+
         return text
