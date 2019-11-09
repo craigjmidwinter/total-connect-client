@@ -4,14 +4,22 @@ import logging
 import time
 import zeep
 
-from TotalConnectZone import TotalConnectZone
-from TotalConnectLocation import TotalConnectLocation
-
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
+
+ZONE_STATUS_NORMAL = 0
+ZONE_STATUS_BYPASSED = 1
+ZONE_STATUS_FAULT = 2
+ZONE_STATUS_TAMPER = 8
+ZONE_STATUS_TROUBLE_LOW_BATTERY = 72
+ZONE_STATUS_TRIGGERED = 256
+
+ZONE_TYPE_SECURITY = 0
+ZONE_TYPE_FIRE_SMOKE = 9
+ZONE_TYPE_CARBON_MONOXIDE = 14
 
 ZONE_BYPASS_SUCCESS = 0
 GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
@@ -312,3 +320,59 @@ class TotalConnectClient:
             logging.error('Could not get zone details. ResultCode: {}. ResultData: {}.'.format(result['ResultCode'], result['ResultData']))
 
         return self.SUCCESS
+
+class TotalConnectLocation:
+    """TotalConnectLocation class."""
+
+    def __init__(self, location):
+        """Initialize."""
+        self.location_id = location.get('LocationID')
+        self.location_name = location.get('LocationName')
+        self.security_device_id = location.get('SecurityDeviceID')
+        self.ac_loss = None
+        self.low_battery = None
+        self.is_cover_tampered = None
+        self.arming_state = None
+        self.zones = {}
+
+    def __str__(self):
+        """Return a texting that is printable."""
+        text = 'LocationID: ' + str(self.location_id) + '\n'
+        text = text + 'LocationName: ' + str(self.location_name) + '\n'
+        text = text + 'SecurityDeviceID: ' + str(self.security_device_id) + '\n'
+        text = text + 'AcLoss: ' + str(self.ac_loss) + '\n'
+        text = text + 'LowBattery: ' + str(self.low_battery) + '\n'
+        text = text + 'IsCoverTampered: ' + str(self.is_cover_tampered) + '\n'
+        text = text + 'Arming State: ' + str(self.arming_state) + '\n'
+
+        return text
+
+class TotalConnectZone:
+    """TotalConnectZone class."""
+
+    def __init__(self, zone):
+        """Initialize."""
+        self.id = zone.get('ZoneID')
+        self.description = zone.get('ZoneDescription')
+        self.status = zone.get('ZoneStatus')
+        self.partition = zone.get('PartitionID')
+        self.zone_type_id = zone.get('ZoneTypeId')
+
+    def update(self, zone):
+        """Update the zone."""
+        if self.id == zone.get('ZoneID'):
+            self.description = zone.get('ZoneDescription')
+            self.partition = zone.get('PartitionID')
+            self.status = zone.get('ZoneStatus')
+        else:
+            raise Exception('ZoneID does not match in TotalConnectZone.')
+
+    def __str__(self):
+        """Return a string that is printable."""
+        text = 'ZoneID: ' + str(self.id) + '\n'
+        text = text + 'ZoneDescription: ' + str(self.description) + '\n'
+        text = text + 'ZoneStatus: ' + str(self.status) + '\n'
+        text = text + 'ZonePartition: ' + str(self.partition) + '\n'
+        text = text + 'ZoneTypeID: ' + str(self.zone_type_id) + '\n'
+    
+        return text
