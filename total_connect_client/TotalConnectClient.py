@@ -347,7 +347,7 @@ class TotalConnectLocation:
         self.zones = {}
 
     def __str__(self):
-        """Return a texting that is printable."""
+        """Return a text string that is printable."""
         text = 'LocationID: {}\n'.format(self.location_id)
         text = text + 'LocationName: {}\n'.format(self.location_name)
         text = text + 'SecurityDeviceID: {}\n'.format(self.security_device_id)
@@ -369,7 +369,8 @@ class TotalConnectZone:
         self.status = zone.get('ZoneStatus')
         self.partition = zone.get('PartitionID')
         self.zone_type_id = zone.get('ZoneTypeId')
-
+        self.can_be_bypassed = zone.get('CanBeBypassed')
+            
     def update(self, zone):
         """Update the zone."""
         if self.id == zone.get('ZoneID'):
@@ -388,3 +389,27 @@ class TotalConnectZone:
         text = text + 'ZoneTypeID: ' + str(self.zone_type_id) + '\n'
 
         return text
+
+    def is_bypassed(self):
+        """Return true if the zone is bypassed."""
+        return self.status == ZONE_STATUS_BYPASSED
+    
+    def is_faulted(self):
+        """Return true if the zone is faulted."""
+        return self.status == ZONE_STATUS_FAULT
+    
+    def is_tampered(self):
+        """Return true if zone is tampered."""
+        return self.status == ZONE_STATUS_TAMPER
+    
+    def is_low_battery(self):
+        """Return true if low battery."""
+        return self.status in (ZONE_STATUS_LOW_BATTERY, ZONE_STATUS_TROUBLE_LOW_BATTERY)
+    
+    def is_troubled(self):
+        """Return true if zone is troubled."""
+        return self.status == ZONE_STATUS_TROUBLE_LOW_BATTERY
+    
+    def is_triggered(self):
+        """Return true if zone is triggered."""
+        return self.status == ZONE_STATUS_TRIGGERED
