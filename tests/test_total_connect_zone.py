@@ -6,44 +6,82 @@ import TotalConnectClient
 
 ZONE_NORMAL = {
     "ZoneDescription": "Normal",
-    "PartitionID": "1",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
 }
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
-    "PartitionID": "1",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_BYPASSED,
 }
 
 ZONE_FAULTED = {
     "ZoneDescription": "Faulted",
-    "PartitionID": "1",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_FAULT,
 }
 
 ZONE_TAMPERED = {
     "ZoneDescription": "Tampered",
-    "PartitionID": "1",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_TAMPER,
 }
 
 ZONE_LOW_BATTERY = {
     "ZoneDescription": "Low Battery",
-    "PartitionID": "1",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_LOW_BATTERY,
 }
 
 ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneDescription": "Trouble Low Battery",
-    "PartitionID": "1",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_TROUBLE_LOW_BATTERY,
 }
 
 ZONE_TRIGGERED = {
     "ZoneDescription": "Triggered",
-    "PartitionID": "1",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_TRIGGERED,
+}
+
+ZONE_BUTTON = {
+    "ZoneDescription": "Button",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 0,
+    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+}
+
+ZONE_SMOKE = {
+    "ZoneDescription": "Smoke",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_FIRE_SMOKE,
+    "CanBeBypassed": 0,
+    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+}
+
+ZONE_GAS = {
+    "ZoneDescription": "Gas",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_CARBON_MONOXIDE,
+    "CanBeBypassed": 0,
+    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
 }
 
 
@@ -61,6 +99,9 @@ class TestTotalConnectZone(unittest.TestCase):
             ZONE_TROUBLE_LOW_BATTERY
         )
         self.zone_triggered = TotalConnectClient.TotalConnectZone(ZONE_TRIGGERED)
+        self.zone_button = TotalConnectClient.TotalConnectZone(ZONE_BUTTON)
+        self.zone_smoke = TotalConnectClient.TotalConnectZone(ZONE_SMOKE)
+        self.zone_gas = TotalConnectClient.TotalConnectZone(ZONE_GAS)
 
     def tearDown(self):
         """Tear down."""
@@ -71,6 +112,9 @@ class TestTotalConnectZone(unittest.TestCase):
         self.zone_low_battery = None
         self.zone_trouble_low_battery = None
         self.zone_triggered = None
+        self.zone_button = None
+        self.zone_smoke = None
+        self.zone_gas = None
 
     def tests_normal(self):
         """Normal zone."""
@@ -134,3 +178,10 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_triggered.is_low_battery())
         self.assertFalse(self.zone_triggered.is_troubled())
         self.assertTrue(self.zone_triggered.is_triggered())
+
+    def tests_button(self):
+        """Normal zone."""
+        self.assertFalse(self.zone_normal.is_button())
+        self.assertTrue(self.zone_button.is_button())
+        self.assertFalse(self.zone_smoke.is_button())
+        self.assertFalse(self.zone_gas.is_button())

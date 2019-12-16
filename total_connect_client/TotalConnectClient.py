@@ -413,3 +413,8 @@ class TotalConnectZone:
     def is_triggered(self):
         """Return true if zone is triggered."""
         return self.status == ZONE_STATUS_TRIGGERED
+    
+    def is_button(self):
+        """Return true if zone is a button."""
+        return (self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0) 
+    
