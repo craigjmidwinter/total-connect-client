@@ -86,15 +86,15 @@ class TotalConnectClient:
 
         if attempts < self.MAX_REQUEST_ATTEMPTS:
             if response.ResultCode == self.INVALID_SESSION:
-                logging.info('Invalid session (attempt number {}).'.format(attempts))
+                logging.info('total-connect-client invalid session (attempt number {}).'.format(attempts))
                 self.authenticate()
                 return self.request(request, attempts)
             elif response.ResultCode == self.CONNECTION_ERROR:
-                logging.info('Connection error (attempt number {}).'.format(attempts))
+                logging.info('total-connect-client connection error (attempt number {}).'.format(attempts))
                 time.sleep(3)
                 return self.request(request, attempts)
             return zeep.helpers.serialize_object(response)
-        raise Exception('Could not execute request.  Maximum attempts tried.')
+        raise Exception('total-connect-client could not execute request.  Maximum attempts tried.')
 
     def authenticate(self):
         """Login to the system."""
@@ -112,7 +112,7 @@ class TotalConnectClient:
 
     def populate_details(self, response):
         """Populate system details."""
-        logging.info('Populating locations')
+        logging.info('total-connect-client populating locations')
 
         location_data = zeep.helpers.serialize_object(response.Locations)['LocationInfoBasic']
 
@@ -126,7 +126,7 @@ class TotalConnectClient:
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
-        logging.info('Initiating Keep Alive')
+        logging.info('total-connect-client initiating Keep Alive')
 
         response = self.soapClient.service.KeepAlive(self.token)
 
