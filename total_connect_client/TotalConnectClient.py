@@ -393,7 +393,6 @@ class TotalConnectZone:
 
         return text
 
-    @property
     def is_bypassed(self):
         """Return true if the zone is bypassed."""
         return self.status == ZONE_STATUS_BYPASSED
