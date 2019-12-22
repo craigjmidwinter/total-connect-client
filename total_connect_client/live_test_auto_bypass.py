@@ -17,8 +17,10 @@ print('using password: ' + sys.argv[2])
 
 print('\n\n\n')
 
-tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2])
+tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2], '-1', True)
 location_id = next(iter(tc.locations))
+
+print('auto_bypass_low_battery: ' + str(tc.auto_bypass_low_battery))
 
 print('\n\n\n')
 
@@ -33,6 +35,3 @@ print(tc.locations[location_id])
 for z in tc.locations[location_id].zones:
     print(tc.locations[location_id].zones[z])
 
-result = tc.request('GetZonesListInStateEx_V1(self.token, ' + str(location_id) + ', {"int": ["1"]}, 0)')
-print('Result Code: {}\n'.format(result['ResultCode']))
-pprint(result)

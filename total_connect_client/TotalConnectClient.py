@@ -64,7 +64,7 @@ class TotalConnectClient:
 
     MAX_REQUEST_ATTEMPTS = 10
 
-    def __init__(self, username, password, usercode='-1'):
+    def __init__(self, username, password, usercode='-1', auto_bypass_battery=False):
         """Initialize."""
         self.soapClient = zeep.Client('https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL')
 
@@ -73,6 +73,7 @@ class TotalConnectClient:
         self.username = username
         self.password = password
         self.usercode = usercode
+        self.auto_bypass_low_battery = auto_bypass_battery
         self.token = False
         self.locations = {}
 
@@ -198,6 +199,8 @@ class TotalConnectClient:
                             zone_id = zone.get('ZoneID')
                             if zone_id is not None:
                                 self.locations[location_id].zones[zone_id].update(zone)
+                                if self.locations[location_id].zones[zone_id].is_low_battery() and self.auto_bypass_low_battery:
+                                    self.zone_bypass(zone_id, location_id)
         else:
             raise Exception('Panel_meta_data is empty.')
 
@@ -295,7 +298,7 @@ class TotalConnectClient:
         logging.info('Bypass Result Code: {}'.format(response.ResultCode))
 
         if response.ResultCode == ZONE_BYPASS_SUCCESS:
-            logging.info('Zone ' + str(zone_id) + ' bypassed.')
+            self.locations[location_id].zones[zone_id].bypass()
         else:
             raise Exception('Could not bypass zone. ResultCode: ' + str(response.ResultCode) +
                             '. ResultData: ' + str(response.ResultData))
@@ -390,9 +393,14 @@ class TotalConnectZone:
 
         return text
 
+    @property
     def is_bypassed(self):
         """Return true if the zone is bypassed."""
         return self.status == ZONE_STATUS_BYPASSED
+
+    def bypass(self):
+        """Set is_bypassed status."""
+        self.status = ZONE_STATUS_BYPASSED
     
     def is_faulted(self):
         """Return true if the zone is faulted."""
