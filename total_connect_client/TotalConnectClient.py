@@ -421,7 +421,19 @@ class TotalConnectZone:
         """Return true if zone is triggered."""
         return self.status == ZONE_STATUS_TRIGGERED
     
-    def is_button(self):
+    def is_type_button(self):
         """Return true if zone is a button."""
         return (self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0) 
+    
+    def is_type_security(self):
+        """Return true if zone type is security."""
+        return (self.zone_type_id == ZONE_TYPE_SECURITY)
+
+    def is_type_fire(self):
+        """Return true if zone type is fire or smoke."""
+        return (self.zone_type_id == ZONE_TYPE_FIRE_SMOKE)
+
+    def is_type_carbon_monoxide(self):
+        """Return true if zone type is carbon monoxide."""
+        return (self.zone_type_id == ZONE_TYPE_CARBON_MONOXIDE)
     

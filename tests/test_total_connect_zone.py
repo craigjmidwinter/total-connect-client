@@ -179,9 +179,30 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_triggered.is_troubled())
         self.assertTrue(self.zone_triggered.is_triggered())
 
-    def tests_button(self):
-        """Normal zone."""
-        self.assertFalse(self.zone_normal.is_button())
-        self.assertTrue(self.zone_button.is_button())
-        self.assertFalse(self.zone_smoke.is_button())
-        self.assertFalse(self.zone_gas.is_button())
+    def tests_type_button(self):
+        """Button zone."""
+        self.assertFalse(self.zone_normal.is_type_button())
+        self.assertTrue(self.zone_button.is_type_button())
+        self.assertFalse(self.zone_smoke.is_type_button())
+        self.assertFalse(self.zone_gas.is_type_button())
+
+    def tests_type_security(self):
+        """Security zone."""
+        self.assertTrue(self.zone_normal.is_type_security())
+        self.assertTrue(self.zone_button.is_type_security())
+        self.assertFalse(self.zone_smoke.is_type_security())
+        self.assertFalse(self.zone_gas.is_type_security())
+
+    def tests_type_fire(self):
+        """Fire zone."""
+        self.assertFalse(self.zone_normal.is_type_fire())
+        self.assertFalse(self.zone_button.is_type_fire())
+        self.assertTrue(self.zone_smoke.is_type_fire())
+        self.assertFalse(self.zone_gas.is_type_fire())
+
+    def tests_type_carbon_monoxide(self):
+        """Carbon monoxide zone."""
+        self.assertFalse(self.zone_normal.is_type_carbon_monoxide())
+        self.assertFalse(self.zone_button.is_type_carbon_monoxide())
+        self.assertFalse(self.zone_smoke.is_type_carbon_monoxide())
+        self.assertTrue(self.zone_gas.is_type_carbon_monoxide())
