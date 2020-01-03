@@ -44,6 +44,14 @@ ZONE_LOW_BATTERY = {
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_LOW_BATTERY,
 }
 
+ZONE_BYPASSED_LOW_BATTERY = {
+    "ZoneDescription": "Bypassed Low Battery",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
+    "ZoneStatus": TotalConnectClient.ZONE_STATUS_BYPASSED_LOW_BATTERY,
+}
+
 ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneDescription": "Trouble Low Battery",
     "PartitionId": "1",
@@ -95,6 +103,9 @@ class TestTotalConnectZone(unittest.TestCase):
         self.zone_faulted = TotalConnectClient.TotalConnectZone(ZONE_FAULTED)
         self.zone_tampered = TotalConnectClient.TotalConnectZone(ZONE_TAMPERED)
         self.zone_low_battery = TotalConnectClient.TotalConnectZone(ZONE_LOW_BATTERY)
+        self.zone_bypassed_low_battery = TotalConnectClient.TotalConnectZone(
+            ZONE_BYPASSED_LOW_BATTERY
+        )
         self.zone_trouble_low_battery = TotalConnectClient.TotalConnectZone(
             ZONE_TROUBLE_LOW_BATTERY
         )
@@ -160,6 +171,15 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_low_battery.is_low_battery())
         self.assertFalse(self.zone_low_battery.is_troubled())
         self.assertFalse(self.zone_low_battery.is_triggered())
+
+    def tests_bypassed_low_battery(self):
+        """Zone bypassed with low battery."""
+        self.assertTrue(self.zone_bypassed_low_battery.is_bypassed())
+        self.assertFalse(self.zone_bypassed_low_battery.is_faulted())
+        self.assertFalse(self.zone_bypassed_low_battery.is_tampered())
+        self.assertTrue(self.zone_bypassed_low_battery.is_low_battery())
+        self.assertFalse(self.zone_bypassed_low_battery.is_troubled())
+        self.assertFalse(self.zone_bypassed_low_battery.is_triggered())
 
     def tests_trouble_low_battery(self):
         """Zone with low battery and trouble."""
