@@ -34,6 +34,7 @@ Code | Status
 1 | Bypassed
 2 | Fault
 8 | Tamper
+64 | Low Battery
 72 | Trouble (low battery)
 256 | Alarm/Triggered
 
