@@ -97,7 +97,7 @@ class TestTotalConnectZone(unittest.TestCase):
     """Test TotalConnectZone."""
 
     def setUp(self):
-        """Setup."""
+        """Test setup."""
         self.zone_normal = TotalConnectClient.TotalConnectZone(ZONE_NORMAL)
         self.zone_bypassed = TotalConnectClient.TotalConnectZone(ZONE_BYPASSED)
         self.zone_faulted = TotalConnectClient.TotalConnectZone(ZONE_FAULTED)

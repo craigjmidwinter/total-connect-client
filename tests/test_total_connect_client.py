@@ -1,7 +1,6 @@
 """Test total_connect_client."""
 
 import unittest
-from unittest.mock import Mock, patch
 
 import TotalConnectClient
 
@@ -13,12 +12,16 @@ class TestTotalConnectClient(unittest.TestCase):
     """Test TotalConnectClient."""
 
     def setUp(self):
+        """Test setup."""
         pass
 
     def tearDown(self):
+        """Test cleanup."""
         self.client = None
 
     def tests_bad_credentials(self):
+        """Test bad credentials."""
+
         with self.assertRaises(TotalConnectClient.AuthenticationError):
             badclient = TotalConnectClient.TotalConnectClient(
                 USERNAME_BAD, PASSWORD_BAD
