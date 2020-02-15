@@ -2,6 +2,7 @@
 
 import logging
 import time
+
 import zeep
 
 ARM_TYPE_AWAY = 0
@@ -43,7 +44,9 @@ class TotalConnectClient:
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
     CONNECTION_ERROR = 4101
+    FAILED_TO_CONNECT = -4104
     BAD_USER_OR_PASSWORD = -50004
+    AUTHENTICATION_FAILED = -100
 
     MAX_REQUEST_ATTEMPTS = 10
 
@@ -79,7 +82,7 @@ class TotalConnectClient:
                 )
                 self.authenticate()
                 return self.request(request, attempts)
-            elif response.ResultCode == self.CONNECTION_ERROR:
+            if response.ResultCode == self.CONNECTION_ERROR:
                 logging.info(
                     "total-connect-client connection error (attempt number {}).".format(
                         attempts
@@ -87,24 +90,40 @@ class TotalConnectClient:
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
+            if response.ResultCode == self.FAILED_TO_CONNECT:
+                logging.info(
+                    "total-connect-client failed to connect with security system (attempt number {}).".format(
+                        attempts
+                    )
+                )
+                time.sleep(3)
+                return self.request(request, attempts)
+            if response.ResultCode == self.AUTHENTICATION_FAILED:
+                logging.info(
+                    "total-connect-client authentication failed (attempt number {}).".format(
+                        attempts
+                    )
+                )
+                time.sleep(3)
+                return self.request(request, attempts)
+            if response.ResultCode == self.BAD_USER_OR_PASSWORD:
+                raise AuthenticationError("total-connect-client bad user or password.")
+
         raise Exception(
             "total-connect-client could not execute request.  Maximum attempts tried."
         )
 
     def authenticate(self):
         """Login to the system."""
-        response = self.soapClient.service.LoginAndGetSessionDetails(
-            self.username, self.password, self.applicationId, self.applicationVersion
+        response = self.request(
+            "LoginAndGetSessionDetails(self.username, self.password, self.applicationId, self.applicationVersion)"
         )
-        if response.ResultCode == self.SUCCESS:
+
+        if response["ResultCode"] == self.SUCCESS:
             logging.info("Login Successful")
-            self.token = response.SessionID
+            self.token = response["SessionID"]
             self.populate_details(response)
             return self.SUCCESS
-        elif response.ResultCode == self.BAD_USER_OR_PASSWORD:
-            raise AuthenticationError(
-                "Unable to authenticate with Total Connect. Bad username or password."
-            )
         else:
             raise AuthenticationError(
                 "Unable to authenticate with Total Connect. ResultCode: "
@@ -119,9 +138,7 @@ class TotalConnectClient:
 
         # not currently using info: ModuleFlags, UserInfo
 
-        location_data = zeep.helpers.serialize_object(response.Locations)[
-            "LocationInfoBasic"
-        ]
+        location_data = response["Locations"]["LocationInfoBasic"]
 
         for location in location_data:
             location_id = location["LocationID"]
