@@ -2,6 +2,7 @@
 
 import logging
 import time
+
 import zeep
 
 ARM_TYPE_AWAY = 0
@@ -38,36 +39,21 @@ class AuthenticationError(Exception):
 class TotalConnectClient:
     """Client for Total Connect."""
 
-    DISARMED = 10200
-    DISARMED_BYPASS = 10211
-    ARMED_AWAY = 10201
-    ARMED_AWAY_BYPASS = 10202
-    ARMED_AWAY_INSTANT = 10205
-    ARMED_AWAY_INSTANT_BYPASS = 10206
-    ARMED_CUSTOM_BYPASS = 10223
-    ARMED_STAY = 10203
-    ARMED_STAY_BYPASS = 10204
-    ARMED_STAY_INSTANT = 10209
-    ARMED_STAY_INSTANT_BYPASS = 10210
-    ARMED_STAY_NIGHT = 10218
-    ARMING = 10307
-    DISARMING = 10308
-    ALARMING = 10207
-    ALARMING_FIRE_SMOKE = 10212
-    ALARMING_CARBON_MONOXIDE = 10213
-
     INVALID_SESSION = -102
     SUCCESS = 0
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
     CONNECTION_ERROR = 4101
+    FAILED_TO_CONNECT = -4104
     BAD_USER_OR_PASSWORD = -50004
+    AUTHENTICATION_FAILED = -100
 
     MAX_REQUEST_ATTEMPTS = 10
 
     def __init__(self, username, password, usercode="-1", auto_bypass_battery=False):
         """Initialize."""
         self.soapClient = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
+        self.soap_base = "self.soapClient.service."
 
         self.applicationId = "14588"
         self.applicationVersion = "1.0.34"
@@ -82,11 +68,12 @@ class TotalConnectClient:
 
     def request(self, request, attempts=0):
         """Send a SOAP request."""
-        base = "self.soapClient.service."
-        response = eval(base + request)
-        attempts += 1
-
         if attempts < self.MAX_REQUEST_ATTEMPTS:
+            attempts += 1
+            response = eval(self.soap_base + request)
+
+            if response.ResultCode == self.SUCCESS:
+                return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
                 logging.info(
                     "total-connect-client invalid session (attempt number {}).".format(
@@ -95,7 +82,7 @@ class TotalConnectClient:
                 )
                 self.authenticate()
                 return self.request(request, attempts)
-            elif response.ResultCode == self.CONNECTION_ERROR:
+            if response.ResultCode == self.CONNECTION_ERROR:
                 logging.info(
                     "total-connect-client connection error (attempt number {}).".format(
                         attempts
@@ -103,25 +90,40 @@ class TotalConnectClient:
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
-            return zeep.helpers.serialize_object(response)
+            if response.ResultCode == self.FAILED_TO_CONNECT:
+                logging.info(
+                    "total-connect-client failed to connect with security system (attempt number {}).".format(
+                        attempts
+                    )
+                )
+                time.sleep(3)
+                return self.request(request, attempts)
+            if response.ResultCode == self.AUTHENTICATION_FAILED:
+                logging.info(
+                    "total-connect-client authentication failed (attempt number {}).".format(
+                        attempts
+                    )
+                )
+                time.sleep(3)
+                return self.request(request, attempts)
+            if response.ResultCode == self.BAD_USER_OR_PASSWORD:
+                raise AuthenticationError("total-connect-client bad user or password.")
+
         raise Exception(
             "total-connect-client could not execute request.  Maximum attempts tried."
         )
 
     def authenticate(self):
         """Login to the system."""
-        response = self.soapClient.service.LoginAndGetSessionDetails(
-            self.username, self.password, self.applicationId, self.applicationVersion
+        response = self.request(
+            "LoginAndGetSessionDetails(self.username, self.password, self.applicationId, self.applicationVersion)"
         )
-        if response.ResultCode == self.SUCCESS:
+
+        if response["ResultCode"] == self.SUCCESS:
             logging.info("Login Successful")
-            self.token = response.SessionID
+            self.token = response["SessionID"]
             self.populate_details(response)
             return self.SUCCESS
-        elif response.ResultCode == self.BAD_USER_OR_PASSWORD:
-            raise AuthenticationError(
-                "Unable to authenticate with Total Connect. Bad username or password."
-            )
         else:
             raise AuthenticationError(
                 "Unable to authenticate with Total Connect. ResultCode: "
@@ -134,14 +136,15 @@ class TotalConnectClient:
         """Populate system details."""
         logging.info("total-connect-client populating locations")
 
-        location_data = zeep.helpers.serialize_object(response.Locations)[
-            "LocationInfoBasic"
-        ]
+        # not currently using info: ModuleFlags, UserInfo
+
+        location_data = response["Locations"]["LocationInfoBasic"]
 
         for location in location_data:
-            self.locations[location["LocationID"]] = TotalConnectLocation(location)
-            self.get_zone_details(location["LocationID"])
-            self.get_panel_meta_data(location["LocationID"])
+            location_id = location["LocationID"]
+            self.locations[location_id] = TotalConnectLocation(location, self)
+            self.get_zone_details(location_id)
+            self.get_panel_meta_data(location_id)
 
         if len(self.locations) < 1:
             Exception("No locations found!")
@@ -199,9 +202,7 @@ class TotalConnectClient:
 
         logging.info("Arm Result Code:" + str(response.ResultCode))
 
-        if (response.ResultCode == self.ARM_SUCCESS) or (
-            response.ResultCode == self.SUCCESS
-        ):
+        if response.ResultCode in (self.ARM_SUCCESS, self.SUCCESS):
             logging.info("System Armed")
         else:
             raise Exception(
@@ -230,41 +231,9 @@ class TotalConnectClient:
             )
 
         if result is not None:
-            self.locations[location_id].ac_loss = result["PanelMetadataAndStatus"].get(
-                "IsInACLoss"
-            )
-            self.locations[location_id].low_battery = result[
-                "PanelMetadataAndStatus"
-            ].get("IsInLowBattery")
-            self.locations[location_id].is_cover_tampered = result[
-                "PanelMetadataAndStatus"
-            ].get("IsCoverTampered")
-            self.locations[location_id].last_updated_timestamp_ticks = result[
-                "PanelMetadataAndStatus"
-            ].get("LastUpdatedTimestampTicks")
-            self.locations[location_id].configuration_sequence_number = result[
-                "PanelMetadataAndStatus"
-            ].get("ConfigurationSequenceNumber")
-            self.locations[location_id].arming_state = result["PanelMetadataAndStatus"][
-                "Partitions"
-            ]["PartitionInfo"][0]["ArmingState"]
 
-            zones = result["PanelMetadataAndStatus"].get("Zones")
-            if zones is not None:
-                zone_info = zones.get("ZoneInfo")
-                if zone_info is not None:
-                    for zone in zone_info:
-                        if zone is not None:
-                            zone_id = zone.get("ZoneID")
-                            if zone_id is not None:
-                                self.locations[location_id].zones[zone_id].update(zone)
-                                if (
-                                    self.locations[location_id]
-                                    .zones[zone_id]
-                                    .is_low_battery()
-                                    and self.auto_bypass_low_battery
-                                ):
-                                    self.zone_bypass(zone_id, location_id)
+            self.locations[location_id].set_status(result["PanelMetadataAndStatus"])
+
         else:
             raise Exception("Panel_meta_data is empty.")
 
@@ -283,49 +252,6 @@ class TotalConnectClient:
         """Get the status of the panel."""
         self.get_panel_meta_data(location_id)
         return self.locations[location_id].arming_state
-
-    def is_armed(self, location_id):
-        """Return True or False if the system is armed in any way."""
-        alarm_code = self.get_armed_status(location_id)
-
-        if alarm_code == self.ARMED_AWAY:
-            return True
-        elif alarm_code == self.ARMED_AWAY_BYPASS:
-            return True
-        elif alarm_code == self.ARMED_AWAY_INSTANT:
-            return True
-        elif alarm_code == self.ARMED_AWAY_INSTANT_BYPASS:
-            return True
-        elif alarm_code == self.ARMED_STAY:
-            return True
-        elif alarm_code == self.ARMED_STAY_BYPASS:
-            return True
-        elif alarm_code == self.ARMED_STAY_INSTANT:
-            return True
-        elif alarm_code == self.ARMED_STAY_INSTANT_BYPASS:
-            return True
-        elif alarm_code == self.ARMED_STAY_NIGHT:
-            return True
-        elif alarm_code == self.ARMED_CUSTOM_BYPASS:
-            return True
-        return False
-
-    def is_arming(self, location_id):
-        """Return true or false is the system is in the process of arming."""
-        return self.get_armed_status(location_id) == self.ARMING
-
-    def is_disarming(self, location_id):
-        """Return true or false is the system is in the process of disarming."""
-        return self.get_armed_status(location_id) == self.DISARMING
-
-    def is_pending(self, location_id):
-        """Return true or false is the system is pending an action."""
-        alarm_code = self.get_armed_status(location_id)
-
-        if alarm_code == self.ARMING or alarm_code == self.DISARMING:
-            return True
-        else:
-            return False
 
     def disarm(self, location_id):
         """Disarm the system."""
@@ -437,14 +363,36 @@ class TotalConnectClient:
 class TotalConnectLocation:
     """TotalConnectLocation class."""
 
-    def __init__(self, location):
-        """Initialize."""
-        self.location_id = location.get("LocationID")
-        self.location_name = location.get("LocationName")
-        self.security_device_id = location.get("SecurityDeviceID")
+    DISARMED = 10200
+    DISARMED_BYPASS = 10211
+    ARMED_AWAY = 10201
+    ARMED_AWAY_BYPASS = 10202
+    ARMED_AWAY_INSTANT = 10205
+    ARMED_AWAY_INSTANT_BYPASS = 10206
+    ARMED_CUSTOM_BYPASS = 10223
+    ARMED_STAY = 10203
+    ARMED_STAY_BYPASS = 10204
+    ARMED_STAY_INSTANT = 10209
+    ARMED_STAY_INSTANT_BYPASS = 10210
+    ARMED_STAY_NIGHT = 10218
+    ARMING = 10307
+    DISARMING = 10308
+    ALARMING = 10207
+    ALARMING_FIRE_SMOKE = 10212
+    ALARMING_CARBON_MONOXIDE = 10213
+
+    def __init__(self, location_info_basic, parent):
+        """Initialize based on a 'LocationInfoBasic'."""
+        # currently not using info from LocationModuleFlags, DeviceList
+        self.location_id = location_info_basic.get("LocationID")
+        self.location_name = location_info_basic.get("LocationName")
+        self.security_device_id = location_info_basic.get("SecurityDeviceID")
+        self.parent = parent
         self.ac_loss = None
         self.low_battery = None
-        self.is_cover_tampered = None
+        self.cover_tampered = None
+        self.last_updated_timestamp_ticks = None
+        self.configuration_sequence_number = None
         self.arming_state = None
         self.zones = {}
 
@@ -455,10 +403,118 @@ class TotalConnectLocation:
         text = text + "SecurityDeviceID: {}\n".format(self.security_device_id)
         text = text + "AcLoss: {}\n".format(self.ac_loss)
         text = text + "LowBattery: {}\n".format(self.low_battery)
-        text = text + "IsCoverTampered: {}\n".format(self.is_cover_tampered)
+        text = text + "IsCoverTampered: {}\n".format(self.cover_tampered)
         text = text + "Arming State: {}\n".format(self.arming_state)
 
         return text
+
+    def set_status(self, data):
+        """Update status based on a 'PanelMetadataAndStatus'."""
+        self.ac_loss = data.get("IsInACLoss")
+        self.low_battery = data.get("IsInLowBattery")
+        self.is_cover_tampered = data.get("IsCoverTampered")
+        self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
+        self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
+        self.arming_state = data["Partitions"]["PartitionInfo"][0]["ArmingState"]
+
+        zones = data.get("Zones")
+        if zones is not None:
+            zone_info = zones.get("ZoneInfo")
+            if zone_info is not None:
+                for zone in zone_info:
+                    if zone is not None:
+                        zone_id = zone.get("ZoneID")
+                        if zone_id is not None:
+                            self.zones[zone_id].update(zone)
+                            if (
+                                self.zones[zone_id].is_low_battery()
+                                and self.parent.auto_bypass_low_battery
+                            ):
+                                self.parent.zone_bypass(zone_id, self.location_id)
+
+    def is_low_battery(self):
+        """Return true if low battery."""
+        return self.low_battery is True
+
+    def is_ac_loss(self):
+        """Return true if AC loss."""
+        return self.ac_loss is True
+
+    def is_cover_tampered(self):
+        """Return true if cover is tampered."""
+        return self.cover_tampered is True
+
+    def is_arming(self):
+        """Return true if the system is in the process of arming."""
+        return self.arming_state == self.ARMING
+
+    def is_disarming(self):
+        """Return true if the system is in the process of disarming."""
+        return self.arming_state == self.DISARMING
+
+    def is_pending(self, location_id):
+        """Return true if the system is pending an action."""
+        return self.is_disarming() or self.is_arming()
+
+    def is_disarmed(self):
+        """Return True if the system is disarmed."""
+        return self.arming_state in (self.DISARMED, self.DISARMED_BYPASS)
+
+    def is_armed_away(self):
+        """Return True if the system is armed away in any way."""
+        return self.arming_state in (
+            self.ARMED_AWAY,
+            self.ARMED_AWAY_BYPASS,
+            self.ARMED_AWAY_INSTANT,
+            self.ARMED_AWAY_INSTANT_BYPASS,
+        )
+
+    def is_armed_custom_bypass(self):
+        """Return True if the system is armed custom bypass in any way."""
+        return self.arming_state == self.ARMED_CUSTOM_BYPASS
+
+    def is_armed_home(self):
+        """Return True if the system is armed home/stay in any way."""
+        return self.arming_state in (
+            self.ARMED_STAY,
+            self.ARMED_STAY_BYPASS,
+            self.ARMED_STAY_INSTANT,
+            self.ARMED_STAY_INSTANT_BYPASS,
+            self.ARMED_STAY_NIGHT,
+        )
+
+    def is_armed_night(self):
+        """Return True if the system is armed night in any way."""
+        return self.arming_state == self.ARMED_STAY_NIGHT
+
+    def is_armed(self):
+        """Return True if the system is armed in any way."""
+        return (
+            self.is_armed_away()
+            or self.is_armed_custom_bypass()
+            or self.is_armed_home()
+            or self.is_armed_night()
+        )
+
+    def is_triggered_police(self):
+        """Return True if the system is triggered for police or medical."""
+        return self.arming_state == self.ALARMING
+
+    def is_triggered_fire(self):
+        """Return True if the system is triggered for fire or smoke."""
+        return self.arming_state == self.ALARMING_FIRE_SMOKE
+
+    def is_triggered_gas(self):
+        """Return True if the system is triggered for carbon monoxide."""
+        return self.arming_state == self.ALARMING_CARBON_MONOXIDE
+
+    def is_triggered(self):
+        """Return True if the system is triggered in any way."""
+        return (
+            self.is_triggered_fire()
+            or self.is_triggered_gas()
+            or self.is_triggered_police()
+        )
 
 
 class TotalConnectZone:

@@ -17,7 +17,7 @@ print('using password: ' + sys.argv[2])
 
 print('\n\n\n')
 
-tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2])
+tc = TotalConnectClient.TotalConnectClient(sys.argv[1], sys.argv[2], auto_bypass_battery=True)
 location_id = next(iter(tc.locations))
 
 print('\n\n\n')
