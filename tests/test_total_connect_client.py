@@ -26,3 +26,7 @@ class TestTotalConnectClient(unittest.TestCase):
             badclient = TotalConnectClient.TotalConnectClient(
                 USERNAME_BAD, PASSWORD_BAD
             )
+            
+            self.assertFalse(badclient.valid_credentials)
+            self.assertFalse(badclient.is_logged_in())
+            self.assertTrue(badclient.log_out())

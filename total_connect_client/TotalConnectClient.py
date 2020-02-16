@@ -62,8 +62,8 @@ class TotalConnectClient:
         self.usercode = usercode
         self.auto_bypass_low_battery = auto_bypass_battery
         self.token = False
+        self.valid_credentials = False
         self.locations = {}
-
         self.authenticate()
 
     def request(self, request, attempts=0):
@@ -80,6 +80,7 @@ class TotalConnectClient:
                         attempts
                     )
                 )
+                self.token = False
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
@@ -109,6 +110,9 @@ class TotalConnectClient:
             if response.ResultCode == self.BAD_USER_OR_PASSWORD:
                 raise AuthenticationError("total-connect-client bad user or password.")
 
+            logging.warning(f"total-connect-client unknown result code {response.ResultCode} with message: {response.ResultData}.")
+            return zeep.helpers.serialize_object(response)
+
         raise Exception(
             "total-connect-client could not execute request.  Maximum attempts tried."
         )
@@ -122,6 +126,7 @@ class TotalConnectClient:
         if response["ResultCode"] == self.SUCCESS:
             logging.info("Login Successful")
             self.token = response["SessionID"]
+            self.valid_credentials = True
             self.populate_details(response)
             return self.SUCCESS
         else:
@@ -131,6 +136,23 @@ class TotalConnectClient:
                 + ". ResultData: "
                 + str(response.ResultData)
             )
+
+    def is_logged_in(self):
+        """Return true if the client is logged into Total Connect service."""
+        return self.token is not False
+
+    def log_out(self):
+        """Return true on logout of Total Connect service, or if not logged in."""
+        if self.is_logged_in():
+            response = self.request("Logout(self.token)")
+
+            if response["ResultCode"] == self.SUCCESS:
+                logging.info("Login Successful")
+                self.token = False
+                return True
+        
+        return False
+
 
     def populate_details(self, response):
         """Populate system details."""
