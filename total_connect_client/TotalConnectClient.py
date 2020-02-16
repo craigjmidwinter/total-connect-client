@@ -75,7 +75,7 @@ class TotalConnectClient:
             if response.ResultCode == self.SUCCESS:
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
-                logging.info(
+                logging.debug(
                     "total-connect-client invalid session (attempt number {}).".format(
                         attempts
                     )
@@ -83,7 +83,7 @@ class TotalConnectClient:
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
-                logging.info(
+                logging.debug(
                     "total-connect-client connection error (attempt number {}).".format(
                         attempts
                     )
@@ -91,7 +91,7 @@ class TotalConnectClient:
                 time.sleep(3)
                 return self.request(request, attempts)
             if response.ResultCode == self.FAILED_TO_CONNECT:
-                logging.info(
+                logging.debug(
                     "total-connect-client failed to connect with security system (attempt number {}).".format(
                         attempts
                     )
@@ -99,7 +99,7 @@ class TotalConnectClient:
                 time.sleep(3)
                 return self.request(request, attempts)
             if response.ResultCode == self.AUTHENTICATION_FAILED:
-                logging.info(
+                logging.debug(
                     "total-connect-client authentication failed (attempt number {}).".format(
                         attempts
                     )
