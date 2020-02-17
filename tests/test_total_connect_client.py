@@ -14,7 +14,15 @@ class FakeGoodClient(TotalConnectClient.TotalConnectClient):
     def authenticate(self):
         """Pretend to authenticate."""
         self.token = True
-        self.valid_credentials = True
+        self._valid_credentials = True
+
+    def logout(self):
+        """Pretend to logout."""
+        if self.is_logged_in():
+            self.token = False
+            return True
+
+        return False
 
 
 class TestTotalConnectClient(unittest.TestCase):
@@ -23,6 +31,9 @@ class TestTotalConnectClient(unittest.TestCase):
     def setUp(self):
         """Test setup."""
         self.client = FakeGoodClient(USERNAME_BAD, PASSWORD_BAD)
+        self.badclient = TotalConnectClient.TotalConnectClient(
+            USERNAME_BAD, PASSWORD_BAD
+        )
 
     def tearDown(self):
         """Test cleanup."""
@@ -30,17 +41,13 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_bad_credentials(self):
         """Test bad credentials."""
-
-        with self.assertRaises(TotalConnectClient.AuthenticationError):
-            badclient = TotalConnectClient.TotalConnectClient(
-                USERNAME_BAD, PASSWORD_BAD
-            )
-
-            self.assertFalse(badclient.valid_credentials)
-            self.assertFalse(badclient.is_logged_in())
-            self.assertTrue(badclient.log_out())
+        self.assertFalse(self.badclient.is_valid_credentials())
+        self.assertFalse(self.badclient.is_logged_in())
+        self.assertFalse(self.badclient.log_out())
 
     def tests_good_client(self):
         """Tests a good client."""
-        self.assertTrue(self.client.valid_credentials)
+        self.assertTrue(self.client.is_valid_credentials())
         self.assertTrue(self.client.is_logged_in())
+        self.assertTrue(self.client.logout())
+        self.assertFalse(self.client.is_logged_in())

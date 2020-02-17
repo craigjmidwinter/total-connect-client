@@ -3,6 +3,7 @@
 import unittest
 
 import TotalConnectClient
+from TotalConnectClient import TotalConnectZone as tcz
 
 ZONE_NORMAL = {
     "ZoneDescription": "Normal",
@@ -98,21 +99,17 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def setUp(self):
         """Test setup."""
-        self.zone_normal = TotalConnectClient.TotalConnectZone(ZONE_NORMAL)
-        self.zone_bypassed = TotalConnectClient.TotalConnectZone(ZONE_BYPASSED)
-        self.zone_faulted = TotalConnectClient.TotalConnectZone(ZONE_FAULTED)
-        self.zone_tampered = TotalConnectClient.TotalConnectZone(ZONE_TAMPERED)
-        self.zone_low_battery = TotalConnectClient.TotalConnectZone(ZONE_LOW_BATTERY)
-        self.zone_bypassed_low_battery = TotalConnectClient.TotalConnectZone(
-            ZONE_BYPASSED_LOW_BATTERY
-        )
-        self.zone_trouble_low_battery = TotalConnectClient.TotalConnectZone(
-            ZONE_TROUBLE_LOW_BATTERY
-        )
-        self.zone_triggered = TotalConnectClient.TotalConnectZone(ZONE_TRIGGERED)
-        self.zone_button = TotalConnectClient.TotalConnectZone(ZONE_BUTTON)
-        self.zone_smoke = TotalConnectClient.TotalConnectZone(ZONE_SMOKE)
-        self.zone_gas = TotalConnectClient.TotalConnectZone(ZONE_GAS)
+        self.zone_normal = tcz(ZONE_NORMAL)
+        self.zone_bypassed = tcz(ZONE_BYPASSED)
+        self.zone_faulted = tcz(ZONE_FAULTED)
+        self.zone_tampered = tcz(ZONE_TAMPERED)
+        self.zone_low_battery = tcz(ZONE_LOW_BATTERY)
+        self.zone_bypassed_low_battery = tcz(ZONE_BYPASSED_LOW_BATTERY)
+        self.zone_trouble_low_battery = tcz(ZONE_TROUBLE_LOW_BATTERY)
+        self.zone_triggered = tcz(ZONE_TRIGGERED)
+        self.zone_button = tcz(ZONE_BUTTON)
+        self.zone_smoke = tcz(ZONE_SMOKE)
+        self.zone_gas = tcz(ZONE_GAS)
 
     def tearDown(self):
         """Tear down."""

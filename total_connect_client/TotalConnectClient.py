@@ -62,7 +62,9 @@ class TotalConnectClient:
         self.usercode = usercode
         self.auto_bypass_low_battery = auto_bypass_battery
         self.token = False
-        self.valid_credentials = False
+        self._valid_credentials = (
+            None  # None at start, True after login, False if login fails
+        )
         self.locations = {}
         self.authenticate()
 
@@ -89,21 +91,21 @@ class TotalConnectClient:
                 return self.request(request, attempts)
             if response.ResultCode == self.FAILED_TO_CONNECT:
                 logging.debug(
-                    f"total-connect-client failed to connect with security system (attempt number {attempts})."
+                    f"total-connect-client failed to connect with security system "
+                    f"(attempt number {attempts})."
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
-            if response.ResultCode == self.AUTHENTICATION_FAILED:
-                logging.debug(
-                    f"total-connect-client authentication failed (attempt number {attempts})."
-                )
-                time.sleep(3)
-                return self.request(request, attempts)
-            if response.ResultCode == self.BAD_USER_OR_PASSWORD:
-                raise AuthenticationError("total-connect-client bad user or password.")
+            if response.ResultCode in (
+                self.BAD_USER_OR_PASSWORD,
+                self.AUTHENTICATION_FAILED,
+            ):
+                logging.debug("total-connect-client authentication failed.")
+                return zeep.helpers.serialize_object(response)
 
             logging.warning(
-                f"total-connect-client unknown result code {response.ResultCode} with message: {response.ResultData}."
+                f"total-connect-client unknown result code "
+                f"{response.ResultCode} with message: {response.ResultData}."
             )
             return zeep.helpers.serialize_object(response)
 
@@ -112,21 +114,34 @@ class TotalConnectClient:
         )
 
     def authenticate(self):
-        """Login to the system."""
-        response = self.request(
-            "LoginAndGetSessionDetails(self.username, self.password, self.applicationId, self.applicationVersion)"
-        )
+        """Login to the system.  Return true if successful."""
+        if self.is_logged_in() is True:
+            logging.debug("total-connect-client attempting login when logged in.")
+            return True
 
-        if response["ResultCode"] == self.SUCCESS:
-            logging.debug("Login Successful")
-            self.token = response["SessionID"]
-            self.valid_credentials = True
-            self.populate_details(response)
-            return self.SUCCESS
+        if self._valid_credentials is not False:
+            response = self.request(
+                "LoginAndGetSessionDetails(self.username, self.password, "
+                "self.applicationId, self.applicationVersion)"
+            )
 
-        raise AuthenticationError(
-            f"Unable to authenticate with Total Connect. ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
+            if response["ResultCode"] == self.SUCCESS:
+                logging.debug("Login Successful")
+                self.token = response["SessionID"]
+                self._valid_credentials = True
+                self.populate_details(response)
+                return True
+
+            self._valid_credentials = False
+            logging.error(
+                f"Unable to authenticate with Total Connect. ResultCode: "
+                f"{response['ResultCode']}. ResultData: {response['ResultData']}"
+            )
+
+        logging.debug(
+            "total-connect-client attempting login with known bad credentials."
         )
+        return False
 
     def is_logged_in(self):
         """Return true if the client is logged into Total Connect service."""
@@ -143,6 +158,10 @@ class TotalConnectClient:
                 return True
 
         return False
+
+    def is_valid_credentials(self):
+        """Return true if the credentials are known to be valid."""
+        return self._valid_credentials is True
 
     def populate_details(self, response):
         """Populate system details."""
@@ -212,7 +231,8 @@ class TotalConnectClient:
 
         if response.ResultCode not in (self.ARM_SUCCESS, self.SUCCESS):
             raise Exception(
-                f"Could not arm system. ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
+                f"Could not arm system. "
+                f"ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
             )
 
         return self.SUCCESS
@@ -225,7 +245,8 @@ class TotalConnectClient:
 
         if result["ResultCode"] != self.SUCCESS:
             logging.error(
-                f"Could not retrieve panel meta data. ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
+                f"Could not retrieve panel meta data. "
+                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
             )
 
         if result is not None:
@@ -277,7 +298,8 @@ class TotalConnectClient:
             logging.info("System Disarmed")
         else:
             raise Exception(
-                f"Could not disarm system. ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
+                f"Could not disarm system. "
+                f"ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
             )
 
         return self.SUCCESS
@@ -347,7 +369,8 @@ class TotalConnectClient:
                             ] = TotalConnectZone(zone)
         else:
             logging.error(
-                f"Could not get zone details. ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
+                f"Could not get zone details. "
+                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
             )
 
         return self.SUCCESS
