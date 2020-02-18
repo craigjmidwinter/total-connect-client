@@ -10,7 +10,6 @@ LOCATION_INFO_BASIC_NORMAL = {
     "SecurityDeviceID": "987654",
 }
 
-
 PARTITION_DISARMED = {
     "PartitionID": "1",
     "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
@@ -50,13 +49,13 @@ class TestTotalConnectLocation(unittest.TestCase):
     """Test TotalConnectLocation."""
 
     def setUp(self):
-        """Setup."""
+        """Set up for location testing."""
         self.auto_bypass_low_battery = False
         self.location_normal = TotalConnectClient.TotalConnectLocation(
             LOCATION_INFO_BASIC_NORMAL, self
         )
-#        self.location_normal.set_status(METADATA_NORMAL)
         """having trouble setting up test structure for METADATA_NORMAL"""
+        #        self.location_normal.set_status(METADATA_NORMAL)
 
     def tearDown(self):
         """Tear down."""
@@ -86,7 +85,7 @@ class TestTotalConnectLocation(unittest.TestCase):
         """Normal zone."""
         self.assertFalse(self.location_normal.is_arming())
         self.assertFalse(self.location_normal.is_disarming())
-#        self.assertTrue(self.location_normal.is_disarmed())
+        #        self.assertTrue(self.location_normal.is_disarmed())
         self.assertFalse(self.location_normal.is_armed_away())
         self.assertFalse(self.location_normal.is_armed_custom_bypass())
         self.assertFalse(self.location_normal.is_armed_home())

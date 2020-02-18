@@ -62,8 +62,10 @@ class TotalConnectClient:
         self.usercode = usercode
         self.auto_bypass_low_battery = auto_bypass_battery
         self.token = False
+        self._valid_credentials = (
+            None  # None at start, True after login, False if login fails
+        )
         self.locations = {}
-
         self.authenticate()
 
     def request(self, request, attempts=0):
@@ -75,67 +77,94 @@ class TotalConnectClient:
             if response.ResultCode == self.SUCCESS:
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
-                logging.info(
-                    "total-connect-client invalid session (attempt number {}).".format(
-                        attempts
-                    )
+                logging.debug(
+                    f"total-connect-client invalid session (attempt number {attempts})."
                 )
+                self.token = False
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
-                logging.info(
-                    "total-connect-client connection error (attempt number {}).".format(
-                        attempts
-                    )
+                logging.debug(
+                    f"total-connect-client connection error (attempt number {attempts})."
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
             if response.ResultCode == self.FAILED_TO_CONNECT:
-                logging.info(
-                    "total-connect-client failed to connect with security system (attempt number {}).".format(
-                        attempts
-                    )
+                logging.debug(
+                    f"total-connect-client failed to connect with security system "
+                    f"(attempt number {attempts})."
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
-            if response.ResultCode == self.AUTHENTICATION_FAILED:
-                logging.info(
-                    "total-connect-client authentication failed (attempt number {}).".format(
-                        attempts
-                    )
-                )
-                time.sleep(3)
-                return self.request(request, attempts)
-            if response.ResultCode == self.BAD_USER_OR_PASSWORD:
-                raise AuthenticationError("total-connect-client bad user or password.")
+            if response.ResultCode in (
+                self.BAD_USER_OR_PASSWORD,
+                self.AUTHENTICATION_FAILED,
+            ):
+                logging.debug("total-connect-client authentication failed.")
+                return zeep.helpers.serialize_object(response)
+
+            logging.warning(
+                f"total-connect-client unknown result code "
+                f"{response.ResultCode} with message: {response.ResultData}."
+            )
+            return zeep.helpers.serialize_object(response)
 
         raise Exception(
             "total-connect-client could not execute request.  Maximum attempts tried."
         )
 
     def authenticate(self):
-        """Login to the system."""
-        response = self.request(
-            "LoginAndGetSessionDetails(self.username, self.password, self.applicationId, self.applicationVersion)"
-        )
+        """Login to the system.  Return true if successful."""
+        if self.is_logged_in() is True:
+            logging.debug("total-connect-client attempting login when logged in.")
+            return True
 
-        if response["ResultCode"] == self.SUCCESS:
-            logging.info("Login Successful")
-            self.token = response["SessionID"]
-            self.populate_details(response)
-            return self.SUCCESS
-        else:
-            raise AuthenticationError(
-                "Unable to authenticate with Total Connect. ResultCode: "
-                + str(response.ResultCode)
-                + ". ResultData: "
-                + str(response.ResultData)
+        if self._valid_credentials is not False:
+            response = self.request(
+                "LoginAndGetSessionDetails(self.username, self.password, "
+                "self.applicationId, self.applicationVersion)"
             )
+
+            if response["ResultCode"] == self.SUCCESS:
+                logging.debug("Login Successful")
+                self.token = response["SessionID"]
+                self._valid_credentials = True
+                self.populate_details(response)
+                return True
+
+            self._valid_credentials = False
+            logging.error(
+                f"Unable to authenticate with Total Connect. ResultCode: "
+                f"{response['ResultCode']}. ResultData: {response['ResultData']}"
+            )
+
+        logging.debug(
+            "total-connect-client attempting login with known bad credentials."
+        )
+        return False
+
+    def is_logged_in(self):
+        """Return true if the client is logged into Total Connect service."""
+        return self.token is not False
+
+    def log_out(self):
+        """Return true on logout of Total Connect service, or if not logged in."""
+        if self.is_logged_in():
+            response = self.request("Logout(self.token)")
+
+            if response["ResultCode"] == self.SUCCESS:
+                logging.info("Logout Successful")
+                self.token = False
+                return True
+
+        return False
+
+    def is_valid_credentials(self):
+        """Return true if the credentials are known to be valid."""
+        return self._valid_credentials is True
 
     def populate_details(self, response):
         """Populate system details."""
-        logging.info("total-connect-client populating locations")
-
         # not currently using info: ModuleFlags, UserInfo
 
         location_data = response["Locations"]["LocationInfoBasic"]
@@ -200,16 +229,10 @@ class TotalConnectClient:
                 self.usercode,
             )
 
-        logging.info("Arm Result Code:" + str(response.ResultCode))
-
-        if response.ResultCode in (self.ARM_SUCCESS, self.SUCCESS):
-            logging.info("System Armed")
-        else:
+        if response.ResultCode not in (self.ARM_SUCCESS, self.SUCCESS):
             raise Exception(
-                "Could not arm system. ResultCode: "
-                + str(response.ResultCode)
-                + ". ResultData: "
-                + str(response.ResultData)
+                f"Could not arm system. "
+                f"ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
             )
 
         return self.SUCCESS
@@ -217,17 +240,13 @@ class TotalConnectClient:
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
         result = self.request(
-            "GetPanelMetaDataAndFullStatus(self.token, "
-            + str(location_id)
-            + ", 0, 0, 1)"
+            f"GetPanelMetaDataAndFullStatus(self.token, {location_id}, 0, 0, 1)"
         )
 
         if result["ResultCode"] != self.SUCCESS:
-            raise Exception(
-                "Could not retrieve panel meta data. ResultCode: "
-                + str(result["ResultCode"])
-                + ". ResultData: "
-                + str(result["ResultData"])
+            logging.error(
+                f"Could not retrieve panel meta data. "
+                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
             )
 
         if result is not None:
@@ -235,7 +254,7 @@ class TotalConnectClient:
             self.locations[location_id].set_status(result["PanelMetadataAndStatus"])
 
         else:
-            raise Exception("Panel_meta_data is empty.")
+            logging.warning("Panel_meta_data is empty.")
 
         return result
 
@@ -243,7 +262,7 @@ class TotalConnectClient:
         """Get status of a zone."""
         z = self.locations[location_id].zones.get(zone_id)
         if z is None:
-            logging.error("Zone {} does not exist.".format(zone_id))
+            logging.error(f"Zone {zone_id} does not exist.")
             return None
 
         return z.status
@@ -271,7 +290,7 @@ class TotalConnectClient:
                 self.usercode,
             )
 
-        logging.info("Disarm Result Code:" + str(response.ResultCode))
+        logging.info(f"Disarm Result Code: {response.ResultCode}.")
 
         if (response.ResultCode == self.DISARM_SUCCESS) or (
             response.ResultCode == self.SUCCESS
@@ -279,10 +298,8 @@ class TotalConnectClient:
             logging.info("System Disarmed")
         else:
             raise Exception(
-                "Could not disarm system. ResultCode: "
-                + str(response.ResultCode)
-                + ". ResultData: "
-                + str(response.ResultData)
+                f"Could not disarm system. "
+                f"ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
             )
 
         return self.SUCCESS
@@ -307,7 +324,7 @@ class TotalConnectClient:
                 self.usercode,
             )
 
-        logging.info("Bypass Result Code: {}".format(response.ResultCode))
+        logging.info(f"Bypass Result Code: {response.ResultCode}.")
 
         if response.ResultCode == ZONE_BYPASS_SUCCESS:
             self.locations[location_id].zones[zone_id].bypass()
@@ -352,9 +369,8 @@ class TotalConnectClient:
                             ] = TotalConnectZone(zone)
         else:
             logging.error(
-                "Could not get zone details. ResultCode: {}. ResultData: {}.".format(
-                    result["ResultCode"], result["ResultData"]
-                )
+                f"Could not get zone details. "
+                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
             )
 
         return self.SUCCESS
@@ -412,7 +428,7 @@ class TotalConnectLocation:
         """Update status based on a 'PanelMetadataAndStatus'."""
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
-        self.is_cover_tampered = data.get("IsCoverTampered")
+        self.cover_tampered = data.get("IsCoverTampered")
         self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
         self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
         self.arming_state = data["Partitions"]["PartitionInfo"][0]["ArmingState"]
@@ -452,7 +468,7 @@ class TotalConnectLocation:
         """Return true if the system is in the process of disarming."""
         return self.arming_state == self.DISARMING
 
-    def is_pending(self, location_id):
+    def is_pending(self):
         """Return true if the system is pending an action."""
         return self.is_disarming() or self.is_arming()
 
