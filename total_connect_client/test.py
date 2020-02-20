@@ -40,3 +40,6 @@ result = tc.request(
 )
 print(f"Result Code: {result['ResultCode']}\n")
 pprint(result)
+
+print("\n\n\n")
+tc.arm_custom(1,location_id)

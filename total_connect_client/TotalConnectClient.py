@@ -237,6 +237,41 @@ class TotalConnectClient:
 
         return self.SUCCESS
 
+    def arm_custom(self, arm_type, location_id):
+        """Arm custom the system.  Return true if successul."""
+
+        ZONE_INFO = {
+            "ZoneID": "12",
+            "ByPass": False,
+            "ZoneStatus": ZONE_STATUS_NORMAL,
+        }
+
+        ZONES_LIST = {}
+        ZONES_LIST[0] = ZONE_INFO
+
+        CUSTOM_ARM_SETTINGS = {
+            "ArmMode": "1",
+            "ArmDelay": "5",
+            "ZonesList": ZONES_LIST,
+        }
+
+        result = self.request(
+            f"CustomArmSecuritySystem(self.token, "
+            f"{location_id}, "
+            f"{self.locations[location_id].security_device_id}, "
+            f"{arm_type}, {self.usercode}, "
+            f"{CUSTOM_ARM_SETTINGS})"
+        )
+
+        if result["ResultCode"] != self.SUCCESS:
+            logging.error(
+                f"Could not arm custom. ResultCode: {result['ResultCode']}. "
+                f"ResultData: {result['ResultData']}"
+            )
+            return False
+
+        return True
+
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
         result = self.request(
