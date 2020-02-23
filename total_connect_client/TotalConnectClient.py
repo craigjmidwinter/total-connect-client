@@ -279,6 +279,24 @@ class TotalConnectClient:
 
         return True
 
+    def get_custom_arm_settings(self, location_id):
+        """Get custom arm settings.  Return true if successul."""
+
+        result = self.request(
+            f"GetCustomArmSettings(self.token, "
+            f"{location_id}, "
+            f"{self.locations[location_id].security_device_id})"
+        )
+
+        if result["ResultCode"] != self.SUCCESS:
+            logging.error(
+                f"Could not arm custom. ResultCode: {result['ResultCode']}. "
+                f"ResultData: {result['ResultData']}"
+            )
+            return False
+
+        return result
+
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
         result = self.request(
