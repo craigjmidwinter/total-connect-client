@@ -7,18 +7,21 @@ import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
-if len(sys.argv) != 3:
-    print("usage:  python3 test.py username password \n")
+if len(sys.argv) != 4:
+    print("usage:  python3 test.py username password usercode \n")
+    pring("usercode = -1 is a good default")
     sys.exit()
 
 
 print(f"using username: {sys.argv[1]}")
 print(f"using password: {sys.argv[2]}")
+print(f"using usercode: {sys.argv[3]}")
+
 
 print("\n\n\n")
 
 tc = TotalConnectClient.TotalConnectClient(
-    sys.argv[1], sys.argv[2], auto_bypass_battery=True
+    username=sys.argv[1], password=sys.argv[2], usercode=sys.argv[3], auto_bypass_battery=True
 )
 location_id = next(iter(tc.locations))
 
