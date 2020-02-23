@@ -270,6 +270,13 @@ class TotalConnectClient:
             )
             return False
 
+        # remove after this is all working
+        print(
+            f"arm_custom ResultCode: {result['ResultCode']}. "
+            f"arm_custom ResultData: {result['ResultData']}"
+        )
+
+
         return True
 
     def get_panel_meta_data(self, location_id):
