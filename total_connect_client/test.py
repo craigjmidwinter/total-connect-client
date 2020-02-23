@@ -38,11 +38,8 @@ print(tc.locations[location_id])
 for z in tc.locations[location_id].zones:
     print(tc.locations[location_id].zones[z])
 
-result = tc.request(
-    "GetZonesListInStateEx_V1(self.token, " + str(location_id) + ', {"int": ["1"]}, 0)'
-)
-print(f"Result Code: {result['ResultCode']}\n")
-pprint(result)
+print("\nCustomArmSettings\n\n")
+pprint(tc.get_custom_arm_settings(location_id))
 
 print("\n\n\n")
 tc.arm_custom(1,location_id)
