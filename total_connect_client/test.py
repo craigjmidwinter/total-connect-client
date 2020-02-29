@@ -9,7 +9,7 @@ logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
 if len(sys.argv) != 4:
     print("usage:  python3 test.py username password usercode \n")
-    pring("usercode = -1 is a good default")
+    print("usercode = -1 is a good default")
     sys.exit()
 
 
@@ -21,7 +21,10 @@ print(f"using usercode: {sys.argv[3]}")
 print("\n\n\n")
 
 tc = TotalConnectClient.TotalConnectClient(
-    username=sys.argv[1], password=sys.argv[2], usercode=sys.argv[3], auto_bypass_battery=True
+    username=sys.argv[1],
+    password=sys.argv[2],
+    usercode=sys.argv[3],
+    auto_bypass_battery=True,
 )
 location_id = next(iter(tc.locations))
 
@@ -42,4 +45,4 @@ print("\nCustomArmSettings\n\n")
 pprint(tc.get_custom_arm_settings(location_id))
 
 print("\n\n\n")
-tc.arm_custom(1,location_id)
+tc.arm_custom(1, location_id)

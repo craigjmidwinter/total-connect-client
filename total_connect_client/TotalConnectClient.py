@@ -45,6 +45,7 @@ class TotalConnectClient:
     DISARM_SUCCESS = 4500
     CONNECTION_ERROR = 4101
     FAILED_TO_CONNECT = -4104
+    USER_CODE_UNAVAILABLE = -4114
     BAD_USER_OR_PASSWORD = -50004
     AUTHENTICATION_FAILED = -100
 
@@ -99,6 +100,7 @@ class TotalConnectClient:
             if response.ResultCode in (
                 self.BAD_USER_OR_PASSWORD,
                 self.AUTHENTICATION_FAILED,
+                self.USER_CODE_UNAVAILABLE,
             ):
                 logging.debug("total-connect-client authentication failed.")
                 return zeep.helpers.serialize_object(response)
@@ -239,7 +241,6 @@ class TotalConnectClient:
 
     def arm_custom(self, arm_type, location_id):
         """Arm custom the system.  Return true if successul."""
-
         ZONE_INFO = {
             "ZoneID": "12",
             "ByPass": False,
@@ -276,12 +277,10 @@ class TotalConnectClient:
             f"arm_custom ResultData: {result['ResultData']}"
         )
 
-
         return True
 
     def get_custom_arm_settings(self, location_id):
         """Get custom arm settings.  Return true if successul."""
-
         result = self.request(
             f"GetCustomArmSettings(self.token, "
             f"{location_id}, "
