@@ -48,6 +48,7 @@ class TotalConnectClient:
     USER_CODE_UNAVAILABLE = -4114
     BAD_USER_OR_PASSWORD = -50004
     AUTHENTICATION_FAILED = -100
+    FEATURE_NOT_SUPPORTED = -120
 
     MAX_REQUEST_ATTEMPTS = 10
 
@@ -66,6 +67,8 @@ class TotalConnectClient:
         self._valid_credentials = (
             None  # None at start, True after login, False if login fails
         )
+        self._module_flags = None
+        self._user_info = None
         self.locations = {}
         self.authenticate()
 
@@ -75,7 +78,7 @@ class TotalConnectClient:
             attempts += 1
             response = eval(self.soap_base + request)
 
-            if response.ResultCode == self.SUCCESS:
+            if response.ResultCode in (self.SUCCESS, self.FEATURE_NOT_SUPPORTED,):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
                 logging.debug(
@@ -170,6 +173,9 @@ class TotalConnectClient:
         # not currently using info: ModuleFlags, UserInfo
 
         location_data = response["Locations"]["LocationInfoBasic"]
+
+        self._module_flags = response["ModuleFlags"]
+        self._user_info = response["UserInfo"]
 
         for location in location_data:
             location_id = location["LocationID"]
@@ -398,12 +404,19 @@ class TotalConnectClient:
         return self.SUCCESS
 
     def get_zone_details(self, location_id):
-        """Get Zone details."""
+        """Get Zone details. Return True if successful."""
         result = self.request(
             "GetZonesListInStateEx_V1(self.token, "
             + str(location_id)
             + ', {"int": ["1"]}, 0)'
         )
+
+        if result["ResultCode"] == self.FEATURE_NOT_SUPPORTED:
+            logging.warning(
+                "Getting Zone Details is a feature not supported by "
+                "your Total Connect account."
+            )
+            return False
 
         if result["ResultCode"] != self.SUCCESS:
             raise Exception(
@@ -412,6 +425,7 @@ class TotalConnectClient:
                 + ". ResultData: "
                 + str(result["ResultData"])
             )
+            return False
 
         zone_status = result.get("ZoneStatus")
 
@@ -431,8 +445,9 @@ class TotalConnectClient:
                 f"Could not get zone details. "
                 f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
             )
+            return False
 
-        return self.SUCCESS
+        return True
 
 
 class TotalConnectLocation:
@@ -458,10 +473,12 @@ class TotalConnectLocation:
 
     def __init__(self, location_info_basic, parent):
         """Initialize based on a 'LocationInfoBasic'."""
-        # currently not using info from LocationModuleFlags, DeviceList
-        self.location_id = location_info_basic.get("LocationID")
-        self.location_name = location_info_basic.get("LocationName")
-        self.security_device_id = location_info_basic.get("SecurityDeviceID")
+        self.location_id = location_info_basic["LocationID"]
+        self.location_name = location_info_basic["LocationName"]
+        self._photo_url = location_info_basic["PhotoURL"]
+        self._module_flags = location_info_basic["LocationModuleFlags"]
+        self.security_device_id = location_info_basic["SecurityDeviceID"]
+        self._device_list = location_info_basic["DeviceList"]
         self.parent = parent
         self.ac_loss = None
         self.low_battery = None
@@ -473,15 +490,18 @@ class TotalConnectLocation:
 
     def __str__(self):
         """Return a text string that is printable."""
-        text = "LocationID: {}\n".format(self.location_id)
-        text = text + "LocationName: {}\n".format(self.location_name)
-        text = text + "SecurityDeviceID: {}\n".format(self.security_device_id)
-        text = text + "AcLoss: {}\n".format(self.ac_loss)
-        text = text + "LowBattery: {}\n".format(self.low_battery)
-        text = text + "IsCoverTampered: {}\n".format(self.cover_tampered)
-        text = text + "Arming State: {}\n".format(self.arming_state)
-
-        return text
+        return (
+            f"LocationID: {self.location_id}\n"
+            f"LocationName: {self.location_name}\n"
+            f"PhotoURL: {self._photo_url}\n"
+            f"LocationModuleFlags: {self._module_flags}\n"
+            f"SecurityDeviceID: {self.security_device_id}\n"
+            f"DeviceList: {self._device_list}\n"
+            f"AcLoss: {self.ac_loss}\n"
+            f"LowBattery: {self.low_battery}\n"
+            f"IsCoverTampered: {self.cover_tampered}\n"
+            f"Arming State: {self.arming_state}\n"
+        )
 
     def set_status(self, data):
         """Update status based on a 'PanelMetadataAndStatus'."""

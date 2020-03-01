@@ -4,8 +4,7 @@ import unittest
 
 import TotalConnectClient
 
-PASSWORD_BAD = "none"
-USERNAME_BAD = "none"
+from const import PASSWORD_BAD, USERNAME_BAD
 
 
 class FakeGoodClient(TotalConnectClient.TotalConnectClient):

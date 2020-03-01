@@ -4,11 +4,7 @@ import unittest
 
 import TotalConnectClient
 
-LOCATION_INFO_BASIC_NORMAL = {
-    "LocationID": "123456",
-    "LocationName": "Home",
-    "SecurityDeviceID": "987654",
-}
+from const import LOCATION_INFO_BASIC_NORMAL
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
