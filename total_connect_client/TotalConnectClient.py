@@ -419,11 +419,9 @@ class TotalConnectClient:
             return False
 
         if result["ResultCode"] != self.SUCCESS:
-            raise Exception(
-                "Could not retrieve zone detail data. ResultCode: "
-                + str(result["ResultCode"])
-                + ". ResultData: "
-                + str(result["ResultData"])
+            logging.error(
+                f"Could not get zone details. "
+                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
             )
             return False
 
