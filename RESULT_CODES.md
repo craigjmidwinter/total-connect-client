@@ -10,6 +10,7 @@ ResultCode | ResultData | Notes
 0 | SUCCESS | 
 -100 | Authentication failed
 -102 | INVALID_SESSION |  
+-120 | Feature Not Supported | When calling get_zone_details()
 -4002 | The specified location is not valid |
 -4007 | NoAutomationDeviceFoundAtSpecifiedLocationException | 
 -4104 | Failed to Connect with Security System | 
