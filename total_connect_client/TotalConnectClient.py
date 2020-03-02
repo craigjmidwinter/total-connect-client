@@ -426,25 +426,13 @@ class TotalConnectClient:
             return False
 
         zone_status = result.get("ZoneStatus")
-
         if zone_status is not None:
-            zones = zone_status.get("Zones")
-            if zones is not None:
-                zone_info = zones.get("ZoneStatusInfoWithPartitionId")
-                if zone_info is not None:
-                    self.locations[location_id].zones.clear()
-                    for zone in zone_info:
-                        if zone is not None:
-                            self.locations[location_id].zones[
-                                zone.get("ZoneID")
-                            ] = TotalConnectZone(zone)
-        else:
-            logging.error(
-                f"Could not get zone details. "
-                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
-            )
-            return False
+            return self.locations[location_id].set_zone_details(zone_status)
 
+        logging.error(
+            f"Could not get zone details. "
+            f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
+        )
         return True
 
 
@@ -501,8 +489,30 @@ class TotalConnectLocation:
             f"Arming State: {self.arming_state}\n"
         )
 
+    def set_zone_details(self, zone_status):
+        """Set status based on GetZonesListInStateEx_V1.  
+           Return true if successful.
+           """
+        zones = zone_status.get("Zones")
+        if zones is None:
+            return False
+
+        zone_info = zones.get("ZoneStatusInfoWithPartitionId")
+        if zone_info is None:
+            return False
+
+        # probabaly shouldn't clear zones
+        # self.locations[location_id].zones.clear()
+
+        for zone in zone_info:
+            self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
+
+        return True
+
     def set_status(self, data):
-        """Update status based on a 'PanelMetadataAndStatus'."""
+        """Update status based on a 'PanelMetadataAndStatus'.
+           Return true if successful.
+           """
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
         self.cover_tampered = data.get("IsCoverTampered")
@@ -511,19 +521,26 @@ class TotalConnectLocation:
         self.arming_state = data["Partitions"]["PartitionInfo"][0]["ArmingState"]
 
         zones = data.get("Zones")
-        if zones is not None:
-            zone_info = zones.get("ZoneInfo")
-            if zone_info is not None:
-                for zone in zone_info:
-                    if zone is not None:
-                        zone_id = zone.get("ZoneID")
-                        if zone_id is not None:
-                            self.zones[zone_id].update(zone)
-                            if (
-                                self.zones[zone_id].is_low_battery()
-                                and self.parent.auto_bypass_low_battery
-                            ):
-                                self.parent.zone_bypass(zone_id, self.location_id)
+        if zones is None:
+            return False
+
+        zone_info = zones.get("ZoneInfo")
+        if zone_info is None:
+            return False
+
+        for zone in zone_info:
+            if zone["ZoneID"] in self.zones:
+                self.zones[zone["ZoneID"]].update(zone)
+            else:
+                self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
+
+            if (
+                self.zones[zone["ZoneID"]].is_low_battery()
+                and self.parent.auto_bypass_low_battery
+            ):
+                self.parent.zone_bypass(zone["ZoneID"], self.location_id)
+
+        return True
 
     def is_low_battery(self):
         """Return true if low battery."""
