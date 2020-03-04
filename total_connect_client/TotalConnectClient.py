@@ -5,6 +5,9 @@ import time
 
 import zeep
 
+from user import total_connect_user
+
+
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
@@ -68,6 +71,7 @@ class TotalConnectClient:
             None  # None at start, True after login, False if login fails
         )
         self._module_flags = None
+        self._user = None
         self._user_info = None
         self.locations = {}
         self.authenticate()
@@ -176,6 +180,8 @@ class TotalConnectClient:
 
         self._module_flags = response["ModuleFlags"]
         self._user_info = response["UserInfo"]
+
+        self._user = total_connect_user(response["UserInfo"])
 
         for location in location_data:
             location_id = location["LocationID"]
