@@ -37,7 +37,6 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_arm(self):
         """Test arm."""
-
         with patch.object(FakeClient, "request", return_value=self.response):
 
             # Test with all zones closed - expecting ARM_SUCCESS
