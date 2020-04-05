@@ -71,7 +71,6 @@ class TotalConnectClient:
         )
         self._module_flags = None
         self._user = None
-        self._user_info = None
         self.locations = {}
         self.authenticate()
 
@@ -178,7 +177,6 @@ class TotalConnectClient:
         location_data = response["Locations"]["LocationInfoBasic"]
 
         self._module_flags = response["ModuleFlags"]
-        self._user_info = response["UserInfo"]
 
         self._user = total_connect_user(response["UserInfo"])
 
@@ -479,9 +477,7 @@ class TotalConnectLocation:
         )
 
     def set_zone_details(self, zone_status):
-        """Set status based on GetZonesListInStateEx_V1.  
-           Return true if successful.
-           """
+        """Update from GetZonesListInStateEx_V1. Return true if successful."""
         zones = zone_status.get("Zones")
         if zones is None:
             return False
@@ -499,9 +495,7 @@ class TotalConnectLocation:
         return True
 
     def set_status(self, data):
-        """Update status based on a 'PanelMetadataAndStatus'.
-           Return true if successful.
-           """
+        """Update from 'PanelMetadataAndStatus'. Return true on success."""
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
         self.cover_tampered = data.get("IsCoverTampered")
@@ -700,10 +694,7 @@ class total_connect_user:
     """User for Total Connect."""
 
     def __init__(self, user_info):
-        """Initialize based on UserInfo.
-           Returned from LoginAndGetSessionDetails.
-        """
-
+        """Initialize based on UserInfo from LoginAndGetSessionDetails."""
         self._user_id = user_info["UserID"]
         self._username = user_info["Username"]
 
