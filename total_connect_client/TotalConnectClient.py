@@ -47,6 +47,7 @@ class TotalConnectClient:
     CONNECTION_ERROR = 4101
     FAILED_TO_CONNECT = -4104
     USER_CODE_UNAVAILABLE = -4114
+    COMMAND_FAILED = -4502
     BAD_USER_OR_PASSWORD = -50004
     AUTHENTICATION_FAILED = -100
     FEATURE_NOT_SUPPORTED = -120
@@ -70,7 +71,6 @@ class TotalConnectClient:
         )
         self._module_flags = None
         self._user = None
-        self._user_info = None
         self.locations = {}
         self.authenticate()
 
@@ -177,7 +177,6 @@ class TotalConnectClient:
         location_data = response["Locations"]["LocationInfoBasic"]
 
         self._module_flags = response["ModuleFlags"]
-        self._user_info = response["UserInfo"]
 
         self._user = total_connect_user(response["UserInfo"])
 
@@ -203,51 +202,47 @@ class TotalConnectClient:
 
     def arm_away(self, location_id):
         """Arm the system (Away)."""
-        self.arm(ARM_TYPE_AWAY, location_id)
+        return self.arm(ARM_TYPE_AWAY, location_id)
 
     def arm_stay(self, location_id):
         """Arm the system (Stay)."""
-        self.arm(ARM_TYPE_STAY, location_id)
+        return self.arm(ARM_TYPE_STAY, location_id)
 
     def arm_stay_instant(self, location_id):
         """Arm the system (Stay - Instant)."""
-        self.arm(ARM_TYPE_STAY_INSTANT, location_id)
+        return self.arm(ARM_TYPE_STAY_INSTANT, location_id)
 
     def arm_away_instant(self, location_id):
         """Arm the system (Away - Instant)."""
-        self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
+        return self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
 
     def arm_stay_night(self, location_id):
         """Arm the system (Stay - Night)."""
-        self.arm(ARM_TYPE_STAY_NIGHT, location_id)
+        return self.arm(ARM_TYPE_STAY_NIGHT, location_id)
 
     def arm(self, arm_type, location_id):
-        """Arm the system."""
-        response = self.soapClient.service.ArmSecuritySystem(
-            self.token,
-            location_id,
-            self.locations[location_id].security_device_id,
-            arm_type,
-            self.usercode,
+        """Arm the system. Return True if successful."""
+        result = self.request(
+            f"ArmSecuritySystem(self.token, "
+            f"{location_id}, "
+            f"{self.locations[location_id].security_device_id}, "
+            f"{arm_type}, "
+            f"{self.usercode})"
         )
 
-        if response.ResultCode == self.INVALID_SESSION:
-            self.authenticate()
-            response = self.soapClient.service.ArmSecuritySystem(
-                self.token,
-                location_id,
-                self.locations[location_id].security_device_id,
-                arm_type,
-                self.usercode,
-            )
+        if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
+            return True
 
-        if response.ResultCode not in (self.ARM_SUCCESS, self.SUCCESS):
-            raise Exception(
-                f"Could not arm system. "
-                f"ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
-            )
+        if result["ResultCode"] == self.COMMAND_FAILED:
+            logging.warning("Could not arm system. Check if a zone is faulted.")
+            return False
 
-        return self.SUCCESS
+        logging.error(
+            f"Could not arm system. "
+            f"ResultCode: {result['ResultCode']}. "
+            f"ResultData: {result['ResultData']}"
+        )
+        return False
 
     def arm_custom(self, arm_type, location_id):
         """Arm custom the system.  Return true if successul."""
@@ -342,36 +337,24 @@ class TotalConnectClient:
         return self.locations[location_id].arming_state
 
     def disarm(self, location_id):
-        """Disarm the system."""
-        response = self.soapClient.service.DisarmSecuritySystem(
-            self.token,
-            location_id,
-            self.locations[location_id].security_device_id,
-            self.usercode,
+        """Disarm the system. Return True if successful."""
+        result = self.request(
+            f"DisarmSecuritySystem(self.token, "
+            f"{location_id}, "
+            f"{self.locations[location_id].security_device_id}, "
+            f"{self.usercode})"
         )
 
-        if response.ResultCode == self.INVALID_SESSION:
-            self.authenticate()
-            response = self.soapClient.service.DisarmSecuritySystem(
-                self.token,
-                location_id,
-                self.locations[location_id].security_device_id,
-                self.usercode,
-            )
-
-        logging.info(f"Disarm Result Code: {response.ResultCode}.")
-
-        if (response.ResultCode == self.DISARM_SUCCESS) or (
-            response.ResultCode == self.SUCCESS
-        ):
+        if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
             logging.info("System Disarmed")
-        else:
-            raise Exception(
-                f"Could not disarm system. "
-                f"ResultCode: {response.ResultCode}. ResultData: {response.ResultData}"
-            )
+            return True
 
-        return self.SUCCESS
+        logging.error(
+            f"Could not disarm system. "
+            f"ResultCode: {result['ResultCode']}. "
+            f"ResultData: {result['ResultData']}"
+        )
+        return False
 
     def zone_bypass(self, zone_id, location_id):
         """Bypass a zone."""
@@ -494,9 +477,7 @@ class TotalConnectLocation:
         )
 
     def set_zone_details(self, zone_status):
-        """Set status based on GetZonesListInStateEx_V1.  
-           Return true if successful.
-           """
+        """Update from GetZonesListInStateEx_V1. Return true if successful."""
         zones = zone_status.get("Zones")
         if zones is None:
             return False
@@ -514,9 +495,7 @@ class TotalConnectLocation:
         return True
 
     def set_status(self, data):
-        """Update status based on a 'PanelMetadataAndStatus'.
-           Return true if successful.
-           """
+        """Update from 'PanelMetadataAndStatus'. Return true on success."""
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
         self.cover_tampered = data.get("IsCoverTampered")
@@ -715,10 +694,7 @@ class total_connect_user:
     """User for Total Connect."""
 
     def __init__(self, user_info):
-        """Initialize based on UserInfo.
-           Returned from LoginAndGetSessionDetails.
-        """
-
+        """Initialize based on UserInfo from LoginAndGetSessionDetails."""
         self._user_id = user_info["UserID"]
         self._username = user_info["Username"]
 

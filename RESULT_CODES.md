@@ -12,7 +12,8 @@ ResultCode | ResultData | Notes
 -102 | INVALID_SESSION |  
 -120 | Feature Not Supported | When calling get_zone_details()
 -4002 | The specified location is not valid |
--4007 | NoAutomationDeviceFoundAtSpecifiedLocationException | 
+-4007 | NoAutomationDeviceFoundAtSpecifiedLocationException |
+-4502 | Command failed. Please try again. | Trying to arm system with zone faulted. 
 -4104 | Failed to Connect with Security System | 
 -4114 | System User Code not available/invalid in Database | https://github.com/craigjmidwinter/total-connect-client/issues/36
 -4504 | Failed to Bypass Zone | Happens when requesting to bypass a non-existent zone.
