@@ -28,14 +28,34 @@ Code | Status
 ## ZoneStatus
 ZoneStatus is reported per Zone.
 
+Status code we have seen are in the table below:
+
 Code | Status
 ------------ | -------------
 0 | Normal
 1 | Bypassed
 2 | Fault
-8 | Tamper
+8 | Trouble/Tampered
+10 | Fault + Trouble
 64 | Low Battery
-72 | Trouble (low battery)
+65 | Low Battery + Bypassed
+72 | Trouble + Low Battery
 256 | Alarm/Triggered
 
 Fault is only returned when "Sensor Events" are enabled for a specific zone in Total Connect, otherwise Normal is returned.
+
+The returned ZoneStatus code appears to be an integer that contains a number of individual bit flags.
+
+Bit | Integer | Status
+------------ | ------------- | -------------
+1 | 1 | Bypassed
+2 | 2 | Fault
+3 | 4 | ???
+4 | 8 | Tamper/Trouble
+5 | 16 | ???
+6 | 32 | ???
+7 | 64 | Low Battery
+8 | 128 | ???
+9 | 256 | Triggered
+
+So a status code of 10 ( = 2 + 8) is both faulted and troubled. Bypassed and low battery is 65 (1 + 64). Troubled and low battery is 72 (8 + 64).

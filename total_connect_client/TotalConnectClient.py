@@ -5,7 +5,6 @@ import time
 
 import zeep
 
-
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
@@ -15,10 +14,8 @@ ARM_TYPE_STAY_NIGHT = 4
 ZONE_STATUS_NORMAL = 0
 ZONE_STATUS_BYPASSED = 1
 ZONE_STATUS_FAULT = 2
-ZONE_STATUS_TAMPER = 8
+ZONE_STATUS_TROUBLE = 8  # is also Tampered
 ZONE_STATUS_LOW_BATTERY = 64
-ZONE_STATUS_BYPASSED_LOW_BATTERY = 65
-ZONE_STATUS_TROUBLE_LOW_BATTERY = 72
 ZONE_STATUS_TRIGGERED = 256
 
 ZONE_TYPE_SECURITY = 0
@@ -80,7 +77,7 @@ class TotalConnectClient:
             attempts += 1
             response = eval(self.soap_base + request)
 
-            if response.ResultCode in (self.SUCCESS, self.FEATURE_NOT_SUPPORTED,):
+            if response.ResultCode in (self.SUCCESS, self.FEATURE_NOT_SUPPORTED):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
                 logging.debug(
@@ -246,20 +243,12 @@ class TotalConnectClient:
 
     def arm_custom(self, arm_type, location_id):
         """Arm custom the system.  Return true if successul."""
-        ZONE_INFO = {
-            "ZoneID": "12",
-            "ByPass": False,
-            "ZoneStatus": ZONE_STATUS_NORMAL,
-        }
+        ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": ZONE_STATUS_NORMAL}
 
         ZONES_LIST = {}
         ZONES_LIST[0] = ZONE_INFO
 
-        CUSTOM_ARM_SETTINGS = {
-            "ArmMode": "1",
-            "ArmDelay": "5",
-            "ZonesList": ZONES_LIST,
-        }
+        CUSTOM_ARM_SETTINGS = {"ArmMode": "1", "ArmDelay": "5", "ZonesList": ZONES_LIST}
 
         result = self.request(
             f"CustomArmSecuritySystem(self.token, "
@@ -643,7 +632,7 @@ class TotalConnectZone:
 
     def is_bypassed(self):
         """Return true if the zone is bypassed."""
-        return self.status in (ZONE_STATUS_BYPASSED, ZONE_STATUS_BYPASSED_LOW_BATTERY)
+        return self.status & ZONE_STATUS_BYPASSED > 0
 
     def bypass(self):
         """Set is_bypassed status."""
@@ -651,27 +640,23 @@ class TotalConnectZone:
 
     def is_faulted(self):
         """Return true if the zone is faulted."""
-        return self.status == ZONE_STATUS_FAULT
+        return self.status & ZONE_STATUS_FAULT > 0
 
     def is_tampered(self):
         """Return true if zone is tampered."""
-        return self.status == ZONE_STATUS_TAMPER
+        return self.status & ZONE_STATUS_TROUBLE > 0
 
     def is_low_battery(self):
         """Return true if low battery."""
-        return self.status in (
-            ZONE_STATUS_LOW_BATTERY,
-            ZONE_STATUS_BYPASSED_LOW_BATTERY,
-            ZONE_STATUS_TROUBLE_LOW_BATTERY,
-        )
+        return self.status & ZONE_STATUS_LOW_BATTERY > 0
 
     def is_troubled(self):
         """Return true if zone is troubled."""
-        return self.status == ZONE_STATUS_TROUBLE_LOW_BATTERY
+        return self.status & ZONE_STATUS_TROUBLE > 0
 
     def is_triggered(self):
         """Return true if zone is triggered."""
-        return self.status == ZONE_STATUS_TRIGGERED
+        return self.status & ZONE_STATUS_TRIGGERED > 0
 
     def is_type_button(self):
         """Return true if zone is a button."""
