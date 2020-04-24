@@ -53,6 +53,8 @@ class TotalConnectClient:
 
     def __init__(self, username, password, usercode="-1", auto_bypass_battery=False):
         """Initialize."""
+        self.times = {}
+        self.time_start = time.time()
         self.soapClient = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
         self.soap_base = "self.soapClient.service."
 
@@ -70,6 +72,39 @@ class TotalConnectClient:
         self._user = None
         self.locations = {}
         self.authenticate()
+        self.times["__init__"] = time.time() - self.time_start
+
+    def __str__(self):
+        """Return a text string that is printable."""
+        data = (
+            f"CLIENT\n\n"
+            f"Username: {self.username}\n"
+            f"Password: {self.password}\n"
+            f"Usercode: {self.usercode}\n"
+            f"Auto Bypass Low Battery: {self.auto_bypass_low_battery}\n"
+            f"Valid Credentials: {self._valid_credentials}\n"
+            f"Module Flags:\n"
+        )
+
+        for key, value in self._module_flags.items():
+            data = data + f"  {key}: {value}\n"
+
+        data = data + str(self._user)
+
+        locations = f"LOCATIONS: {len(self.locations)}\n\n"
+        for location in self.locations:
+            locations = locations + str(self.locations[location])
+
+        return data + locations
+
+    def get_times(self):
+        """Return a string with times."""
+        self.times["total running time"] = time.time() - self.time_start
+        msg = "total-connect-client time info (seconds):\n"
+        for key, value in self.times.items():
+            msg = msg + f"  {key}: {value}\n"
+
+        return msg
 
     def request(self, request, attempts=0):
         """Send a SOAP request."""
@@ -124,6 +159,7 @@ class TotalConnectClient:
             return True
 
         if self._valid_credentials is not False:
+            start_time = time.time()
             response = self.request(
                 "LoginAndGetSessionDetails(self.username, self.password, "
                 "self.applicationId, self.applicationVersion)"
@@ -134,6 +170,7 @@ class TotalConnectClient:
                 self.token = response["SessionID"]
                 self._valid_credentials = True
                 self.populate_details(response)
+                self.times["authenticate()"] = time.time() - start_time
                 return True
 
             self._valid_credentials = False
@@ -145,6 +182,7 @@ class TotalConnectClient:
         logging.debug(
             "total-connect-client attempting login with known bad credentials."
         )
+        self.times["authenticate()"] = time.time() - start_time
         return False
 
     def is_logged_in(self):
@@ -169,11 +207,10 @@ class TotalConnectClient:
 
     def populate_details(self, response):
         """Populate system details."""
-        # not currently using info: ModuleFlags, UserInfo
-
+        start_time = time.time()
         location_data = response["Locations"]["LocationInfoBasic"]
 
-        self._module_flags = response["ModuleFlags"]
+        self._module_flags = dict(x.split("=") for x in response["ModuleFlags"].split(","))
 
         self._user = total_connect_user(response["UserInfo"])
 
@@ -185,6 +222,8 @@ class TotalConnectClient:
 
         if len(self.locations) < 1:
             Exception("No locations found!")
+
+        self.times["populate_details()"] = time.time() - start_time
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
@@ -292,6 +331,7 @@ class TotalConnectClient:
 
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
+        start_time = time.time()
         result = self.request(
             f"GetPanelMetaDataAndFullStatus(self.token, {location_id}, 0, 0, 1)"
         )
@@ -303,12 +343,11 @@ class TotalConnectClient:
             )
 
         if result is not None:
-
             self.locations[location_id].set_status(result["PanelMetadataAndStatus"])
-
         else:
             logging.warning("Panel_meta_data is empty.")
 
+        self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
         return result
 
     def zone_status(self, location_id, zone_id):
@@ -381,6 +420,7 @@ class TotalConnectClient:
 
     def get_zone_details(self, location_id):
         """Get Zone details. Return True if successful."""
+        start_time = time.time()
         result = self.request(
             "GetZonesListInStateEx_V1(self.token, "
             + str(location_id)
@@ -390,8 +430,9 @@ class TotalConnectClient:
         if result["ResultCode"] == self.FEATURE_NOT_SUPPORTED:
             logging.warning(
                 "Getting Zone Details is a feature not supported by "
-                "your Total Connect account."
+                "your Total Connect account or hardware."
             )
+            self.times[f"get_zone_details({location_id})"] = time.time() - start_time            
             return False
 
         if result["ResultCode"] != self.SUCCESS:
@@ -399,16 +440,19 @@ class TotalConnectClient:
                 f"Could not get zone details. "
                 f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
             )
+            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
             return False
 
         zone_status = result.get("ZoneStatus")
         if zone_status is not None:
+            self.times[f"get_zone_details({location_id})"] = time.time() - start_time            
             return self.locations[location_id].set_zone_details(zone_status)
 
         logging.error(
             f"Could not get zone details. "
             f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
         )
+        self.times[f"get_zone_details({location_id})"] = time.time() - start_time
         return True
 
 
@@ -438,7 +482,7 @@ class TotalConnectLocation:
         self.location_id = location_info_basic["LocationID"]
         self.location_name = location_info_basic["LocationName"]
         self._photo_url = location_info_basic["PhotoURL"]
-        self._module_flags = location_info_basic["LocationModuleFlags"]
+        self._module_flags = dict(x.split("=") for x in location_info_basic["LocationModuleFlags"].split(","))
         self.security_device_id = location_info_basic["SecurityDeviceID"]
         self._device_list = location_info_basic["DeviceList"]
         self.parent = parent
@@ -452,18 +496,28 @@ class TotalConnectLocation:
 
     def __str__(self):
         """Return a text string that is printable."""
-        return (
-            f"LocationID: {self.location_id}\n"
-            f"LocationName: {self.location_name}\n"
+        data = (
+            f"LOCATION {self.location_id} - {self.location_name}\n\n"
             f"PhotoURL: {self._photo_url}\n"
-            f"LocationModuleFlags: {self._module_flags}\n"
             f"SecurityDeviceID: {self.security_device_id}\n"
             f"DeviceList: {self._device_list}\n"
             f"AcLoss: {self.ac_loss}\n"
             f"LowBattery: {self.low_battery}\n"
             f"IsCoverTampered: {self.cover_tampered}\n"
             f"Arming State: {self.arming_state}\n"
+            f"LocationModuleFlags:\n"
         )
+
+        for key, value in self._module_flags.items():
+            data = data + f"  {key}: {value}\n"
+
+        data = data + "\n"
+
+        zones = f"ZONES: {len(self.zones)}\n\n"
+        for zone in self.zones:
+            zones = zones + str(self.zones[zone])
+
+        return data + zones
 
     def set_zone_details(self, zone_status):
         """Update from GetZonesListInStateEx_V1. Return true if successful."""
@@ -622,13 +676,12 @@ class TotalConnectZone:
 
     def __str__(self):
         """Return a string that is printable."""
-        text = "ZoneID: " + str(self.id) + "\n"
-        text = text + "ZoneDescription: " + str(self.description) + "\n"
-        text = text + "ZoneStatus: " + str(self.status) + "\n"
-        text = text + "ZonePartition: " + str(self.partition) + "\n"
-        text = text + "ZoneTypeID: " + str(self.zone_type_id) + "\n"
-
-        return text
+        return (
+            f"Zone {self.id} - {self.description}\n"
+            f"Partition: {self.partition}\t"
+            f"Type: {self.zone_type_id}\t"
+            f"Status: {self.status}\n\n"
+        )
 
     def is_bypassed(self):
         """Return true if the zone is bypassed."""
@@ -682,11 +735,10 @@ class total_connect_user:
         """Initialize based on UserInfo from LoginAndGetSessionDetails."""
         self._user_id = user_info["UserID"]
         self._username = user_info["Username"]
-
-        features = dict(x.split("=") for x in user_info["UserFeatureList"].split(","))
-        self._master_user = features["Master"] == "1"
-        self._user_admin = features["User Administration"] == "1"
-        self._config_admin = features["Configuration Administration"] == "1"
+        self._features = dict(x.split("=") for x in user_info["UserFeatureList"].split(","))
+        self._master_user = self._features["Master"] == "1"
+        self._user_admin = self._features["User Administration"] == "1"
+        self._config_admin = self._features["Configuration Administration"] == "1"
 
         if self.security_problem():
             logging.warning(
@@ -718,10 +770,16 @@ class total_connect_user:
 
     def __str__(self):
         """Return a string that is printable."""
-        return (
+        data = (
             f"Username: {self._username}\n"
             f"UserID: {self._user_id}\n"
             f"Master User: {self._master_user}\n"
             f"User Administrator: {self._user_admin}\n"
             f"Configuration Administrator: {self._config_admin}\n"
+            "User features:\n"
         )
+
+        for key, value in self._features.items():
+            data = data + f"  {key}: {value}\n"
+
+        return data + "\n"
