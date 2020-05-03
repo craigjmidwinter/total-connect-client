@@ -13,9 +13,13 @@ if len(sys.argv) != 4:
     sys.exit()
 
 tc = TotalConnectClient.TotalConnectClient(
-    username=sys.argv[1], password=sys.argv[2], usercode=sys.argv[3],
+    username=sys.argv[1], password=sys.argv[2], usercode=sys.argv[3]
 )
 
 print(tc)
 
+tc.log_out()
+
+location_id = next(iter(tc.locations))
+tc.get_panel_meta_data(location_id)
 print(tc.get_times())

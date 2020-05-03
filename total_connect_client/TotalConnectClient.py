@@ -119,7 +119,7 @@ class TotalConnectClient:
                     f"total-connect-client invalid session (attempt number {attempts})."
                 )
                 self.token = False
-                self.authenticate()
+                self.authenticate_user_login()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
                 logging.debug(
@@ -153,11 +153,7 @@ class TotalConnectClient:
         )
 
     def authenticate(self):
-        """Login to the system.  Return true if successful."""
-        if self.is_logged_in() is True:
-            logging.debug("total-connect-client attempting login when logged in.")
-            return True
-
+        """Login to the system and populate details.  Return true if successful."""
         if self._valid_credentials is not False:
             start_time = time.time()
             response = self.request(
@@ -185,6 +181,35 @@ class TotalConnectClient:
         self.times["authenticate()"] = time.time() - start_time
         return False
 
+    def authenticate_user_login(self):
+        """Login to the system.  Return true if successful."""
+        if self._valid_credentials is not False:
+            start_time = time.time()
+            response = self.request(
+                "AuthenticateUserLogin(self.username, self.password, "
+                "self.applicationId, self.applicationVersion)"
+            )
+
+            if response["ResultCode"] == self.SUCCESS:
+                logging.debug("Login Successful")
+                self.token = response["SessionID"]
+                self._valid_credentials = True
+                self.times["authenticate_user_login()"] = time.time() - start_time
+                return True
+
+            self._valid_credentials = False
+            logging.error(
+                f"Unable to authenticate with Total Connect. ResultCode: "
+                f"{response['ResultCode']}. ResultData: {response['ResultData']}"
+            )
+
+        logging.debug(
+            "total-connect-client attempting login with known bad credentials."
+        )
+        self.times["authenticate_user_login()"] = time.time() - start_time
+        return False
+
+
     def is_logged_in(self):
         """Return true if the client is logged into Total Connect service."""
         return self.token is not False
@@ -210,7 +235,9 @@ class TotalConnectClient:
         start_time = time.time()
         location_data = response["Locations"]["LocationInfoBasic"]
 
-        self._module_flags = dict(x.split("=") for x in response["ModuleFlags"].split(","))
+        self._module_flags = dict(
+            x.split("=") for x in response["ModuleFlags"].split(",")
+        )
 
         self._user = total_connect_user(response["UserInfo"])
 
@@ -432,7 +459,7 @@ class TotalConnectClient:
                 "Getting Zone Details is a feature not supported by "
                 "your Total Connect account or hardware."
             )
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time            
+            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
             return False
 
         if result["ResultCode"] != self.SUCCESS:
@@ -445,7 +472,7 @@ class TotalConnectClient:
 
         zone_status = result.get("ZoneStatus")
         if zone_status is not None:
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time            
+            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
             return self.locations[location_id].set_zone_details(zone_status)
 
         logging.error(
@@ -482,7 +509,9 @@ class TotalConnectLocation:
         self.location_id = location_info_basic["LocationID"]
         self.location_name = location_info_basic["LocationName"]
         self._photo_url = location_info_basic["PhotoURL"]
-        self._module_flags = dict(x.split("=") for x in location_info_basic["LocationModuleFlags"].split(","))
+        self._module_flags = dict(
+            x.split("=") for x in location_info_basic["LocationModuleFlags"].split(",")
+        )
         self.security_device_id = location_info_basic["SecurityDeviceID"]
         self._device_list = location_info_basic["DeviceList"]
         self.parent = parent
@@ -735,7 +764,9 @@ class total_connect_user:
         """Initialize based on UserInfo from LoginAndGetSessionDetails."""
         self._user_id = user_info["UserID"]
         self._username = user_info["Username"]
-        self._features = dict(x.split("=") for x in user_info["UserFeatureList"].split(","))
+        self._features = dict(
+            x.split("=") for x in user_info["UserFeatureList"].split(",")
+        )
         self._master_user = self._features["Master"] == "1"
         self._user_admin = self._features["User Administration"] == "1"
         self._config_admin = self._features["Configuration Administration"] == "1"
