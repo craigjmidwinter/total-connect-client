@@ -17,9 +17,3 @@ tc = TotalConnectClient.TotalConnectClient(
 )
 
 print(tc)
-
-tc.log_out()
-
-location_id = next(iter(tc.locations))
-tc.get_panel_meta_data(location_id)
-print(tc.get_times())
