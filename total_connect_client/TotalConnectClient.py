@@ -209,7 +209,6 @@ class TotalConnectClient:
         self.times["authenticate_user_login()"] = time.time() - start_time
         return False
 
-
     def is_logged_in(self):
         """Return true if the client is logged into Total Connect service."""
         return self.token is not False

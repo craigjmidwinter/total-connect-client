@@ -26,10 +26,7 @@ class TestTotalConnectClient(unittest.TestCase):
         self.client.locations[self.location_id] = Mock()
         self.client.locations[self.location_id].security_device_id = "987654"
 
-        self.response = {
-            "ResultCode": -1,
-            "ResultData": "test",
-        }
+        self.response = {"ResultCode": -1, "ResultData": "test"}
 
     def tearDown(self):
         """Test cleanup."""

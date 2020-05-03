@@ -26,21 +26,11 @@ ZONES = {"ZoneStatusInfoWithPartitionId": ZONE_STATUS_INFO}
 
 ZONE_STATUS = {"Zones": ZONES}
 
-RESULT_SUCCESS = {
-    "ResultCode": 0,
-    "ResultData": "Success",
-    "ZoneStatus": ZONE_STATUS,
-}
+RESULT_SUCCESS = {"ResultCode": 0, "ResultData": "Success", "ZoneStatus": ZONE_STATUS}
 
-RESULT_NOT_SUPPORTED = {
-    "ResultCode": -120,
-    "ResultData": "Not Supported",
-}
+RESULT_NOT_SUPPORTED = {"ResultCode": -120, "ResultData": "Not Supported"}
 
-RESULT_UNKNOWN = {
-    "ResultCode": 999,
-    "ResultData": "Unknown",
-}
+RESULT_UNKNOWN = {"ResultCode": 999, "ResultData": "Unknown"}
 
 
 class FakeGoodClient(TotalConnectClient.TotalConnectClient):
