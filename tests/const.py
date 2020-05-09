@@ -8,6 +8,6 @@ LOCATION_INFO_BASIC_NORMAL = {
     "LocationName": "Home",
     "SecurityDeviceID": "987654",
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
-    "LocationModuleFlags": None,
+    "LocationModuleFlags": "Security=1,Video=0,Automation=0,GPS=0,VideoPIR=0",
     "DeviceList": None,
 }
