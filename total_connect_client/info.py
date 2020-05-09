@@ -2,7 +2,6 @@
 
 import sys
 import logging
-from pprint import pprint
 import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
