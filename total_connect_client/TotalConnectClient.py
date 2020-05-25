@@ -367,9 +367,14 @@ class TotalConnectClient:
                 f"Could not retrieve panel meta data. "
                 f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
             )
+            return False
 
-        if result is not None:
-            self.locations[location_id].set_status(result["PanelMetadataAndStatus"])
+        if "PanelMetadataAndStatus" in result:
+            status = self.locations[location_id].set_status(
+                result["PanelMetadataAndStatus"]
+            )
+            self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
+            return status
         else:
             logging.warning("Panel_meta_data is empty.")
 
@@ -567,22 +572,30 @@ class TotalConnectLocation:
 
     def set_status(self, data):
         """Update from 'PanelMetadataAndStatus'. Return true on success."""
+        if data is None:
+            return False
+
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
         self.cover_tampered = data.get("IsCoverTampered")
         self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
         self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
+
+        if "Partitions" not in data:
+            return False
+
+        if "PartitionInfo" not in data["Partitions"]:
+            return False
+
         self.arming_state = data["Partitions"]["PartitionInfo"][0]["ArmingState"]
 
-        zones = data.get("Zones")
-        if zones is None:
+        if "Zones" not in data:
             return False
 
-        zone_info = zones.get("ZoneInfo")
-        if zone_info is None:
+        if "ZoneInfo" not in data["Zones"]:
             return False
 
-        for zone in zone_info:
+        for zone in data["Zones"]["ZoneInfo"]:
             if zone["ZoneID"] in self.zones:
                 self.zones[zone["ZoneID"]].update(zone)
             else:

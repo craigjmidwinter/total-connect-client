@@ -1,7 +1,8 @@
 """Test your system from the command line."""
 
-import sys
 import logging
+import sys
+
 import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
