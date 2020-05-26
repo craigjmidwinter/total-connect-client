@@ -3,8 +3,8 @@
 import unittest
 from unittest.mock import Mock, patch
 
-from TotalConnectClient import TotalConnectClient as tcc
 from const import PASSWORD_BAD, USERNAME_BAD
+from TotalConnectClient import TotalConnectClient as tcc
 
 
 class FakeClient(tcc):

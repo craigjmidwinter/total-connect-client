@@ -3,7 +3,6 @@
 import unittest
 
 import TotalConnectClient
-
 from const import PASSWORD_BAD, USERNAME_BAD
 
 
