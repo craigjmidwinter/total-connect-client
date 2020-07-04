@@ -41,8 +41,10 @@ class TotalConnectClient:
     SUCCESS = 0
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
+    SESSION_INITIATED = 4500
     CONNECTION_ERROR = 4101
     FAILED_TO_CONNECT = -4104
+    USER_CODE_INVALID = -4106     
     USER_CODE_UNAVAILABLE = -4114
     COMMAND_FAILED = -4502
     BAD_USER_OR_PASSWORD = -50004
@@ -68,6 +70,9 @@ class TotalConnectClient:
         self._valid_credentials = (
             None  # None at start, True after login, False if login fails
         )
+        self._valid_usercode = (
+            None  # None at start, True after login, False if login fails
+            )
         self._module_flags = None
         self._user = None
         self.locations = {}
@@ -284,6 +289,10 @@ class TotalConnectClient:
 
     def arm(self, arm_type, location_id):
         """Arm the system. Return True if successful."""
+        if self._valid_usercode is False:
+            logging.warning("User code is invalid.")
+            return False
+
         result = self.request(
             f"ArmSecuritySystem(self.token, "
             f"{location_id}, "
@@ -299,6 +308,11 @@ class TotalConnectClient:
             logging.warning("Could not arm system. Check if a zone is faulted.")
             return False
 
+        if result["ResultCode"] == self.USER_CODE_INVALID:
+            logging.warning("User code is invalid.")
+            self._valid_usercode = False
+            return False
+
         logging.error(
             f"Could not arm system. "
             f"ResultCode: {result['ResultCode']}. "
@@ -308,6 +322,10 @@ class TotalConnectClient:
 
     def arm_custom(self, arm_type, location_id):
         """Arm custom the system.  Return true if successul."""
+        if self._valid_usercode is False:
+            logging.warning("User code is invalid.")
+            return False
+
         ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": ZONE_STATUS_NORMAL}
 
         ZONES_LIST = {}
@@ -339,7 +357,7 @@ class TotalConnectClient:
         return True
 
     def get_custom_arm_settings(self, location_id):
-        """Get custom arm settings.  Return true if successul."""
+        """Get custom arm settings.  Return true if successful."""
         result = self.request(
             f"GetCustomArmSettings(self.token, "
             f"{location_id}, "
@@ -397,6 +415,10 @@ class TotalConnectClient:
 
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""
+        if self._valid_usercode is False:
+            logging.warning("User code is invalid.")
+            return False
+        
         result = self.request(
             f"DisarmSecuritySystem(self.token, "
             f"{location_id}, "
@@ -406,7 +428,13 @@ class TotalConnectClient:
 
         if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
             logging.info("System Disarmed")
+            self._valid_usercode = True
             return True
+
+        if result["ResultCode"] == self.USER_CODE_INVALID:
+            logging.warning("User code is invalid.")
+            self._valid_usercode = False
+            return False
 
         logging.error(
             f"Could not disarm system. "

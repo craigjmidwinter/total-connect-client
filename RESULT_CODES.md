@@ -6,6 +6,7 @@ ResultCode | ResultData | Notes
 ------------ | - | - 
 4500 | ARM_SUCCESS |
 4500 | DISARM_SUCCESS | 
+4500 | SESSION_INITIATED | Session Initiated. Poll for command state update.
 4101 | CONNECTION_ERROR | We are unable to connect to the security panel. Please try again later or contact support
 0 | SUCCESS | 
 -100 | Authentication failed
@@ -15,6 +16,7 @@ ResultCode | ResultData | Notes
 -4007 | NoAutomationDeviceFoundAtSpecifiedLocationException |
 -4502 | Command failed. Please try again. | Trying to arm system with zone faulted. 
 -4104 | Failed to Connect with Security System | 
+-4106 | Invalid user code. Please try again. | When disarming.  https://github.com/craigjmidwinter/total-connect-client/issues/85
 -4114 | System User Code not available/invalid in Database | https://github.com/craigjmidwinter/total-connect-client/issues/36
 -4504 | Failed to Bypass Zone | Happens when requesting to bypass a non-existent zone.
 -9001 | Authorization Failed to Perform Notification Configuration | Received when trying getAllSensorsMaskStatus
