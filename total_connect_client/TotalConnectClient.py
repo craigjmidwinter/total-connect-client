@@ -44,7 +44,7 @@ class TotalConnectClient:
     SESSION_INITIATED = 4500
     CONNECTION_ERROR = 4101
     FAILED_TO_CONNECT = -4104
-    USER_CODE_INVALID = -4106     
+    USER_CODE_INVALID = -4106
     USER_CODE_UNAVAILABLE = -4114
     COMMAND_FAILED = -4502
     BAD_USER_OR_PASSWORD = -50004
@@ -72,7 +72,7 @@ class TotalConnectClient:
         )
         self._valid_usercode = (
             None  # None at start, True after login, False if login fails
-            )
+        )
         self._module_flags = None
         self._user = None
         self.locations = {}
@@ -302,6 +302,7 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
+            self._valid_usercode = True
             return True
 
         if result["ResultCode"] == self.COMMAND_FAILED:
@@ -418,7 +419,7 @@ class TotalConnectClient:
         if self._valid_usercode is False:
             logging.warning("User code is invalid.")
             return False
-        
+
         result = self.request(
             f"DisarmSecuritySystem(self.token, "
             f"{location_id}, "
