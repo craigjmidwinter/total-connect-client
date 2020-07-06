@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from common import create_client
-from const import LOCATION_INFO_BASIC_NORMAL, RESPONSE_ARMED_AWAY, RESPONSE_DISARMED
+from const import (LOCATION_INFO_BASIC_NORMAL, RESPONSE_ARMED_AWAY,
+                   RESPONSE_DISARMED)
 
 RESPONSE_DISARMED_NONE = {"ResultCode": 0}
 
@@ -23,10 +24,9 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_get_panel_meta_data_normal(self):
         """Test get_panel_meta_data() with a normal response."""
-
         RESPONSES = [RESPONSE_ARMED_AWAY, RESPONSE_DISARMED]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES,
+            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
@@ -44,7 +44,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         RESPONSES = [RESPONSE_DISARMED_NONE]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES,
+            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True

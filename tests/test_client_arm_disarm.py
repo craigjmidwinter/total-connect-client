@@ -1,19 +1,41 @@
 """Test total_connect_client."""
 
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from const import PASSWORD_BAD, USERNAME_BAD
-from TotalConnectClient import TotalConnectClient as tcc
+import TotalConnectClient
+from common import create_client
+from const import (LOCATION_INFO_BASIC_NORMAL, RESPONSE_ARMED_AWAY,
+                   RESPONSE_ARMED_STAY, RESPONSE_ARMED_STAY_NIGHT,
+                   RESPONSE_DISARMED)
 
+RESPONSE_ARM_SUCCESS = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.ARM_SUCCESS,
+    "ResultData": "testing arm success",
+}
+RESPONSE_DISARM_SUCCESS = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.DISARM_SUCCESS,
+    "ResultData": "testing disarm success",
+}
 
-class FakeClient(tcc):
-    """Fake total connect client."""
+# returned when a zone is faulted
+RESPONSE_ARM_FAILED = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
+    "ResultData": "testing arm failed",
+}
+RESPONSE_DISARM_FAILED = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
+    "ResultData": "testing disarm failed",
+}
 
-    def authenticate(self):
-        """Pretend to authenticate."""
-        self.token = True
-        self._valid_credentials = True
+RESPONSE_USER_CODE_INVALID = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_INVALID,
+    "ResultData": "testing user code invalid",
+}
+RESPONSE_SUCCESS = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultData": "testing success",
+}
 
 
 class TestTotalConnectClient(unittest.TestCase):
@@ -21,54 +43,327 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def setUp(self):
         """Test setup."""
-        self.location_id = "123456"
-        self.client = FakeClient(USERNAME_BAD, PASSWORD_BAD)
-        self.client.locations[self.location_id] = Mock()
-        self.client.locations[self.location_id].security_device_id = "987654"
-
-        self.response = {"ResultCode": -1, "ResultData": "test"}
+        self.client = None
+        self.location_id = LOCATION_INFO_BASIC_NORMAL["LocationID"]
 
     def tearDown(self):
         """Test cleanup."""
         self.client = None
 
-    def tests_arm(self):
-        """Test arm."""
-        with patch.object(FakeClient, "request", return_value=self.response):
+    def tests_arm_away(self):
+        """Test arm away."""
+        # first test with no issues
+        self.client = create_client()
+        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should succeed
+            assert self.client.arm_away(self.location_id) is True
 
-            # Test with all zones closed - expecting ARM_SUCCESS
-            self.response["ResultCode"] = tcc.ARM_SUCCESS
-            self.assertTrue(self.client.arm_away(self.location_id))
-            self.assertTrue(self.client.arm_away_instant(self.location_id))
-            self.assertTrue(self.client.arm_stay(self.location_id))
-            self.assertTrue(self.client.arm_stay_instant(self.location_id))
-            self.assertTrue(self.client.arm_stay_night(self.location_id))
+            # confirm armed_away
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client._valid_usercode is True
 
-            # Test with a zone faulted - expecting COMMAND_FAILED
-            self.response["ResultCode"] = tcc.COMMAND_FAILED
-            self.assertFalse(self.client.arm_away(self.location_id))
-            self.assertFalse(self.client.arm_away_instant(self.location_id))
-            self.assertFalse(self.client.arm_stay(self.location_id))
-            self.assertFalse(self.client.arm_stay_instant(self.location_id))
-            self.assertFalse(self.client.arm_stay_night(self.location_id))
+        # second test with a zone faulted
+        self.client = create_client()
+        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_away(self.location_id) is False
 
-            # What about trying to arm after already armed?
-            # What result will TC give?
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+        # third test with bad usercode
+        self.client = create_client()
+        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_away(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client._valid_usercode is False
+
+    def tests_arm_away_instant(self):
+        """Test arm away instant."""
+        # first test with no issues
+        self.client = create_client()
+        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should succeed
+            assert self.client.arm_away_instant(self.location_id) is True
+
+            # confirm armed_away
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client._valid_usercode is True
+
+        # second test with a zone faulted
+        self.client = create_client()
+        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_away_instant(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+        # third test with bad usercode
+        self.client = create_client()
+        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_away_instant(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client._valid_usercode is False
+
+    def tests_arm_stay(self):
+        """Test arm stay."""
+        # first test with no issues
+        self.client = create_client()
+        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system
+            assert self.client.arm_stay(self.location_id) is True
+
+            # confirm armed_away
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_home() is True
+            assert self.client._valid_usercode is True
+
+        # second test with a zone faulted
+        self.client = create_client()
+        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_stay(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_home() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+        # third test with bad usercode
+        self.client = create_client()
+        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_stay(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_home() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client._valid_usercode is False
+
+    def tests_arm_stay_instant(self):
+        """Test arm stay instant."""
+        # first test with no issues
+        self.client = create_client()
+        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system
+            assert self.client.arm_stay_instant(self.location_id) is True
+
+            # confirm armed_away
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_home() is True
+            assert self.client._valid_usercode is True
+
+        # second test with a zone faulted
+        self.client = create_client()
+        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_stay_instant(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_home() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+        # third test with bad usercode
+        self.client = create_client()
+        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_stay_instant(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_home() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client._valid_usercode is False
+
+    def tests_arm_stay_night(self):
+        """Test arm stay night."""
+        # first test with no issues
+        self.client = create_client()
+        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY_NIGHT]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system
+            assert self.client.arm_stay_night(self.location_id) is True
+
+            # confirm armed_away
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_night() is True
+            assert self.client._valid_usercode is True
+
+        # second test with a zone faulted
+        self.client = create_client()
+        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_stay_night(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_night() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+        # third test with bad usercode
+        self.client = create_client()
+        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_stay_night(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_night() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client._valid_usercode is False
 
     def tests_disarm(self):
         """Test disarm."""
-        with patch.object(FakeClient, "request", return_value=self.response):
+        # first test with no issues
+        self.client = create_client()
+        responses = [
+            RESPONSE_ARM_SUCCESS,
+            RESPONSE_ARMED_AWAY,
+            RESPONSE_DISARM_SUCCESS,
+            RESPONSE_DISARMED,
+        ]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system and confirm armed_away
+            assert self.client.arm_away(self.location_id) is True
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is True
 
-            # Test with all zones closed - expecting DISARM_SUCCESS
-            self.response["ResultCode"] = tcc.DISARM_SUCCESS
-            self.assertTrue(self.client.disarm(self.location_id))
+            # now disarm
+            assert self.client.disarm(self.location_id) is True
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_disarmed() is True
 
-            # Test with a problem.
-            # Don't know what a failed response would be...using COMMAND_FAILED
-            self.response["ResultCode"] = tcc.COMMAND_FAILED
-            self.assertFalse(self.client.disarm(self.location_id))
+    def tests_disarm_command_failed(self):
+        """Test disarm with command failed."""
+        # first test with no issues
+        self.client = create_client()
+        responses = [
+            RESPONSE_ARM_SUCCESS,
+            RESPONSE_ARMED_AWAY,
+            RESPONSE_DISARM_FAILED,
+            RESPONSE_ARMED_AWAY,
+        ]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system and confirm armed_away
+            assert self.client.arm_away(self.location_id) is True
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is True
 
-            # Test trying to disarm after already disarmed
-            # Did this once on my Lynx 7000 and it gave result code SUCCESS
-            self.response["ResultCode"] = tcc.SUCCESS
-            self.assertTrue(self.client.disarm(self.location_id))
+            # now disarm, should fail
+            assert self.client.disarm(self.location_id) is False
+
+            # should still be armed_away
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is True
+
+    def tests_disarm_user_code_invalid(self):
+        """Test disarm with invalid user code."""
+        # first test with no issues
+        self.client = create_client()
+        responses = [
+            RESPONSE_ARM_SUCCESS,
+            RESPONSE_ARMED_AWAY,
+            RESPONSE_USER_CODE_INVALID,
+            RESPONSE_ARMED_AWAY,
+        ]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system and confirm armed_away
+            assert self.client.arm_away(self.location_id) is True
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is True
+
+            # reset the valid_usercode flag so it appears this is the first use of usercode
+            self.client._valid_usercode = None
+
+            # now disarm, should fail
+            assert self.client.disarm(self.location_id) is False
+
+            # should still be armed_away
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is True
+
+    def tests_disarm_disarmed(self):
+        """Test attempt to disarm an already disarmed system."""
+        # Did this once on my Lynx 7000 and it gave result code SUCCESS
+
+        self.client = create_client()
+        responses = [RESPONSE_DISARMED, RESPONSE_SUCCESS, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+            # now disarm
+            assert self.client.disarm(self.location_id) is True
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_disarmed() is True
