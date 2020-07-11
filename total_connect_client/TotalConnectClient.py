@@ -298,7 +298,7 @@ class TotalConnectClient:
             f"{location_id}, "
             f"{self.locations[location_id].security_device_id}, "
             f"{arm_type}, "
-            f"{self.usercode})"
+            f"'{self.usercode}')"
         )
 
         if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
@@ -424,7 +424,7 @@ class TotalConnectClient:
             f"DisarmSecuritySystem(self.token, "
             f"{location_id}, "
             f"{self.locations[location_id].security_device_id}, "
-            f"{self.usercode})"
+            f"'{self.usercode}')"
         )
 
         if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
