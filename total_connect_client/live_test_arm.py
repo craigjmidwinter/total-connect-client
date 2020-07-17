@@ -22,4 +22,3 @@ if tc.arm_stay(location_id):
     print("Arm success.")
 else:
     print("Arm failure.  Check logs.")
-

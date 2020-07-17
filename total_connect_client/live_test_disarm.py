@@ -22,4 +22,3 @@ if tc.disarm(location_id):
     print("Disarm success.")
 else:
     print("Disarm failure.  Check logs.")
-

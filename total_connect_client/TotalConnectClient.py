@@ -117,7 +117,13 @@ class TotalConnectClient:
             attempts += 1
             response = eval(self.soap_base + request)
 
-            if response.ResultCode in (self.SUCCESS, self.FEATURE_NOT_SUPPORTED):
+            if response.ResultCode in (
+                self.SUCCESS,
+                self.FEATURE_NOT_SUPPORTED,
+                self.ARM_SUCCESS,
+                self.DISARM_SUCCESS,
+                self.SESSION_INITIATED,
+            ):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
                 logging.debug(
