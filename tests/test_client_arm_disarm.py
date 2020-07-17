@@ -5,9 +5,15 @@ from unittest.mock import patch
 
 import TotalConnectClient
 from common import create_client
-from const import (LOCATION_INFO_BASIC_NORMAL, RESPONSE_ARMED_AWAY,
-                   RESPONSE_ARMED_STAY, RESPONSE_ARMED_STAY_NIGHT,
-                   RESPONSE_DISARMED)
+from const import (
+    LOCATION_INFO_BASIC_NORMAL,
+    RESPONSE_ARMED_AWAY,
+    RESPONSE_ARMED_STAY,
+    RESPONSE_ARMED_STAY_NIGHT,
+    RESPONSE_DISARMED,
+    RESPONSE_INVALID_SESSION,
+    RESPONSE_SESSION_INITIATED,
+)
 
 RESPONSE_ARM_SUCCESS = {
     "ResultCode": TotalConnectClient.TotalConnectClient.ARM_SUCCESS,

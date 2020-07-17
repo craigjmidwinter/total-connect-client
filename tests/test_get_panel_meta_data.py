@@ -4,8 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from common import create_client
-from const import (LOCATION_INFO_BASIC_NORMAL, RESPONSE_ARMED_AWAY,
-                   RESPONSE_DISARMED)
+from const import LOCATION_INFO_BASIC_NORMAL, RESPONSE_ARMED_AWAY, RESPONSE_DISARMED
 
 RESPONSE_DISARMED_NONE = {"ResultCode": 0}
 

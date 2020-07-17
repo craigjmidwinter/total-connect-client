@@ -119,7 +119,10 @@ METADATA_ARMED_AWAY["Partitions"] = PARTITIONS_ARMED_AWAY
 
 RESPONSE_DISARMED = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_DISARMED}
 RESPONSE_ARMED_STAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_STAY}
-RESPONSE_ARMED_STAY_NIGHT = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT}
+RESPONSE_ARMED_STAY_NIGHT = {
+    "ResultCode": 0,
+    "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT,
+}
 RESPONSE_ARMED_AWAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_AWAY}
 
 RESPONSE_AUTHENTICATE = {
@@ -128,4 +131,14 @@ RESPONSE_AUTHENTICATE = {
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
     "UserInfo": USER,
+}
+
+RESPONSE_INVALID_SESSION = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.INVALID_SESSION,
+    "ResultData": "testing invalid session",
+}
+
+RESPONSE_SESSION_INITIATED = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.SESSION_INITIATED,
+    "ResultData": "testing session initiated",
 }

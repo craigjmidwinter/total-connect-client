@@ -2,8 +2,11 @@
 from unittest.mock import patch
 
 import TotalConnectClient
-from const import (RESPONSE_AUTHENTICATE, RESPONSE_DISARMED,
-                   RESPONSE_GET_ZONE_DETAILS_SUCCESS)
+from const import (
+    RESPONSE_AUTHENTICATE,
+    RESPONSE_DISARMED,
+    RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+)
 
 
 def create_client():
