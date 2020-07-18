@@ -220,7 +220,7 @@ class TotalConnectClient:
         return False
 
     def validate_usercode(self, device_id, usercode):
-        """Return true if the usercode is valid for the location."""
+        """Return true if the usercode is valid for the device."""
         response = self.request(
             f"ValidateUserCode(self.token, " f"{device_id}, '{usercode}')"
         )
