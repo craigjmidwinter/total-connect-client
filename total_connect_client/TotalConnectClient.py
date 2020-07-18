@@ -70,9 +70,6 @@ class TotalConnectClient:
         self._valid_credentials = (
             None  # None at start, True after login, False if login fails
         )
-        self._valid_usercode = (
-            None  # None at start, True after login, False if login fails
-        )
         self._module_flags = None
         self._user = None
         self.locations = {}
@@ -123,6 +120,7 @@ class TotalConnectClient:
                 self.ARM_SUCCESS,
                 self.DISARM_SUCCESS,
                 self.SESSION_INITIATED,
+                self.USER_CODE_INVALID,
             ):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
@@ -210,14 +208,39 @@ class TotalConnectClient:
 
             self._valid_credentials = False
             logging.error(
-                f"Unable to authenticate with Total Connect. ResultCode: "
-                f"{response['ResultCode']}. ResultData: {response['ResultData']}"
+                f"Unable to authenticate with Total Connect. "
+                f"ResultCode: {response['ResultCode']}. "
+                f"ResultData: {response['ResultData']}"
             )
 
         logging.debug(
             "total-connect-client attempting login with known bad credentials."
         )
         self.times["authenticate_user_login()"] = time.time() - start_time
+        return False
+
+    def validate_usercode(self, device_id, usercode):
+        """Return true if the usercode is valid for the location."""
+        response = self.request(
+            f"ValidateUserCode(self.token, " f"{device_id}, '{usercode}')"
+        )
+
+        if response["ResultCode"] == self.SUCCESS:
+            return True
+
+        if response["ResultCode"] in (
+            self.USER_CODE_INVALID,
+            self.USER_CODE_UNAVAILABLE,
+        ):
+            logging.warning(f"usercode '{usercode}' invalid for device {device_id}.")
+            return False
+
+        logging.error(
+            f"Unknown response for validate_usercode. "
+            f"ResultCode: {response['ResultCode']}. "
+            f"ResultData: {response['ResultData']}"
+        )
+
         return False
 
     def is_logged_in(self):
@@ -295,29 +318,23 @@ class TotalConnectClient:
 
     def arm(self, arm_type, location_id):
         """Arm the system. Return True if successful."""
-        if self._valid_usercode is False:
-            logging.warning("User code is invalid.")
-            return False
-
         result = self.request(
             f"ArmSecuritySystem(self.token, "
             f"{location_id}, "
             f"{self.locations[location_id].security_device_id}, "
             f"{arm_type}, "
-            f"'{self.usercode}')"
+            f"'{self.locations[location_id].usercode}')"
         )
 
         if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
-            self._valid_usercode = True
             return True
 
         if result["ResultCode"] == self.COMMAND_FAILED:
             logging.warning("Could not arm system. Check if a zone is faulted.")
             return False
 
-        if result["ResultCode"] == self.USER_CODE_INVALID:
+        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
             logging.warning("User code is invalid.")
-            self._valid_usercode = False
             return False
 
         logging.error(
@@ -329,10 +346,6 @@ class TotalConnectClient:
 
     def arm_custom(self, arm_type, location_id):
         """Arm custom the system.  Return true if successul."""
-        if self._valid_usercode is False:
-            logging.warning("User code is invalid.")
-            return False
-
         ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": ZONE_STATUS_NORMAL}
 
         ZONES_LIST = {}
@@ -422,25 +435,19 @@ class TotalConnectClient:
 
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""
-        if self._valid_usercode is False:
-            logging.warning("User code is invalid.")
-            return False
-
         result = self.request(
             f"DisarmSecuritySystem(self.token, "
             f"{location_id}, "
             f"{self.locations[location_id].security_device_id}, "
-            f"'{self.usercode}')"
+            f"'{self.locations[location_id].usercode}')"
         )
 
         if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
             logging.info("System Disarmed")
-            self._valid_usercode = True
             return True
 
-        if result["ResultCode"] == self.USER_CODE_INVALID:
+        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
             logging.warning("User code is invalid.")
-            self._valid_usercode = False
             return False
 
         logging.error(
@@ -561,6 +568,7 @@ class TotalConnectLocation:
         self.configuration_sequence_number = None
         self.arming_state = None
         self.zones = {}
+        self.usercode = "-1"
 
     def __str__(self):
         """Return a text string that is printable."""
@@ -727,6 +735,14 @@ class TotalConnectLocation:
             or self.is_triggered_gas()
             or self.is_triggered_police()
         )
+
+    def set_usercode(self, usercode):
+        """Set the usercode. Return true if successful."""
+        if self.parent.validate_usercode(self.security_device_id, usercode):
+            self.usercode = usercode
+            return True
+
+        return False
 
 
 class TotalConnectZone:
