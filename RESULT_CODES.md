@@ -17,7 +17,7 @@ ResultCode | ResultData | Notes
 -4502 | Command failed. Please try again. | Trying to arm system with zone faulted. 
 -4104 | Failed to Connect with Security System | 
 -4106 | Invalid user code. Please try again. | When disarming.  https://github.com/craigjmidwinter/total-connect-client/issues/85
--4114 | System User Code not available/invalid in Database | https://github.com/craigjmidwinter/total-connect-client/issues/36
+-4114 | System User Code not available/invalid in Database | https://github.com/craigjmidwinter/total-connect-client/issues/36 Also happens attempting a code for an incorrect location/device.
 -4504 | Failed to Bypass Zone | Happens when requesting to bypass a non-existent zone.
 -9001 | Authorization Failed to Perform Notification Configuration | Received when trying getAllSensorsMaskStatus
 -10026 | Unable to load your scenes, please try syncing your panel in the Locations menu.  If your panel is still not connecting, please contact your Security Dealer for support | 

@@ -18,11 +18,10 @@ First download the latest files:
  - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/info.py`
  
 The run the script:
- - A usercode is not required for most systems.  Enter '-1' in it's place unless you need to enter your panel code.
- - `python3 info.py username password usercode`  
+`python3 info.py username password`  
  
 If you want to easily put the info into a file for sharing: 
- - `python3 info.py username password usercode > my_info.txt`
+ - `python3 info.py username password > my_info.txt`
  - Now the file my_info.txt in the same directory will hold all of that information
 
 **WARNING**:  the script will include private information including your username and password.  Carefully remove it before sharing with the developers or posting on Github.

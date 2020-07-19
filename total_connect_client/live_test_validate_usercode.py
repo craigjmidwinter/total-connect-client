@@ -19,12 +19,21 @@ USERNAME = sys.argv[1]
 PASSWORD = sys.argv[2]
 USERCODES = dict(x.split("=") for x in sys.argv[3].split(","))
 
+print(f"usercodes: {USERCODES}")
+
 TC = TotalConnectClient.TotalConnectClient(USERNAME, PASSWORD, USERCODES)
 
 for location_id in TC.locations:
-    if TC.arm_stay(location_id):
-        print("Arm success.")
+
+    if str(location_id) in USERCODES:
+        code = USERCODES[str(location_id)]
     else:
-        print("Arm failure.  Check logs.")
+        print(f"location {location_id} not found in locations.")
+        code = TotalConnectClient.DEFAULT_USERCODE
+
+    if TC.locations[location_id].set_usercode(code):
+        print(f"Usercode {code} valid for location {location_id}.")
+    else:
+        print(f"Usercode {code} invalid for location {location_id}.")
 
 sys.exit()
