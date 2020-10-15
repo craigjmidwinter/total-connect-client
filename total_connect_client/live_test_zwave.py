@@ -28,6 +28,25 @@ result = TC.request(
 
 pprint(result)
 
+
+print("\n\n\nGetAutomationDeviceStatusExV1\n\n\n")
+result = TC.request(
+    f"GetAutomationDeviceStatusExV1(self.token, {AUTOMATION_DEVICE})"
+)
+
+pprint(result)
+
+
+print("\n\n\nGetAllAutomationDeviceStatusExV1\n\n\n")
+result = TC.request(
+    f"GetAllAutomationDeviceStatusExV1(self.token, {AUTOMATION_DEVICE})"
+)
+
+pprint(result)
+
+
+
+
 print("\n\n\nGetDeviceStatus\n\n\n")
 
 a = []
@@ -38,6 +57,12 @@ b.append(a)
 
 result = TC.request(
     f"GetDeviceStatus(self.token, {LOCATION}, {b})"
+)
+
+
+print("\n\n\nGetAutomationLocks\n\n\n")
+result = TC.request(
+    f"GetAutomationLocks(self.token, {AUTOMATION_DEVICE}, {DEVICE_ID})"
 )
 
 pprint(result)
