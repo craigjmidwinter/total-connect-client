@@ -791,6 +791,7 @@ class TotalConnectZone:
             f"Zone {self.id} - {self.description}\n"
             f"Partition: {self.partition}\t"
             f"Type: {self.zone_type_id}\t"
+            f"CanBeBypassed: {self.can_be_bypassed}\t"
             f"Status: {self.status}\n\n"
         )
 
