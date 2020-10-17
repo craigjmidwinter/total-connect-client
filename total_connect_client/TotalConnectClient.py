@@ -19,8 +19,13 @@ ZONE_STATUS_LOW_BATTERY = 64
 ZONE_STATUS_TRIGGERED = 256
 
 ZONE_TYPE_SECURITY = 0
+ZONE_TYPE_LYRIC_CONTACT = 1
+ZONE_TYPE_LYRIC_MOTION = 4
+ZONE_TYPE_LYRIC_POLICE = 6
 ZONE_TYPE_FIRE_SMOKE = 9
+ZONE_TYPE_LYRIC_TEMP = 12
 ZONE_TYPE_CARBON_MONOXIDE = 14
+ZONE_TYPE_LYRIC_LOCAL_ALARM = 89
 
 ZONE_BYPASS_SUCCESS = 0
 GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
@@ -829,11 +834,17 @@ class TotalConnectZone:
 
     def is_type_security(self):
         """Return true if zone type is security."""
-        return self.zone_type_id == ZONE_TYPE_SECURITY
+        return self.zone_type_id in (
+            ZONE_TYPE_SECURITY,
+            ZONE_TYPE_LYRIC_CONTACT,
+            ZONE_TYPE_LYRIC_MOTION,
+            ZONE_TYPE_LYRIC_POLICE,
+            ZONE_TYPE_LYRIC_LOCAL_ALARM,
+        )
 
     def is_type_fire(self):
         """Return true if zone type is fire or smoke."""
-        return self.zone_type_id == ZONE_TYPE_FIRE_SMOKE
+        return self.zone_type_id in (ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_LYRIC_TEMP)
 
     def is_type_carbon_monoxide(self):
         """Return true if zone type is carbon monoxide."""
