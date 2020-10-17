@@ -5,13 +5,14 @@ import unittest
 import TotalConnectClient
 from TotalConnectClient import TotalConnectZone as tcz
 
-ZONE_NORMAL = {
-    "ZoneDescription": "Normal",
-    "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
-    "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
-}
+from const import (
+    ZONE_STATUS_LYRIC_CONTACT,
+    ZONE_STATUS_LYRIC_LOCAL_ALARM,
+    ZONE_STATUS_LYRIC_MOTION,
+    ZONE_STATUS_LYRIC_POLICE,
+    ZONE_STATUS_LYRIC_TEMP,
+    ZONE_STATUS_NORMAL,
+)
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
@@ -99,7 +100,7 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def setUp(self):
         """Test setup."""
-        self.zone_normal = tcz(ZONE_NORMAL)
+        self.zone_normal = tcz(ZONE_STATUS_NORMAL)
         self.zone_bypassed = tcz(ZONE_BYPASSED)
         self.zone_faulted = tcz(ZONE_FAULTED)
         self.zone_tampered = tcz(ZONE_TAMPERED)
@@ -110,6 +111,11 @@ class TestTotalConnectZone(unittest.TestCase):
         self.zone_button = tcz(ZONE_BUTTON)
         self.zone_smoke = tcz(ZONE_SMOKE)
         self.zone_gas = tcz(ZONE_GAS)
+        self.zone_lyric_contact = tcz(ZONE_STATUS_LYRIC_CONTACT)
+        self.zone_lyric_motion = tcz(ZONE_STATUS_LYRIC_MOTION)
+        self.zone_lyric_police = tcz(ZONE_STATUS_LYRIC_POLICE)
+        self.zone_lyric_temp = tcz(ZONE_STATUS_LYRIC_TEMP)
+        self.zone_lyric_local_alarm = tcz(ZONE_STATUS_LYRIC_LOCAL_ALARM)
 
     def tearDown(self):
         """Tear down."""
@@ -123,6 +129,11 @@ class TestTotalConnectZone(unittest.TestCase):
         self.zone_button = None
         self.zone_smoke = None
         self.zone_gas = None
+        self.zone_lyric_contact = None
+        self.zone_lyric_motion = None
+        self.zone_lyric_police = None
+        self.zone_lyric_temp = None
+        self.zone_lyric_local_alarm = None
 
     def tests_normal(self):
         """Normal zone."""
@@ -141,6 +152,12 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_bypassed.is_low_battery())
         self.assertFalse(self.zone_bypassed.is_troubled())
         self.assertFalse(self.zone_bypassed.is_triggered())
+
+    def tests_bypass(self):
+        """Bypass a zone."""
+        self.assertFalse(self.zone_normal.is_bypassed())
+        self.zone_normal.bypass()
+        self.assertTrue(self.zone_normal.is_bypassed())        
 
     def tests_faulted(self):
         """Faulted zone."""
@@ -202,6 +219,11 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_button.is_type_button())
         self.assertFalse(self.zone_smoke.is_type_button())
         self.assertFalse(self.zone_gas.is_type_button())
+        self.assertFalse(self.zone_lyric_contact.is_type_button())
+        self.assertFalse(self.zone_lyric_local_alarm.is_type_button())
+        self.assertFalse(self.zone_lyric_motion.is_type_button())
+        self.assertFalse(self.zone_lyric_police.is_type_button())
+        self.assertFalse(self.zone_lyric_temp.is_type_button())
 
     def tests_type_security(self):
         """Security zone."""
@@ -209,6 +231,11 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_button.is_type_security())
         self.assertFalse(self.zone_smoke.is_type_security())
         self.assertFalse(self.zone_gas.is_type_security())
+        self.assertTrue(self.zone_lyric_contact.is_type_security())
+        self.assertTrue(self.zone_lyric_local_alarm.is_type_security())
+        self.assertTrue(self.zone_lyric_motion.is_type_security())
+        self.assertTrue(self.zone_lyric_police.is_type_security())
+        self.assertFalse(self.zone_lyric_temp.is_type_security())
 
     def tests_type_fire(self):
         """Fire zone."""
@@ -216,6 +243,11 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_button.is_type_fire())
         self.assertTrue(self.zone_smoke.is_type_fire())
         self.assertFalse(self.zone_gas.is_type_fire())
+        self.assertFalse(self.zone_lyric_contact.is_type_fire())
+        self.assertFalse(self.zone_lyric_local_alarm.is_type_fire())
+        self.assertFalse(self.zone_lyric_motion.is_type_fire())
+        self.assertFalse(self.zone_lyric_police.is_type_fire())
+        self.assertTrue(self.zone_lyric_temp.is_type_fire())
 
     def tests_type_carbon_monoxide(self):
         """Carbon monoxide zone."""
@@ -223,3 +255,8 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_button.is_type_carbon_monoxide())
         self.assertFalse(self.zone_smoke.is_type_carbon_monoxide())
         self.assertTrue(self.zone_gas.is_type_carbon_monoxide())
+        self.assertFalse(self.zone_lyric_contact.is_type_carbon_monoxide())
+        self.assertFalse(self.zone_lyric_local_alarm.is_type_carbon_monoxide())
+        self.assertFalse(self.zone_lyric_motion.is_type_carbon_monoxide())
+        self.assertFalse(self.zone_lyric_police.is_type_carbon_monoxide())
+        self.assertFalse(self.zone_lyric_temp.is_type_carbon_monoxide())
