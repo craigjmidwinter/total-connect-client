@@ -3,6 +3,7 @@
 import unittest
 
 import TotalConnectClient
+
 from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED
 
 

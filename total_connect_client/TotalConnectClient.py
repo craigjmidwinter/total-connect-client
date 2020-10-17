@@ -842,6 +842,10 @@ class TotalConnectZone:
             ZONE_TYPE_LYRIC_LOCAL_ALARM,
         )
 
+    def is_type_motion(self):
+        """Return true if zone type is motion."""
+        return self.zone_type_id == ZONE_TYPE_LYRIC_MOTION
+
     def is_type_fire(self):
         """Return true if zone type is fire or smoke."""
         return self.zone_type_id in (ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_LYRIC_TEMP)

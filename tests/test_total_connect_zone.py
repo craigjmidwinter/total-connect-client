@@ -2,6 +2,7 @@
 
 import unittest
 
+import pytest
 import TotalConnectClient
 from TotalConnectClient import TotalConnectZone as tcz
 
@@ -24,6 +25,7 @@ ZONE_BYPASSED = {
 
 ZONE_FAULTED = {
     "ZoneDescription": "Faulted",
+    "ZoneID": "1",
     "PartitionId": "1",
     "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
@@ -144,6 +146,21 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_normal.is_troubled())
         self.assertFalse(self.zone_normal.is_triggered())
 
+    def tests_update(self):
+        """Test updates to a zone."""
+        self.assertFalse(self.zone_normal.is_faulted())
+        self.zone_normal.update(ZONE_FAULTED)
+        self.assertTrue(self.zone_normal.is_faulted())
+        self.zone_normal.update(ZONE_STATUS_NORMAL)
+        self.assertFalse(self.zone_normal.is_faulted())
+
+    def tests_update_wrong_zone(self):
+        """Test updates to the wrong zone."""
+        zone_temp = ZONE_STATUS_NORMAL.copy()
+        zone_temp["ZoneID"] = "99"
+        with pytest.raises(Exception):
+            assert self.zone_normal.update(zone_temp)
+
     def tests_bypassed(self):
         """Bypassed zone."""
         self.assertTrue(self.zone_bypassed.is_bypassed())
@@ -157,7 +174,7 @@ class TestTotalConnectZone(unittest.TestCase):
         """Bypass a zone."""
         self.assertFalse(self.zone_normal.is_bypassed())
         self.zone_normal.bypass()
-        self.assertTrue(self.zone_normal.is_bypassed())        
+        self.assertTrue(self.zone_normal.is_bypassed())
 
     def tests_faulted(self):
         """Faulted zone."""
@@ -260,3 +277,15 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_lyric_motion.is_type_carbon_monoxide())
         self.assertFalse(self.zone_lyric_police.is_type_carbon_monoxide())
         self.assertFalse(self.zone_lyric_temp.is_type_carbon_monoxide())
+
+    def tests_type_motion(self):
+        """Motion zone."""
+        self.assertFalse(self.zone_normal.is_type_motion())
+        self.assertFalse(self.zone_button.is_type_motion())
+        self.assertFalse(self.zone_smoke.is_type_motion())
+        self.assertFalse(self.zone_gas.is_type_motion())
+        self.assertFalse(self.zone_lyric_contact.is_type_motion())
+        self.assertFalse(self.zone_lyric_local_alarm.is_type_motion())
+        self.assertTrue(self.zone_lyric_motion.is_type_motion())
+        self.assertFalse(self.zone_lyric_police.is_type_motion())
+        self.assertFalse(self.zone_lyric_temp.is_type_motion())
