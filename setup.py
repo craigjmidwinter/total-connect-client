@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name="total_connect_client",
     py_modules=["total_connect_client"],
-    version="0.55.6",
+    version="0.56",
     description="Interact with Total Connect 2 alarm systems",
     author="Craig J. Midwinter",
     author_email="craig.j.midwinter@gmail.com",
