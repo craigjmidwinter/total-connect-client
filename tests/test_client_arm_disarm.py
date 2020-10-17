@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 
 import TotalConnectClient
+
 from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,

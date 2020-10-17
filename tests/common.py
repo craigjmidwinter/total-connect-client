@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import TotalConnectClient
+
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_DISARMED,
