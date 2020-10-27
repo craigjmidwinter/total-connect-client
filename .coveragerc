@@ -1,0 +1,4 @@
+[run]
+omit = 
+    total_connect_client/live*.py
+    total_connect_client/info.py
