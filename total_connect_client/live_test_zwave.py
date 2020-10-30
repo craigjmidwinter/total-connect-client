@@ -9,7 +9,9 @@ import TotalConnectClient
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
 if len(sys.argv) != 7:
-    print("usage:  python3 test.py username password AutomationDeviceID DeviceID DeviceTypeID LocationID\n")
+    print(
+        "usage:  python3 test.py username password AutomationDeviceID DeviceID DeviceTypeID LocationID\n"
+    )
     sys.exit()
 
 USERNAME = sys.argv[1]
@@ -22,17 +24,13 @@ LOCATION = sys.argv[6]
 TC = TotalConnectClient.TotalConnectClient(USERNAME, PASSWORD)
 
 print("\n\n\nGetAutomationDeviceStatus\n\n\n")
-result = TC.request(
-    f"GetAutomationDeviceStatus(self.token, {AUTOMATION_DEVICE})"
-)
+result = TC.request(f"GetAutomationDeviceStatus(self.token, {AUTOMATION_DEVICE})")
 
 pprint(result)
 
 
 print("\n\n\nGetAutomationDeviceStatusExV1\n\n\n")
-result = TC.request(
-    f"GetAutomationDeviceStatusExV1(self.token, {AUTOMATION_DEVICE})"
-)
+result = TC.request(f"GetAutomationDeviceStatusExV1(self.token, {AUTOMATION_DEVICE})")
 
 pprint(result)
 
@@ -45,8 +43,6 @@ result = TC.request(
 pprint(result)
 
 
-
-
 print("\n\n\nGetDeviceStatus\n\n\n")
 
 a = []
@@ -55,14 +51,10 @@ a.append(TYPE)
 b = []
 b.append(a)
 
-result = TC.request(
-    f"GetDeviceStatus(self.token, {LOCATION}, {b})"
-)
+result = TC.request(f"GetDeviceStatus(self.token, {LOCATION}, {b})")
 
 
 print("\n\n\nGetAutomationLocks\n\n\n")
-result = TC.request(
-    f"GetAutomationLocks(self.token, {AUTOMATION_DEVICE}, {DEVICE_ID})"
-)
+result = TC.request(f"GetAutomationLocks(self.token, {AUTOMATION_DEVICE}, {DEVICE_ID})")
 
 pprint(result)

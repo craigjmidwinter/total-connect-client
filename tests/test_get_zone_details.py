@@ -3,9 +3,8 @@
 import unittest
 
 import TotalConnectClient
-from TotalConnectClient import TotalConnectLocation as tcl
-
 from const import LOCATION_INFO_BASIC_NORMAL, PASSWORD_BAD, USERNAME_BAD
+from TotalConnectClient import TotalConnectLocation as tcl
 
 ZONE_NORMAL = {
     "PartitionId": "1",
