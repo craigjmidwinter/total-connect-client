@@ -77,7 +77,12 @@ class TotalConnectClient:
         self.applicationVersion = "1.0.34"
         self.username = username
         self.password = password
-        self.usercodes = usercodes
+
+        if not isinstance(usercodes, dict):
+            self.usercodes = {"default": DEFAULT_USERCODE}
+        else:
+            self.usercodes = usercodes
+
         self.auto_bypass_low_battery = auto_bypass_battery
         self.token = False
         self._valid_credentials = (

@@ -4,8 +4,6 @@ import unittest
 
 import pytest
 import TotalConnectClient
-from TotalConnectClient import TotalConnectZone as tcz
-
 from const import (
     ZONE_STATUS_LYRIC_CONTACT,
     ZONE_STATUS_LYRIC_LOCAL_ALARM,
@@ -14,6 +12,7 @@ from const import (
     ZONE_STATUS_LYRIC_TEMP,
     ZONE_STATUS_NORMAL,
 )
+from TotalConnectClient import TotalConnectZone as tcz
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
