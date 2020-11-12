@@ -181,8 +181,8 @@ class TotalConnectClient:
 
     def authenticate(self):
         """Login to the system and populate details.  Return true if successful."""
+        start_time = time.time()
         if self._valid_credentials is not False:
-            start_time = time.time()
             response = self.request(
                 "LoginAndGetSessionDetails(self.username, self.password, "
                 "self.applicationId, self.applicationVersion)"
@@ -197,6 +197,7 @@ class TotalConnectClient:
                 return True
 
             self._valid_credentials = False
+            self.token = False
             logging.error(
                 f"Unable to authenticate with Total Connect. ResultCode: "
                 f"{response['ResultCode']}. ResultData: {response['ResultData']}"
