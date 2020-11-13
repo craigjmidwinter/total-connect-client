@@ -160,3 +160,8 @@ RESPONSE_SESSION_INITIATED = {
     "ResultCode": TotalConnectClient.TotalConnectClient.SESSION_INITIATED,
     "ResultData": "testing session initiated",
 }
+
+RESPONSE_FEATURE_NOT_SUPPORTED = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.FEATURE_NOT_SUPPORTED,
+    "ResultData": "testing user code feature not supported",
+}

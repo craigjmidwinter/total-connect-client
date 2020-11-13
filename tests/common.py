@@ -20,7 +20,9 @@ def create_client():
     with patch("zeep.Client", autospec=True), patch(
         "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
     ) as mock_request:
-        client = TotalConnectClient.TotalConnectClient("username", "password", {"123456": "1234"})
+        client = TotalConnectClient.TotalConnectClient(
+            "username", "password", {"123456": "1234"}
+        )
         assert mock_request.call_count == 3
 
     return client

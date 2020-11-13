@@ -11,6 +11,7 @@ from const import (
     RESPONSE_ARMED_STAY,
     RESPONSE_ARMED_STAY_NIGHT,
     RESPONSE_DISARMED,
+    RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
 RESPONSE_ARM_SUCCESS = {
@@ -108,6 +109,20 @@ class TestTotalConnectClient(unittest.TestCase):
         # fourth test with 'unavailable' usercode
         self.client = create_client()
         responses = [RESPONSE_USER_CODE_UNAVAILABLE, RESPONSE_DISARMED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # arm the system, should fail
+            assert self.client.arm_away(self.location_id) is False
+
+            # should still be disarmed
+            self.client.get_panel_meta_data(self.location_id)
+            assert self.client.locations[self.location_id].is_armed_away() is False
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+        # fifth test with 'other' usercode
+        self.client = create_client()
+        responses = [RESPONSE_FEATURE_NOT_SUPPORTED, RESPONSE_DISARMED]
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):

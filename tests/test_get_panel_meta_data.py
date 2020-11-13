@@ -4,7 +4,12 @@ import unittest
 from unittest.mock import patch
 
 from common import create_client
-from const import LOCATION_INFO_BASIC_NORMAL, RESPONSE_ARMED_AWAY, RESPONSE_DISARMED
+from const import (
+    LOCATION_INFO_BASIC_NORMAL,
+    RESPONSE_ARMED_AWAY,
+    RESPONSE_DISARMED,
+    RESPONSE_FEATURE_NOT_SUPPORTED,
+)
 
 RESPONSE_DISARMED_NONE = {"ResultCode": 0}
 
@@ -23,9 +28,9 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_get_panel_meta_data_normal(self):
         """Test get_panel_meta_data() with a normal response."""
-        RESPONSES = [RESPONSE_ARMED_AWAY, RESPONSE_DISARMED]
+        responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARMED]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
@@ -41,9 +46,9 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_get_panel_meta_data_none(self):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
 
-        RESPONSES = [RESPONSE_DISARMED_NONE]
+        responses = [RESPONSE_DISARMED_NONE]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
@@ -51,3 +56,16 @@ class TestTotalConnectClient(unittest.TestCase):
             # first response gives empty status...should remain the same
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_disarmed() is True
+
+    def tests_get_panel_meta_data_failed(self):
+        """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
+
+        responses = [RESPONSE_FEATURE_NOT_SUPPORTED]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # should start disarmed
+            assert self.client.locations[self.location_id].is_disarmed() is True
+
+            # should error out and return false
+            assert self.client.get_panel_meta_data(self.location_id) is False
