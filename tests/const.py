@@ -151,10 +151,26 @@ RESPONSE_AUTHENTICATE = {
     "UserInfo": USER,
 }
 
+RESPONSE_BAD_USER_OR_PASSWORD = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultData": "testing bad user or password",
+}
+
 RESPONSE_INVALID_SESSION = {
     "ResultCode": TotalConnectClient.TotalConnectClient.INVALID_SESSION,
     "ResultData": "testing invalid session",
 }
+
+RESPONSE_FAILED_TO_CONNECT = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.FAILED_TO_CONNECT,
+    "ResultData": "testing failed to connect",
+}
+
+RESPONSE_CONNECTION_ERROR = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.CONNECTION_ERROR,
+    "ResultData": "testing connection error",
+}
+
 
 RESPONSE_SESSION_INITIATED = {
     "ResultCode": TotalConnectClient.TotalConnectClient.SESSION_INITIATED,
