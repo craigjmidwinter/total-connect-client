@@ -543,7 +543,7 @@ class TotalConnectClient:
             f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
         )
         self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-        return True
+        return False
 
 
 class TotalConnectLocation:
