@@ -10,6 +10,10 @@ from const import (
     RESPONSE_ARMED_STAY,
     RESPONSE_ARMED_STAY_NIGHT,
     RESPONSE_DISARMED,
+    RESPONSE_FEATURE_NOT_SUPPORTED,
+    RESPONSE_GET_ZONE_DETAILS_NONE,
+    RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+    RESPONSE_UNKNOWN,
 )
 from TotalConnectClient import ZONE_STATUS_NORMAL
 
@@ -73,3 +77,24 @@ class TestTotalConnectClient(unittest.TestCase):
             # disarmed
             assert self.client.get_armed_status(self.location_id)
             assert self.client.locations[self.location_id].is_disarmed() is True
+
+    def tests_get_zone_details(self):
+        """Test get_zone_details."""
+        responses = [
+            RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+            RESPONSE_FEATURE_NOT_SUPPORTED,
+            RESPONSE_UNKNOWN,
+            RESPONSE_GET_ZONE_DETAILS_NONE,
+        ]
+        with patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+        ):
+            # first response is SUCCESS
+            assert self.client.get_zone_details(self.location_id) is True
+            # second response is FEATURE_NOT_SUPPORTED
+            assert self.client.get_zone_details(self.location_id) is False
+            # third response is UNKOWN
+            assert self.client.get_zone_details(self.location_id) is False
+            # third response is SUCCESS but with empty ZoneStatus
+            # ...which we've seen before in the wild
+            assert self.client.get_zone_details(self.location_id) is False

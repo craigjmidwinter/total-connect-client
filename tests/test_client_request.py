@@ -16,12 +16,8 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_INVALID_SESSION,
     RESPONSE_SESSION_INITIATED,
+    RESPONSE_UNKNOWN,
 )
-
-RESPONSE_UNKNOWN = {
-    "ResultCode": -123456,
-    "ResultData": "testing unknown result code",
-}
 
 
 class fakeResponse:

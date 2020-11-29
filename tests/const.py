@@ -78,6 +78,9 @@ RESPONSE_GET_ZONE_DETAILS_SUCCESS = {
     "ZoneStatus": ZONE_STATUS,
 }
 
+RESPONSE_GET_ZONE_DETAILS_NONE = RESPONSE_GET_ZONE_DETAILS_SUCCESS.copy()
+RESPONSE_GET_ZONE_DETAILS_NONE["ZoneStatus"] = None
+
 PARTITION_DISARMED = {
     "PartitionID": "1",
     "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
@@ -180,4 +183,9 @@ RESPONSE_SESSION_INITIATED = {
 RESPONSE_FEATURE_NOT_SUPPORTED = {
     "ResultCode": TotalConnectClient.TotalConnectClient.FEATURE_NOT_SUPPORTED,
     "ResultData": "testing user code feature not supported",
+}
+
+RESPONSE_UNKNOWN = {
+    "ResultCode": -123456,
+    "ResultData": "testing unknown result code",
 }
