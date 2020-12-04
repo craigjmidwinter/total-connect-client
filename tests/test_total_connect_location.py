@@ -51,6 +51,7 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.assertFalse(self.location_normal.is_armed_home())
         self.assertFalse(self.location_normal.is_armed_night())
         self.assertFalse(self.location_normal.is_armed())
+        self.assertFalse(self.location_normal.is_pending())
         self.assertFalse(self.location_normal.is_triggered_police())
         self.assertFalse(self.location_normal.is_triggered_fire())
         self.assertFalse(self.location_normal.is_triggered_gas())
