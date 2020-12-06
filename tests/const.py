@@ -154,6 +154,9 @@ RESPONSE_AUTHENTICATE = {
     "UserInfo": USER,
 }
 
+RESPONSE_AUTHENTICATE_EMPTY = RESPONSE_AUTHENTICATE.copy()
+RESPONSE_AUTHENTICATE_EMPTY["Locations"] = None
+
 RESPONSE_BAD_USER_OR_PASSWORD = {
     "ResultCode": TotalConnectClient.TotalConnectClient.BAD_USER_OR_PASSWORD,
     "ResultData": "testing bad user or password",

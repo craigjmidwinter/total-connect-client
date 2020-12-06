@@ -2,12 +2,14 @@
 
 import unittest
 from unittest.mock import patch
+import pytest
 
 import TotalConnectClient
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+    RESPONSE_AUTHENTICATE_EMPTY,
 )
 
 
@@ -40,6 +42,21 @@ class TestTotalConnectClient(unittest.TestCase):
             assert mock_request.call_count == 3
 
         assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
+
+    def tests_init_locations_empty(self):
+        """Test init with no locations."""
+        RESPONSES = [
+            RESPONSE_AUTHENTICATE_EMPTY,
+        ]
+
+        with patch("zeep.Client", autospec=True), patch(
+            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
+        ) as mock_request, pytest.raises(Exception):
+
+            client = TotalConnectClient.TotalConnectClient(
+                "username", "password", usercodes=None
+            )
+            assert mock_request.call_count == 1
 
     def tests_init_usercodes_string(self):
         """Test init with usercodes == a string."""
