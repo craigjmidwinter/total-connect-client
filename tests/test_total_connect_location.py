@@ -3,7 +3,7 @@
 import unittest
 
 import TotalConnectClient
-from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED
+from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED, ZONE_STATUS
 
 
 class TestTotalConnectLocation(unittest.TestCase):
@@ -62,3 +62,16 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.assertTrue(self.location_normal.is_disarmed())
         self.assertFalse(self.location_normal.set_status(None))
         self.assertTrue(self.location_normal.is_disarmed())
+
+    def tests_set_zone_details(self):
+        """Test set_zone_details with normal data passed in."""
+        self.assertTrue(self.location_normal.set_zone_details(ZONE_STATUS))
+
+        # "Zones" is None
+        self.assertFalse(self.location_normal.set_zone_details({"Zones": None}))
+
+        # "ZoneStatusInfoWithPartitionId" is None
+        data = ZONE_STATUS.copy()
+        data["Zones"] = {"ZoneStatusInfoWithPartitionId": None}
+        # now test with "ZoneInfo" is none
+        self.assertFalse(self.location_normal.set_zone_details(data))
