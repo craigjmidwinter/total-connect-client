@@ -68,15 +68,18 @@ ZONE_STATUS_LYRIC_LOCAL_ALARM[
 ZONE_STATUS_INFO = []
 ZONE_STATUS_INFO.append(ZONE_STATUS_NORMAL)
 
-ZONES = {"ZoneStatusInfoWithPartitionId": ZONE_STATUS_INFO}
+ZONE_DETAILS = {"ZoneStatusInfoWithPartitionId": ZONE_STATUS_INFO}
 
-ZONE_STATUS = {"Zones": ZONES}
+ZONE_DETAIL_STATUS = {"Zones": ZONE_DETAILS}
 
 RESPONSE_GET_ZONE_DETAILS_SUCCESS = {
     "ResultCode": 0,
     "ResultData": "Success",
-    "ZoneStatus": ZONE_STATUS,
+    "ZoneStatus": ZONE_DETAIL_STATUS,
 }
+
+RESPONSE_GET_ZONE_DETAILS_NONE = RESPONSE_GET_ZONE_DETAILS_SUCCESS.copy()
+RESPONSE_GET_ZONE_DETAILS_NONE["ZoneStatus"] = None
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
@@ -151,12 +154,41 @@ RESPONSE_AUTHENTICATE = {
     "UserInfo": USER,
 }
 
+RESPONSE_AUTHENTICATE_EMPTY = RESPONSE_AUTHENTICATE.copy()
+RESPONSE_AUTHENTICATE_EMPTY["Locations"] = None
+
+RESPONSE_BAD_USER_OR_PASSWORD = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultData": "testing bad user or password",
+}
+
 RESPONSE_INVALID_SESSION = {
     "ResultCode": TotalConnectClient.TotalConnectClient.INVALID_SESSION,
     "ResultData": "testing invalid session",
 }
 
+RESPONSE_FAILED_TO_CONNECT = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.FAILED_TO_CONNECT,
+    "ResultData": "testing failed to connect",
+}
+
+RESPONSE_CONNECTION_ERROR = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.CONNECTION_ERROR,
+    "ResultData": "testing connection error",
+}
+
+
 RESPONSE_SESSION_INITIATED = {
     "ResultCode": TotalConnectClient.TotalConnectClient.SESSION_INITIATED,
     "ResultData": "testing session initiated",
+}
+
+RESPONSE_FEATURE_NOT_SUPPORTED = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.FEATURE_NOT_SUPPORTED,
+    "ResultData": "testing user code feature not supported",
+}
+
+RESPONSE_UNKNOWN = {
+    "ResultCode": -123456,
+    "ResultData": "testing unknown result code",
 }

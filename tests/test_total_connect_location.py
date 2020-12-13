@@ -1,9 +1,10 @@
 """Test total_connect_client location."""
 
 import unittest
+from copy import deepcopy
 
 import TotalConnectClient
-from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED
+from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED, ZONE_DETAIL_STATUS
 
 
 class TestTotalConnectLocation(unittest.TestCase):
@@ -15,7 +16,7 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.location_normal = TotalConnectClient.TotalConnectLocation(
             LOCATION_INFO_BASIC_NORMAL, self
         )
-        self.location_normal.set_status(METADATA_DISARMED)
+        self.location_normal.set_status(deepcopy(METADATA_DISARMED))
 
     def tearDown(self):
         """Tear down."""
@@ -51,6 +52,7 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.assertFalse(self.location_normal.is_armed_home())
         self.assertFalse(self.location_normal.is_armed_night())
         self.assertFalse(self.location_normal.is_armed())
+        self.assertFalse(self.location_normal.is_pending())
         self.assertFalse(self.location_normal.is_triggered_police())
         self.assertFalse(self.location_normal.is_triggered_fire())
         self.assertFalse(self.location_normal.is_triggered_gas())
@@ -58,6 +60,34 @@ class TestTotalConnectLocation(unittest.TestCase):
 
     def tests_set_status_none(self):
         """Test set_status with None passed in."""
-        self.assertTrue(self.location_normal.is_disarmed())
-        self.assertFalse(self.location_normal.set_status(None))
-        self.assertTrue(self.location_normal.is_disarmed())
+        loc = TotalConnectClient.TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
+        loc.set_status(deepcopy(METADATA_DISARMED))
+
+        self.assertTrue(loc.is_disarmed())
+        self.assertFalse(loc.set_status(None))
+
+        data = deepcopy(METADATA_DISARMED)
+        del data["Partitions"]["PartitionInfo"]
+        self.assertFalse(loc.set_status(data))
+        del data["Partitions"]
+        self.assertFalse(loc.set_status(data))
+
+        data = deepcopy(METADATA_DISARMED)
+        del data["Zones"]["ZoneInfo"]
+        self.assertFalse(loc.set_status(data))
+        del data["Zones"]
+        self.assertFalse(loc.set_status(data))
+        self.assertTrue(loc.is_disarmed())
+
+    def tests_set_zone_details(self):
+        """Test set_zone_details with normal data passed in."""
+        self.assertTrue(self.location_normal.set_zone_details(ZONE_DETAIL_STATUS))
+
+        # "Zones" is None
+        self.assertFalse(self.location_normal.set_zone_details({"Zones": None}))
+
+        # "ZoneStatusInfoWithPartitionId" is None
+        data = deepcopy(ZONE_DETAIL_STATUS)
+        data["Zones"] = {"ZoneStatusInfoWithPartitionId": None}
+        # now test with "ZoneInfo" is none
+        self.assertFalse(self.location_normal.set_zone_details(data))

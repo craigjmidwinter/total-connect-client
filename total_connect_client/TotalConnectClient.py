@@ -181,8 +181,8 @@ class TotalConnectClient:
 
     def authenticate(self):
         """Login to the system and populate details.  Return true if successful."""
+        start_time = time.time()
         if self._valid_credentials is not False:
-            start_time = time.time()
             response = self.request(
                 "LoginAndGetSessionDetails(self.username, self.password, "
                 "self.applicationId, self.applicationVersion)"
@@ -197,6 +197,7 @@ class TotalConnectClient:
                 return True
 
             self._valid_credentials = False
+            self.token = False
             logging.error(
                 f"Unable to authenticate with Total Connect. ResultCode: "
                 f"{response['ResultCode']}. ResultData: {response['ResultData']}"
@@ -487,38 +488,25 @@ class TotalConnectClient:
         return False
 
     def zone_bypass(self, zone_id, location_id):
-        """Bypass a zone."""
-        response = self.soapClient.service.Bypass(
-            self.token,
-            location_id,
-            self.locations[location_id].security_device_id,
-            zone_id,
-            f"'{self.locations[location_id].usercode}'",
+        """Bypass a zone.  Return true if successful."""
+        result = self.request(
+            f"Bypass(self.token, "
+            f"{location_id}, "
+            f"{self.locations[location_id].security_device_id}, "
+            f"{zone_id}, "
+            f"'{self.locations[location_id].usercode}')"
         )
 
-        if response.ResultCode == self.INVALID_SESSION:
-            self.authenticate()
-            response = self.soapClient.service.Bypass(
-                self.token,
-                location_id,
-                self.locations[location_id].security_device_id,
-                zone_id,
-                f"'{self.locations[location_id].usercode}'",
-            )
-
-        logging.info(f"Bypass Result Code: {response.ResultCode}.")
-
-        if response.ResultCode == ZONE_BYPASS_SUCCESS:
+        if result["ResultCode"] is ZONE_BYPASS_SUCCESS:
             self.locations[location_id].zones[zone_id].bypass()
-        else:
-            raise Exception(
-                "Could not bypass zone. ResultCode: "
-                + str(response.ResultCode)
-                + ". ResultData: "
-                + str(response.ResultData)
-            )
+            return True
 
-        return self.SUCCESS
+        logging.error(
+            f"Could not bypass zone {zone_id} at location {location_id}."
+            f"ResultCode: {result['ResultCode']}. "
+            f"ResultData: {result['ResultData']}"
+        )
+        return False
 
     def get_zone_details(self, location_id):
         """Get Zone details. Return True if successful."""
@@ -555,7 +543,7 @@ class TotalConnectClient:
             f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
         )
         self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-        return True
+        return False
 
 
 class TotalConnectLocation:
