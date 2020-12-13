@@ -45,7 +45,6 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_get_panel_meta_data_none(self):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
-
         responses = [RESPONSE_DISARMED_NONE]
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
@@ -59,7 +58,6 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_get_panel_meta_data_failed(self):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
-
         responses = [RESPONSE_FEATURE_NOT_SUPPORTED]
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses

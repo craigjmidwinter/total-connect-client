@@ -43,14 +43,14 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_validate_usercode(self):
         """Test validate_usercode() with a valid code."""
-        RESPONSES = [
+        responses = [
             RESPONSE_VALID,
             RESPONSE_INVALID,
             RESPONSE_UNAVAILABLE,
             RESPONSE_FAILED,
         ]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             # valid
             assert self.client.validate_usercode("1", "1234") is True

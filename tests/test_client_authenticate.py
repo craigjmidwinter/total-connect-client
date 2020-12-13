@@ -44,11 +44,11 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_logout(self):
         """Test logout."""
-        RESPONSES = [
+        responses = [
             RESPONSE_SUCCESS,
         ]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             assert self.client.is_logged_in() is True
             assert self.client.log_out() is True
@@ -59,14 +59,14 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_authenticate(self):
         """Test authenticate()."""
-        RESPONSES = [
+        responses = [
             RESPONSE_SUCCESS,
             RESPONSE_SUCCESS,
             RESPONSE_BAD_USER_OR_PASSWORD,
             RESPONSE_AUTHENTICATION_FAILED,
         ]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=RESPONSES
+            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ), patch(
             "TotalConnectClient.TotalConnectClient.populate_details", return_value=True
         ):
