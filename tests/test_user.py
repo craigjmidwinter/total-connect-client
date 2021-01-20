@@ -23,7 +23,7 @@ USER_BAD_CONFIG = {
 }
 
 
-class test_user(unittest.TestCase):
+class TestUser(unittest.TestCase):
     """Test total_connect_user."""
 
     def setUp(self):
@@ -37,14 +37,6 @@ class test_user(unittest.TestCase):
         self.user_good = None
         self.user_bad_master = None
         self.user_bad_config = None
-
-    def tests_basic(self):
-        """Test basic things."""
-        self.assertTrue(self.user_good._user_id == USER_GOOD["UserID"])
-        self.assertTrue(self.user_good._username == USER_GOOD["Username"])
-        self.assertFalse(self.user_good._master_user)
-        self.assertFalse(self.user_good._user_admin)
-        self.assertFalse(self.user_good._config_admin)
 
     def tests_security(self):
         """Test security_check()."""

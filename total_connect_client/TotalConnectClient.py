@@ -88,6 +88,7 @@ class TotalConnectClient:
         self._valid_credentials = (
             None  # None at start, True after login, False if login fails
         )
+        self._populated = False
         self._module_flags = None
         self._user = None
         self.locations = {}
@@ -146,7 +147,7 @@ class TotalConnectClient:
                     f"total-connect-client invalid session (attempt number {attempts})."
                 )
                 self.token = False
-                self.authenticate_user_login()
+                self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
                 logging.debug(
@@ -183,16 +184,26 @@ class TotalConnectClient:
         """Login to the system and populate details.  Return true if successful."""
         start_time = time.time()
         if self._valid_credentials is not False:
-            response = self.request(
-                "LoginAndGetSessionDetails(self.username, self.password, "
-                "self.applicationId, self.applicationVersion)"
-            )
+
+            if self._populated:
+                response = self.request(
+                    "AuthenticateUserLogin(self.username, self.password, "
+                    "self.applicationId, self.applicationVersion)"
+                )
+            else:
+                # this request is very slow, so only use it when necessary
+                response = self.request(
+                    "LoginAndGetSessionDetails(self.username, self.password, "
+                    "self.applicationId, self.applicationVersion)"
+                )
 
             if response["ResultCode"] == self.SUCCESS:
                 logging.debug("Login Successful")
                 self.token = response["SessionID"]
                 self._valid_credentials = True
-                self.populate_details(response)
+                if not self._populated:
+                    self.populate_details(response)
+                    self._populated = True
                 self.times["authenticate()"] = time.time() - start_time
                 return True
 
@@ -207,35 +218,6 @@ class TotalConnectClient:
             "total-connect-client attempting login with known bad credentials."
         )
         self.times["authenticate()"] = time.time() - start_time
-        return False
-
-    def authenticate_user_login(self):
-        """Login to the system.  Return true if successful."""
-        if self._valid_credentials is not False:
-            start_time = time.time()
-            response = self.request(
-                "AuthenticateUserLogin(self.username, self.password, "
-                "self.applicationId, self.applicationVersion)"
-            )
-
-            if response["ResultCode"] == self.SUCCESS:
-                logging.debug("Login Successful")
-                self.token = response["SessionID"]
-                self._valid_credentials = True
-                self.times["authenticate_user_login()"] = time.time() - start_time
-                return True
-
-            self._valid_credentials = False
-            logging.error(
-                f"Unable to authenticate with Total Connect. "
-                f"ResultCode: {response['ResultCode']}. "
-                f"ResultData: {response['ResultData']}"
-            )
-
-        logging.debug(
-            "total-connect-client attempting login with known bad credentials."
-        )
-        self.times["authenticate_user_login()"] = time.time() - start_time
         return False
 
     def validate_usercode(self, device_id, usercode):
