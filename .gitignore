@@ -56,3 +56,6 @@ build/
 dist/
 .coverage
 total_connect_client.egg-info/
+
+# VS Code
+.vscode/
