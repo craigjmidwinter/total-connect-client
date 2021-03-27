@@ -70,8 +70,9 @@ class TotalConnectClient:
         """Initialize."""
         self.times = {}
         self.time_start = time.time()
-        self.soapClient = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
+        self.soapClient = None
         self.soap_base = "self.soapClient.service."
+        self.soap_ready = False
 
         self.applicationId = "14588"
         self.applicationVersion = "1.0.34"
@@ -127,8 +128,16 @@ class TotalConnectClient:
 
         return msg
 
+    def setup_soap(self):
+        """Set up soap for use."""
+        self.soapClient = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
+        self.soap_ready = True
+
     def request(self, request, attempts=0):
         """Send a SOAP request."""
+        if self.soap_ready is False:
+            self.setup_soap()
+
         if attempts < self.MAX_REQUEST_ATTEMPTS:
             attempts += 1
             response = eval(self.soap_base + request)

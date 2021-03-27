@@ -58,9 +58,11 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_DISARMED,
         ]
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
+        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+            "builtins.eval", side_effect=eval_responses
+        ) as mock_request:
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
@@ -79,9 +81,11 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_BAD_USER_OR_PASSWORD,
         ]
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
+        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+            "builtins.eval", side_effect=eval_responses
+        ) as mock_request:
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
@@ -101,9 +105,11 @@ class TestTotalConnectClient(unittest.TestCase):
             )
             serialize_responses.append(RESPONSE_FAILED_TO_CONNECT)
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("time.sleep", autospec=True), patch(
+        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+            "time.sleep", autospec=True
+        ), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request, pytest.raises(
             Exception
@@ -134,9 +140,11 @@ class TestTotalConnectClient(unittest.TestCase):
             )
             serialize_responses.append(RESPONSE_CONNECTION_ERROR)
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("time.sleep", autospec=True), patch(
+        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+            "time.sleep", autospec=True
+        ), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request, pytest.raises(
             Exception
@@ -185,9 +193,11 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_ARMED_AWAY,
         ]
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
+        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+            "builtins.eval", side_effect=eval_responses
+        ) as mock_request:
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
@@ -208,9 +218,11 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_UNKNOWN,
         ]
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
+        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+            "builtins.eval", side_effect=eval_responses
+        ) as mock_request:
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )

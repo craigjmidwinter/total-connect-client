@@ -34,7 +34,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_DISARMED,
         ]
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ) as mock_request:
             client = TotalConnectClient.TotalConnectClient(
@@ -50,7 +50,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_AUTHENTICATE_EMPTY,
         ]
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ) as mock_request, pytest.raises(Exception):
 
@@ -68,7 +68,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_DISARMED,
         ]
 
-        with patch("zeep.Client", autospec=True), patch(
+        with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ) as mock_request:
             client = TotalConnectClient.TotalConnectClient(

@@ -17,7 +17,7 @@ def create_client():
         RESPONSE_DISARMED,
     ]
 
-    with patch("zeep.Client", autospec=True), patch(
+    with patch(
         "TotalConnectClient.TotalConnectClient.request", side_effect=responses
     ) as mock_request:
         client = TotalConnectClient.TotalConnectClient(
