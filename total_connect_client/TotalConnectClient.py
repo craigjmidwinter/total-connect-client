@@ -281,6 +281,9 @@ class TotalConnectClient:
             location_id = location["LocationID"]
             self.locations[location_id] = TotalConnectLocation(location, self)
 
+            # set auto_bypass
+            self.locations[location_id].auto_bypass_low_battery = self.auto_bypass_low_battery
+
             # set the usercode for the location
             if location_id in self.usercodes:
                 self.locations[location_id].usercode = self.usercodes[location_id]
