@@ -568,6 +568,7 @@ class TotalConnectLocation:
         self.arming_state = None
         self.zones = {}
         self.usercode = DEFAULT_USERCODE
+        self._auto_bypass_low_battery = False
 
     def __str__(self):
         """Return a text string that is printable."""
@@ -593,6 +594,16 @@ class TotalConnectLocation:
             zones = zones + str(self.zones[zone])
 
         return data + zones
+
+    @property
+    def auto_bypass_low_battery(self):
+        """Return true if set to automatically bypass a low battery."""
+        return self._auto_bypass_low_battery
+
+    @auto_bypass_low_battery.setter
+    def auto_bypass_low_battery(self, value: bool):
+        """Set to automatically bypass a low battery."""
+        self._auto_bypass_low_battery = value
 
     def set_zone_details(self, zone_status):
         """Update from GetZonesListInStateEx_V1. Return true if successful."""
@@ -645,7 +656,7 @@ class TotalConnectLocation:
 
             if (
                 self.zones[zone["ZoneID"]].is_low_battery()
-                and self.parent.auto_bypass_low_battery
+                and self._auto_bypass_low_battery
             ):
                 self.parent.zone_bypass(zone["ZoneID"], self.location_id)
 
