@@ -121,3 +121,26 @@ class TestTotalConnectLocation(unittest.TestCase):
         loc.set_status(METADATA_DISARMED_LOW_BATTERY)
         assert mock_client.zone_bypass.call_count == 1
         
+    def tests_set_usercode(self):
+        """Test set_usercode."""
+
+        mock_client = Mock()
+
+        loc = TotalConnectClient.TotalConnectLocation(
+            LOCATION_INFO_BASIC_NORMAL, mock_client
+        )
+
+        # should start with default usercode
+        assert loc.usercode == TotalConnectClient.DEFAULT_USERCODE
+
+        # now set it with an invalid code
+        mock_client.validate_usercode.return_value = False
+        assert loc.set_usercode("0000") is False
+        assert loc.usercode == TotalConnectClient.DEFAULT_USERCODE
+        assert mock_client.validate_usercode.call_count == 1
+
+        # now set it with a valid code
+        mock_client.validate_usercode.return_value = True
+        assert loc.set_usercode("1234") is True
+        assert loc.usercode == "1234"
+        assert mock_client.validate_usercode.call_count == 2
