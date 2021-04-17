@@ -62,7 +62,6 @@ class TestTotalConnectLocation(unittest.TestCase):
 
         loc = TotalConnectClient.TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
         self.assertTrue(loc.set_status(deepcopy(METADATA_DISARMED_LOW_BATTERY)))
-        print(loc)
         assert loc.zones["1"].is_low_battery() is True
 
     def tests_set_status_none(self):
