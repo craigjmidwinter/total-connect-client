@@ -275,7 +275,7 @@ class TotalConnectClient:
             x.split("=") for x in response["ModuleFlags"].split(",")
         )
 
-        self._user = total_connect_user(response["UserInfo"])
+        self._user = TotalConnectUser(response["UserInfo"])
 
         for location in location_data:
             location_id = location["LocationID"]
@@ -844,7 +844,7 @@ class TotalConnectZone:
         return self.zone_type_id == ZONE_TYPE_CARBON_MONOXIDE
 
 
-class total_connect_user:
+class TotalConnectUser:
     """User for Total Connect."""
 
     def __init__(self, user_info):
