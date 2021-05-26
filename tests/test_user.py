@@ -1,8 +1,8 @@
-"""Test total_connect_user."""
+"""Test TotalConnectUser."""
 
 import unittest
 
-from TotalConnectClient import total_connect_user
+from TotalConnectClient import TotalConnectUser
 
 USER_GOOD = {
     "UserID": "1234567",
@@ -24,13 +24,13 @@ USER_BAD_CONFIG = {
 
 
 class TestUser(unittest.TestCase):
-    """Test total_connect_user."""
+    """Test TotalConnectUser."""
 
     def setUp(self):
         """Test setup."""
-        self.user_good = total_connect_user(USER_GOOD)
-        self.user_bad_master = total_connect_user(USER_BAD_MASTER)
-        self.user_bad_config = total_connect_user(USER_BAD_CONFIG)
+        self.user_good = TotalConnectUser(USER_GOOD)
+        self.user_bad_master = TotalConnectUser(USER_BAD_MASTER)
+        self.user_bad_config = TotalConnectUser(USER_BAD_CONFIG)
 
     def tearDown(self):
         """Tear down."""

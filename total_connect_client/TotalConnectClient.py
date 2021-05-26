@@ -284,11 +284,14 @@ class TotalConnectClient:
             x.split("=") for x in response["ModuleFlags"].split(",")
         )
 
-        self._user = total_connect_user(response["UserInfo"])
+        self._user = TotalConnectUser(response["UserInfo"])
 
         for location in location_data:
             location_id = location["LocationID"]
             self.locations[location_id] = TotalConnectLocation(location, self)
+
+            # set auto_bypass
+            self.locations[location_id].auto_bypass_low_battery = self.auto_bypass_low_battery
 
             # set the usercode for the location
             if location_id in self.usercodes:
@@ -577,6 +580,7 @@ class TotalConnectLocation:
         self.arming_state = None
         self.zones = {}
         self.usercode = DEFAULT_USERCODE
+        self._auto_bypass_low_battery = False
 
     def __str__(self):
         """Return a text string that is printable."""
@@ -602,6 +606,16 @@ class TotalConnectLocation:
             zones = zones + str(self.zones[zone])
 
         return data + zones
+
+    @property
+    def auto_bypass_low_battery(self):
+        """Return true if set to automatically bypass a low battery."""
+        return self._auto_bypass_low_battery
+
+    @auto_bypass_low_battery.setter
+    def auto_bypass_low_battery(self, value: bool):
+        """Set to automatically bypass a low battery."""
+        self._auto_bypass_low_battery = value
 
     def set_zone_details(self, zone_status):
         """Update from GetZonesListInStateEx_V1. Return true if successful."""
@@ -654,7 +668,7 @@ class TotalConnectLocation:
 
             if (
                 self.zones[zone["ZoneID"]].is_low_battery()
-                and self.parent.auto_bypass_low_battery
+                and self._auto_bypass_low_battery
             ):
                 self.parent.zone_bypass(zone["ZoneID"], self.location_id)
 
@@ -839,7 +853,7 @@ class TotalConnectZone:
         return self.zone_type_id == ZONE_TYPE_CARBON_MONOXIDE
 
 
-class total_connect_user:
+class TotalConnectUser:
     """User for Total Connect."""
 
     def __init__(self, user_info):

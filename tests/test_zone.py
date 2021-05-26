@@ -11,6 +11,7 @@ from const import (
     ZONE_STATUS_LYRIC_POLICE,
     ZONE_STATUS_LYRIC_TEMP,
     ZONE_STATUS_NORMAL,
+    ZONE_LOW_BATTERY,
 )
 from TotalConnectClient import TotalConnectZone as tcz
 
@@ -37,14 +38,6 @@ ZONE_TAMPERED = {
     "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": TotalConnectClient.ZONE_STATUS_TROUBLE,
-}
-
-ZONE_LOW_BATTERY = {
-    "ZoneDescription": "Low Battery",
-    "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
-    "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_LOW_BATTERY,
 }
 
 ZONE_BYPASSED_LOW_BATTERY = {
@@ -152,6 +145,12 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_normal.is_faulted())
         self.zone_normal.update(ZONE_STATUS_NORMAL)
         self.assertFalse(self.zone_normal.is_faulted())
+
+        self.assertFalse(self.zone_normal.is_low_battery())
+        self.zone_normal.update(ZONE_LOW_BATTERY)
+        self.assertTrue(self.zone_normal.is_low_battery())
+        self.zone_normal.update(ZONE_STATUS_NORMAL)
+        self.assertFalse(self.zone_normal.is_low_battery())
 
     def tests_update_wrong_zone(self):
         """Test updates to the wrong zone."""

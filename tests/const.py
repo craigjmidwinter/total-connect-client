@@ -31,10 +31,23 @@ ZONE_NORMAL = {
     "PartitionId": "1",
 }
 
+ZONE_LOW_BATTERY = {
+    "ZoneID": "1",
+    "ZoneDescription": "Low Battery",
+    "PartitionId": "1",
+    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "CanBeBypassed": 1,
+    "ZoneStatus": TotalConnectClient.ZONE_STATUS_LOW_BATTERY,
+}
+
 ZONE_INFO = []
 ZONE_INFO.append(ZONE_NORMAL)
-ZONES = {"ZoneInfo": ZONE_INFO}
 
+ZONE_INFO_LOW_BATTERY = []
+ZONE_INFO_LOW_BATTERY.append(ZONE_LOW_BATTERY)
+
+ZONES = {"ZoneInfo": ZONE_INFO}
+ZONES_LOW_BATTERY = {"ZoneInfo": ZONE_INFO_LOW_BATTERY}
 ZONE_STATUS_NORMAL = {
     "PartitionId": "1",
     "Batterylevel": "-1",
@@ -121,6 +134,17 @@ PARTITIONS_ARMED_AWAY = {"PartitionInfo": PARTITION_INFO_ARMED_AWAY}
 METADATA_DISARMED = {
     "Partitions": PARTITIONS_DISARMED,
     "Zones": ZONES,
+    "PromptForImportSecuritySettings": False,
+    "IsInACLoss": False,
+    "IsCoverTampered": False,
+    "Bell1SupervisionFailure": False,
+    "Bell2SupervisionFailure": False,
+    "IsInLowBattery": False,
+}
+
+METADATA_DISARMED_LOW_BATTERY = {
+    "Partitions": PARTITIONS_DISARMED,
+    "Zones": ZONES_LOW_BATTERY,
     "PromptForImportSecuritySettings": False,
     "IsInACLoss": False,
     "IsCoverTampered": False,
