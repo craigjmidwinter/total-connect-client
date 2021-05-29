@@ -658,6 +658,10 @@ class TotalConnectLocation:
             return False
 
         if data["Zones"] is None:
+            logging.info(
+                f"total-connect-client returned zero zones. "
+                f"Sync your panel using the TotalConnect app or website.)."
+            )
             return False
 
         if "ZoneInfo" not in data["Zones"]:
