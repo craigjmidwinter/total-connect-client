@@ -81,6 +81,14 @@ class TestTotalConnectLocation(unittest.TestCase):
         data = deepcopy(METADATA_DISARMED)
         del data["Zones"]["ZoneInfo"]
         self.assertFalse(loc.set_status(data))
+
+        """
+        See issue #112 when user's system returned zero zones,
+        and zeep set "Zones" to None
+        """
+        data["Zones"] = None
+        self.assertFalse(loc.set_status(data))
+
         del data["Zones"]
         self.assertFalse(loc.set_status(data))
         self.assertTrue(loc.is_disarmed())
