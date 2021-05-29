@@ -657,6 +657,9 @@ class TotalConnectLocation:
         if "Zones" not in data:
             return False
 
+        if data["Zones"] is None:
+            return False
+
         if "ZoneInfo" not in data["Zones"]:
             return False
 
