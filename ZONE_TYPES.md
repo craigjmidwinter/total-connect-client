@@ -6,7 +6,7 @@ Zone Type # | Type | Notes
 ------------ | - | -
 0 | Security | Lynx Touch 7000 and sensors 5820L, 5818MNL, 5800RPS, 5898
 1 | Security | Lyric and 5800MINI
-3 | tbd | ProA7
+3 | Security | 5800mini via the ProA7 "takeover" module
 4 | Security | Lyric and SiXPIR motion
 6 | tbd | Lyric "Police", perhaps a button?
 7 | tbd | ProA7
