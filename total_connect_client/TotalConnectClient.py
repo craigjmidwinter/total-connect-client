@@ -665,6 +665,7 @@ class TotalConnectLocation:
             return False
 
         if "Zones" not in data:
+            logging.warning("Zones not found in PanelMetaDataAndStatus in set_status()")
             return False
 
         if data["Zones"] is None:
@@ -673,11 +674,13 @@ class TotalConnectLocation:
                 f"Sync your panel using the TotalConnect app or website.)."
             )
             return False
-
+        """
+        pprint(data["Zones"])
         if "ZoneInfo" not in data["Zones"]:
+            logging.warning("ZoneInfo not found in Zones in set_status()")
             return False
-
-        for zone in data["Zones"]["ZoneInfo"]:
+        """
+        for zone in data["Zones"]["ZoneInfoEx"]:
             if zone["ZoneID"] in self.zones:
                 self.zones[zone["ZoneID"]].update(zone)
             else:
