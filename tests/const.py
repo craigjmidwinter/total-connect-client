@@ -174,16 +174,17 @@ METADATA_ARMED_STAY_NIGHT["Partitions"] = PARTITIONS_ARMED_STAY_NIGHT
 METADATA_ARMED_AWAY = METADATA_DISARMED.copy()
 METADATA_ARMED_AWAY["Partitions"] = PARTITIONS_ARMED_AWAY
 
-RESPONSE_DISARMED = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_DISARMED}
-RESPONSE_ARMED_STAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_STAY}
+RESPONSE_DISARMED = {"ResultCode": 0, "ResultData": "Success", "PanelMetadataAndStatus": METADATA_DISARMED}
+RESPONSE_ARMED_STAY = {"ResultCode": 0, "ResultData": "Success", "PanelMetadataAndStatus": METADATA_ARMED_STAY}
 RESPONSE_ARMED_STAY_NIGHT = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT,
 }
-RESPONSE_ARMED_AWAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_AWAY}
+RESPONSE_ARMED_AWAY = {"ResultCode": 0, "ResultData": "Success", "PanelMetadataAndStatus": METADATA_ARMED_AWAY}
 
 RESPONSE_AUTHENTICATE = {
     "ResultCode": 0,
+    "ResultData": "Success",
     "SessionID": 1,
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
@@ -227,4 +228,25 @@ RESPONSE_FEATURE_NOT_SUPPORTED = {
 RESPONSE_UNKNOWN = {
     "ResultCode": -123456,
     "ResultData": "testing unknown result code",
+}
+
+PARTITION_DETAILS_1 = {
+    "PartitionID": 1,
+    "ArmingState": 0,
+    "PartitionName": "Test1",
+}
+
+PARTITION_DETAILS_2 = {
+    "PartitionID": 2,
+    "ArmingState": 0,
+    "PartitionName": "Test2",
+}
+
+PARTITION_DETAILS = []
+PARTITION_DETAILS.append(PARTITION_DETAILS_1)
+
+RESPONSE_PARTITION_DETAILS = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultData": "testing partition details",
+    "PartitionsInfoList": PARTITION_DETAILS,
 }

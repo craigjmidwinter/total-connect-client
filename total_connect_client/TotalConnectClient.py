@@ -6,12 +6,16 @@ from pprint import pprint
 import zeep
 
 from device import TotalConnectDevice
+from partition import TotalConnectPartition
+
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
+
+RESULT_SUCCESS = 0
 
 ZONE_STATUS_NORMAL = 0
 ZONE_STATUS_BYPASSED = 1
@@ -290,22 +294,26 @@ class TotalConnectClient:
 
         for location in location_data:
             location_id = location["LocationID"]
-            self.locations[location_id] = TotalConnectLocation(location, self)
+
+            # self.locations[location_id] = TotalConnectLocation(location, self)
+            new_location = TotalConnectLocation(location, self)
 
             # set auto_bypass
-            self.locations[location_id].auto_bypass_low_battery = self.auto_bypass_low_battery
+            new_location.auto_bypass_low_battery = self.auto_bypass_low_battery
 
             # set the usercode for the location
             if location_id in self.usercodes:
-                self.locations[location_id].usercode = self.usercodes[location_id]
+                new_location.usercode = self.usercodes[location_id]
             elif str(location_id) in self.usercodes:
-                self.locations[location_id].usercode = self.usercodes[str(location_id)]
+                new_location.usercode = self.usercodes[str(location_id)]
             else:
                 logging.warning(f"No usercode for location {location_id}.")
 
+            new_location.get_partition_details()
+            self.locations[location_id] = new_location
             self.get_zone_details(location_id)
             self.get_panel_meta_data(location_id)
-
+            
         if len(self.locations) < 1:
             Exception("No locations found!")
 
@@ -421,29 +429,8 @@ class TotalConnectClient:
 
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
-        start_time = time.time()
-        result = self.request(
-            f"GetPanelMetaDataAndFullStatus(self.token, {location_id}, 0, 0, 1)"
-        )
-
-        if result["ResultCode"] != self.SUCCESS:
-            logging.error(
-                f"Could not retrieve panel meta data. "
-                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
-            )
-            return False
-
-        if "PanelMetadataAndStatus" in result:
-            status = self.locations[location_id].set_status(
-                result["PanelMetadataAndStatus"]
-            )
-            self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
-            return status
-        else:
-            logging.warning("Panel_meta_data is empty.")
-
-        self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
-        return result
+        # DEPRECATED
+        return self.locations[location_id].get_panel_meta_data()
 
     def zone_status(self, location_id, zone_id):
         """Get status of a zone."""
@@ -579,6 +566,7 @@ class TotalConnectLocation:
         self.last_updated_timestamp_ticks = None
         self.configuration_sequence_number = None
         self.arming_state = None
+        self.partitions = {}
         self.zones = {}
         self.usercode = DEFAULT_USERCODE
         self._auto_bypass_low_battery = False
@@ -614,12 +602,16 @@ class TotalConnectLocation:
         devices = f"DEVICES: {len(self.devices)}\n\n"
         for device in self.devices:
             devices = devices + str(self.devices[device]) + "\n"
-        
+
+        partitions = f"PARTITIONS: {len(self.partitions)}\n\n"
+        for partition in self.partitions:
+            partitions = partitions + str(self.partitions[partition]) + "\n"
+
         zones = f"ZONES: {len(self.zones)}\n\n"
         for zone in self.zones:
             zones = zones + str(self.zones[zone])
 
-        return data + devices + zones
+        return data + devices + partitions + zones
 
     @property
     def auto_bypass_low_battery(self):
@@ -649,6 +641,39 @@ class TotalConnectLocation:
 
         return True
 
+    def get_panel_meta_data(self):
+        """Get all meta data about the alarm panel."""
+        # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPanelMetaDataAndFullStatus
+
+        # f"GetPanelMetaDataAndFullStatus(self.token, {location_id}, 0, 0, 1)"
+        partitions = []
+        for id in self.partitions:
+            partitions.append(id)
+
+        partition_list = {"int": partitions}
+
+        result = self.parent.request(
+            f"GetPanelMetaDataAndFullStatusEx_V2(self.token, {self.location_id}, 0, 0, {partition_list})"
+        )
+
+        if result["ResultCode"] != RESULT_SUCCESS:
+            logging.error(
+                f"Could not retrieve panel meta data. "
+                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
+            )
+            return False
+
+        if "PanelMetadataAndStatus" in result:
+            status = self.set_status(
+                result["PanelMetadataAndStatus"]
+            )
+            return status
+        else:
+            logging.warning("Panel_meta_data is empty.")
+
+        return result
+
+
     def set_status(self, data):
         """Update from 'PanelMetadataAndStatus'. Return true on success."""
         if data is None:
@@ -663,10 +688,8 @@ class TotalConnectLocation:
         if "Partitions" not in data:
             return False
 
-        if "PartitionInfo" not in data["Partitions"]:
+        if not self.update_partitions(data["Partitions"]):
             return False
-
-        self.arming_state = data["Partitions"]["PartitionInfo"][0]["ArmingState"]
 
         if "Zones" not in data:
             return False
@@ -694,6 +717,54 @@ class TotalConnectLocation:
                 self.parent.zone_bypass(zone["ZoneID"], self.location_id)
 
         return True
+
+    def update_partitions(self, data):
+        """Update partition info."""
+        if "PartitionInfo" not in data:
+            return False
+
+        partition_info = data["PartitionInfo"]
+
+        if partition_info is None:
+            return False
+
+        self.arming_state = partition_info[0]["ArmingState"]
+        # loop through partitions and update
+        return True
+
+    def get_partition_details(self):
+        """Get partition details for this location."""
+        # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPartitionsDetails
+
+        result = self.parent.request(f"GetPartitionsDetails(self.token, {self.location_id}, {self.security_device_id})")
+
+        if result["ResultCode"] != RESULT_SUCCESS:
+            logging.error(
+                f"Could not get partition details for "
+                f"device {self.security_device_id} at "
+                f"location {self.location_id}."
+                f"ResultCode: {result['ResultCode']}. "
+                f"ResultData: {result['ResultData']}"
+            )
+            return False
+
+        if "PartitionsInfoList" not in result:
+            return False
+
+        partition_info_list = result["PartitionsInfoList"]
+
+        if "PartitionDetails" not in partition_info_list:
+            return False
+
+        partition_details = partition_info_list["PartitionDetails"]
+
+        # loop through list and add partitions
+        for partition in partition_details:
+            new_partition = TotalConnectPartition(partition)
+            self.partitions[new_partition.id] = new_partition
+
+        return True
+
 
     def is_low_battery(self):
         """Return true if low battery."""
