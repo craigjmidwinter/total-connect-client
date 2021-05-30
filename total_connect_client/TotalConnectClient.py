@@ -493,40 +493,8 @@ class TotalConnectClient:
 
     def get_zone_details(self, location_id):
         """Get Zone details. Return True if successful."""
-        start_time = time.time()
-        result = self.request(
-            "GetZonesListInStateEx_V1(self.token, "
-            + str(location_id)
-            + ', {"int": ["1"]}, 0)'
-        )
-
-        if result["ResultCode"] == self.FEATURE_NOT_SUPPORTED:
-            logging.warning(
-                "Getting Zone Details is a feature not supported by "
-                "your Total Connect account or hardware."
-            )
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-            return False
-
-        if result["ResultCode"] != self.SUCCESS:
-            logging.error(
-                f"Could not get zone details. "
-                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
-            )
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-            return False
-
-        zone_status = result.get("ZoneStatus")
-        if zone_status is not None:
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-            return self.locations[location_id].set_zone_details(zone_status)
-
-        logging.error(
-            f"Could not get zone details. "
-            f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
-        )
-        self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-        return False
+        # DEPRECATED
+        return self.locations[location_id].get_zone_details()
 
 
 class TotalConnectLocation:
@@ -717,6 +685,42 @@ class TotalConnectLocation:
                 self.parent.zone_bypass(zone["ZoneID"], self.location_id)
 
         return True
+
+    def get_zone_details(self):
+        """Get Zone details. Return True if successful."""
+        partitions = []
+        for id in self.partitions:
+            partitions.append(id)
+
+        partition_list = {"int": partitions}
+
+        result = self.parent.request(
+            f"GetZonesListInStateEx_V1(self.token, {self.location_id}, {partition_list}, 0)"
+        )
+
+        if result["ResultCode"] == self.parent.FEATURE_NOT_SUPPORTED:
+            logging.warning(
+                "Getting Zone Details is a feature not supported by "
+                "your Total Connect account or hardware."
+            )
+            return False
+
+        if result["ResultCode"] != RESULT_SUCCESS:
+            logging.error(
+                f"Could not get zone details. "
+                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
+            )
+            return False
+
+        zone_status = result.get("ZoneStatus")
+        if zone_status is not None:
+            return self.set_zone_details(zone_status)
+
+        logging.error(
+            f"Could not get zone details. "
+            f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
+        )
+        return False
 
     def update_partitions(self, data):
         """Update partition info."""
