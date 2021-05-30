@@ -1,6 +1,7 @@
 """Test total_connect_client."""
 
 import unittest
+from unittest.runner import TextTestRunner
 
 import pytest
 import TotalConnectClient
@@ -287,3 +288,18 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_lyric_motion.is_type_motion())
         self.assertFalse(self.zone_lyric_police.is_type_motion())
         self.assertFalse(self.zone_lyric_temp.is_type_motion())
+
+def test_proa7_zones():
+    """Test ProA7."""
+
+    ZONE_MEDICAL = {
+        "ZoneDescription": "Gas",
+        "PartitionId": "1",
+        "ZoneTypeId": TotalConnectClient.ZONE_TYPE_PROA7_MEDICAL,
+        "CanBeBypassed": 0,
+        "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+    }
+
+    z = tcz(ZONE_MEDICAL)
+    assert z.is_type_medical() is True
+    assert z.is_type_button() is True

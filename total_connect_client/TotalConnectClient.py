@@ -26,11 +26,16 @@ ZONE_STATUS_TRIGGERED = 256
 
 ZONE_TYPE_SECURITY = 0
 ZONE_TYPE_LYRIC_CONTACT = 1
+ZONE_TYPE_PROA7_SECURITY = 3
 ZONE_TYPE_LYRIC_MOTION = 4
 ZONE_TYPE_LYRIC_POLICE = 6
+ZONE_TYPE_PROA7_POLICE = 7
 ZONE_TYPE_FIRE_SMOKE = 9
+ZONE_TYPE_PROA7_INTERIOR_DELAY = 10
 ZONE_TYPE_LYRIC_TEMP = 12
+ZONE_TYPE_PROA7_FLOOD = 12
 ZONE_TYPE_CARBON_MONOXIDE = 14
+ZONE_TYPE_PROA7_MEDICAL = 15
 ZONE_TYPE_LYRIC_LOCAL_ALARM = 89
 
 ZONE_BYPASS_SUCCESS = 0
@@ -924,15 +929,25 @@ class TotalConnectZone:
 
     def is_type_button(self):
         """Return true if zone is a button."""
-        return self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0
+ 
+        # as seen so far, any security zone that cannot be bypassed is a button on a panel
+        if self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0:
+            return True
+
+        if self.zone_type_id in (ZONE_TYPE_PROA7_MEDICAL, ZONE_TYPE_PROA7_POLICE):
+            return True
+
+        return False
 
     def is_type_security(self):
         """Return true if zone type is security."""
         return self.zone_type_id in (
             ZONE_TYPE_SECURITY,
             ZONE_TYPE_LYRIC_CONTACT,
+            ZONE_TYPE_PROA7_SECURITY,
             ZONE_TYPE_LYRIC_MOTION,
             ZONE_TYPE_LYRIC_POLICE,
+            ZONE_TYPE_PROA7_INTERIOR_DELAY,
             ZONE_TYPE_LYRIC_LOCAL_ALARM,
         )
 
@@ -948,6 +963,9 @@ class TotalConnectZone:
         """Return true if zone type is carbon monoxide."""
         return self.zone_type_id == ZONE_TYPE_CARBON_MONOXIDE
 
+    def is_type_medical(self):
+        """Return true if zone type is medical."""
+        return self.zone_type_id == ZONE_TYPE_PROA7_MEDICAL
 
 class TotalConnectUser:
     """User for Total Connect."""
