@@ -2,8 +2,10 @@
 
 import logging
 import time
-
+from pprint import pprint
 import zeep
+
+from device import TotalConnectDevice
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
@@ -570,7 +572,6 @@ class TotalConnectLocation:
             x.split("=") for x in location_info_basic["LocationModuleFlags"].split(",")
         )
         self.security_device_id = location_info_basic["SecurityDeviceID"]
-        self._device_list = location_info_basic["DeviceList"]
         self.parent = parent
         self.ac_loss = None
         self.low_battery = None
@@ -582,13 +583,22 @@ class TotalConnectLocation:
         self.usercode = DEFAULT_USERCODE
         self._auto_bypass_low_battery = False
 
+        self.devices = {}
+        if "DeviceList" in location_info_basic:
+            if location_info_basic["DeviceList"] is not None:
+                if "DeviceInfoBasic" in location_info_basic["DeviceList"]:
+                    device_info_basic = location_info_basic["DeviceList"]["DeviceInfoBasic"]
+                    if device_info_basic is not None:
+                        for single_device in device_info_basic:
+                            device = TotalConnectDevice(single_device)
+                            self.devices[device.id] = device
+
     def __str__(self):
         """Return a text string that is printable."""
         data = (
             f"LOCATION {self.location_id} - {self.location_name}\n\n"
             f"PhotoURL: {self._photo_url}\n"
             f"SecurityDeviceID: {self.security_device_id}\n"
-            f"DeviceList: {self._device_list}\n"
             f"AcLoss: {self.ac_loss}\n"
             f"LowBattery: {self.low_battery}\n"
             f"IsCoverTampered: {self.cover_tampered}\n"
@@ -601,11 +611,15 @@ class TotalConnectLocation:
 
         data = data + "\n"
 
+        devices = f"DEVICES: {len(self.devices)}\n\n"
+        for device in self.devices:
+            devices = devices + str(self.devices[device]) + "\n"
+        
         zones = f"ZONES: {len(self.zones)}\n\n"
         for zone in self.zones:
             zones = zones + str(self.zones[zone])
 
-        return data + zones
+        return data + devices + zones
 
     @property
     def auto_bypass_low_battery(self):

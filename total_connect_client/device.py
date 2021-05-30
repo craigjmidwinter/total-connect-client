@@ -21,11 +21,8 @@ class TotalConnectDevice:
             f"  ClassID: {self.class_id}\n"
             f"  Security Panel Type ID: {self.security_panel_type_id}\n"
             f"  Serial Number: {self.serial_number}\n"
-            f"  Serial Text: P{self.serial_text}\n"
-            f"  Device Flags:\n"
+            f"  Serial Text: {self.serial_text}\n"
+            f"  Device Flags: {self.flags}\n"
         )
 
-        for key, value in self.flags.items():
-            data = data + f"    {key}: {value}\n"
-
-        return data + "\n"
+        return data
