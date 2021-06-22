@@ -2,7 +2,6 @@
 
 import logging
 import time
-from pprint import pprint
 import zeep
 
 from device import TotalConnectDevice
@@ -85,8 +84,8 @@ class TotalConnectClient:
         self.soap_base = "self.soapClient.service."
         self.soap_ready = False
 
-        self.applicationId = "14588"
-        self.applicationVersion = "1.0.34"
+        self.application_id = "14588"
+        self.application_version = "1.0.34"
         self.username = username
         self.password = password
 
@@ -208,13 +207,13 @@ class TotalConnectClient:
             if self._populated:
                 response = self.request(
                     "AuthenticateUserLogin(self.username, self.password, "
-                    "self.applicationId, self.applicationVersion)"
+                    "self.application_id, self.application_version)"
                 )
             else:
                 # this request is very slow, so only use it when necessary
                 response = self.request(
                     "LoginAndGetSessionDetails(self.username, self.password, "
-                    "self.applicationId, self.applicationVersion)"
+                    "self.application_id, self.application_version)"
                 )
 
             if response["ResultCode"] == self.SUCCESS:
@@ -668,29 +667,8 @@ class TotalConnectLocation:
             logging.warning("Zones not found in PanelMetaDataAndStatus in set_status()")
             return False
 
-        if data["Zones"] is None:
-            logging.info(
-                f"total-connect-client returned zero zones. "
-                f"Sync your panel using the TotalConnect app or website.)."
-            )
+        if not self.update_zones(data["Zones"]):
             return False
-        """
-        pprint(data["Zones"])
-        if "ZoneInfo" not in data["Zones"]:
-            logging.warning("ZoneInfo not found in Zones in set_status()")
-            return False
-        """
-        for zone in data["Zones"]["ZoneInfoEx"]:
-            if zone["ZoneID"] in self.zones:
-                self.zones[zone["ZoneID"]].update(zone)
-            else:
-                self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
-
-            if (
-                self.zones[zone["ZoneID"]].is_low_battery()
-                and self._auto_bypass_low_battery
-            ):
-                self.parent.zone_bypass(zone["ZoneID"], self.location_id)
 
         return True
 
@@ -742,6 +720,40 @@ class TotalConnectLocation:
 
         self.arming_state = partition_info[0]["ArmingState"]
         # loop through partitions and update
+        return True
+
+    def update_zones(self, data):
+        """Update zone info from ZoneInfo or ZoneInfoEx."""
+
+        if data is None:
+            logging.info(
+                f"total-connect-client returned zero zones. "
+                f"Sync your panel using the TotalConnect app or website."
+            )
+            return False
+
+        zone_info = None
+
+        if "ZoneInfoEx" in data:
+            zone_info = data["ZoneInfoEx"]
+        elif "ZoneInfo" in data:
+            zone_info = data["ZoneInfo"]
+
+        if zone_info is None:
+            return False
+
+        for zone in zone_info:
+            if zone["ZoneID"] in self.zones:
+                self.zones[zone["ZoneID"]].update(zone)
+            else:
+                self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
+
+            if (
+                self.zones[zone["ZoneID"]].is_low_battery()
+                and self._auto_bypass_low_battery
+            ):
+                self.parent.zone_bypass(zone["ZoneID"], self.location_id)
+
         return True
 
     def get_partition_details(self):
