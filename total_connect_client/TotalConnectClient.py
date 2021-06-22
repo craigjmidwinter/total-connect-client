@@ -2,6 +2,7 @@
 
 import logging
 import time
+
 import zeep
 
 from device import TotalConnectDevice
@@ -317,7 +318,7 @@ class TotalConnectClient:
             self.locations[location_id] = new_location
             self.get_zone_details(location_id)
             self.get_panel_meta_data(location_id)
-            
+
         if len(self.locations) < 1:
             Exception("No locations found!")
 
@@ -547,7 +548,9 @@ class TotalConnectLocation:
         if "DeviceList" in location_info_basic:
             if location_info_basic["DeviceList"] is not None:
                 if "DeviceInfoBasic" in location_info_basic["DeviceList"]:
-                    device_info_basic = location_info_basic["DeviceList"]["DeviceInfoBasic"]
+                    device_info_basic = location_info_basic["DeviceList"][
+                        "DeviceInfoBasic"
+                    ]
                     if device_info_basic is not None:
                         for single_device in device_info_basic:
                             device = TotalConnectDevice(single_device)
@@ -636,15 +639,12 @@ class TotalConnectLocation:
             return False
 
         if "PanelMetadataAndStatus" in result:
-            status = self.set_status(
-                result["PanelMetadataAndStatus"]
-            )
+            status = self.set_status(result["PanelMetadataAndStatus"])
             return status
         else:
             logging.warning("Panel_meta_data is empty.")
 
         return result
-
 
     def set_status(self, data):
         """Update from 'PanelMetadataAndStatus'. Return true on success."""
@@ -760,7 +760,9 @@ class TotalConnectLocation:
         """Get partition details for this location."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPartitionsDetails
 
-        result = self.parent.request(f"GetPartitionsDetails(self.token, {self.location_id}, {self.security_device_id})")
+        result = self.parent.request(
+            f"GetPartitionsDetails(self.token, {self.location_id}, {self.security_device_id})"
+        )
 
         if result["ResultCode"] != RESULT_SUCCESS:
             logging.error(
@@ -788,7 +790,6 @@ class TotalConnectLocation:
             self.partitions[new_partition.id] = new_partition
 
         return True
-
 
     def is_low_battery(self):
         """Return true if low battery."""
@@ -944,7 +945,7 @@ class TotalConnectZone:
 
     def is_type_button(self):
         """Return true if zone is a button."""
- 
+
         # as seen so far, any security zone that cannot be bypassed is a button on a panel
         if self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0:
             return True
@@ -981,4 +982,3 @@ class TotalConnectZone:
     def is_type_medical(self):
         """Return true if zone type is medical."""
         return self.zone_type_id == ZONE_TYPE_PROA7_MEDICAL
-

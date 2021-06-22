@@ -9,9 +9,7 @@ import TotalConnectClient
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
 if len(sys.argv) != 5:
-    print(
-        "usage:  python3 test.py username password LocationID DeviceID\n"
-    )
+    print("usage:  python3 test.py username password LocationID DeviceID\n")
     sys.exit()
 
 USERNAME = sys.argv[1]

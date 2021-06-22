@@ -1,11 +1,11 @@
 """Total Connect Device."""
 
+
 class TotalConnectDevice:
     """Device class for Total Connect."""
 
     def __init__(self, info):
         """Initialize device based on DeviceInfoBasic."""
-
         self.id = info.get("DeviceID")
         self.name = info.get("DeviceName")
         self.class_id = info.get("DeviceClassID")
@@ -17,9 +17,7 @@ class TotalConnectDevice:
         if flags is None:
             self.flags = {}
         else:
-            self.flags = dict(
-                x.split("=") for x in flags.split(",")
-            )
+            self.flags = dict(x.split("=") for x in flags.split(","))
 
     def __str__(self):
         """Return a string that is printable."""

@@ -1,5 +1,6 @@
 """Total Connect Partition."""
 
+
 class TotalConnectPartition:
     """Partition class for Total Connect."""
 
@@ -28,4 +29,3 @@ class TotalConnectPartition:
 
         self.arming_state = info["ArmingState"]
         return True
-        
