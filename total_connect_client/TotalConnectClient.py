@@ -706,7 +706,7 @@ class TotalConnectLocation:
             return False
 
         self.arming_state = partition_info[0]["ArmingState"]
-        # loop through partitions and update
+        # TODO:  loop through partitions and update
         return True
 
     def update_zones(self, data):
@@ -772,15 +772,13 @@ class TotalConnectLocation:
         partition_details = partition_info_list["PartitionDetails"]
 
         # loop through list and add partitions
+        new_partition_list = []
         for partition in partition_details:
             new_partition = TotalConnectPartition(partition)
             self.partitions[new_partition.id] = new_partition
+            new_partition_list.append(new_partition.id)
 
-
-        partitions = []
-        for id in self.partitions:
-            partitions.append(id)
-        self._partition_list = {"int": partitions}
+        self._partition_list = {"int": new_partition_list}
 
         return True
 
