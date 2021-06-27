@@ -540,6 +540,7 @@ class TotalConnectLocation:
         self.configuration_sequence_number = None
         self.arming_state = None
         self.partitions = {}
+        self._partition_list = None
         self.zones = {}
         self.usercode = DEFAULT_USERCODE
         self._auto_bypass_low_battery = False
@@ -619,16 +620,8 @@ class TotalConnectLocation:
     def get_panel_meta_data(self):
         """Get all meta data about the alarm panel."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPanelMetaDataAndFullStatus
-
-        # f"GetPanelMetaDataAndFullStatus(self.token, {location_id}, 0, 0, 1)"
-        partitions = []
-        for id in self.partitions:
-            partitions.append(id)
-
-        partition_list = {"int": partitions}
-
         result = self.parent.request(
-            f"GetPanelMetaDataAndFullStatusEx_V2(self.token, {self.location_id}, 0, 0, {partition_list})"
+            f"GetPanelMetaDataAndFullStatusEx_V2(self.token, {self.location_id}, 0, 0, {self._partition_list})"
         )
 
         if result["ResultCode"] != RESULT_SUCCESS:
@@ -674,14 +667,8 @@ class TotalConnectLocation:
 
     def get_zone_details(self):
         """Get Zone details. Return True if successful."""
-        partitions = []
-        for id in self.partitions:
-            partitions.append(id)
-
-        partition_list = {"int": partitions}
-
         result = self.parent.request(
-            f"GetZonesListInStateEx_V1(self.token, {self.location_id}, {partition_list}, 0)"
+            f"GetZonesListInStateEx_V1(self.token, {self.location_id}, {self._partition_list}, 0)"
         )
 
         if result["ResultCode"] == self.parent.FEATURE_NOT_SUPPORTED:
@@ -788,6 +775,12 @@ class TotalConnectLocation:
         for partition in partition_details:
             new_partition = TotalConnectPartition(partition)
             self.partitions[new_partition.id] = new_partition
+
+
+        partitions = []
+        for id in self.partitions:
+            partitions.append(id)
+        self._partition_list = {"int": partitions}
 
         return True
 
