@@ -111,6 +111,11 @@ PARTITION_DISARMED = {
     "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
 }
 
+PARTITION_DISARMED2 = {
+    "PartitionID": "2",
+    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+}
+
 PARTITION_ARMED_STAY = {
     "PartitionID": "1",
     "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY,
@@ -128,6 +133,7 @@ PARTITION_ARMED_AWAY = {
 
 PARTITION_INFO_DISARMED = {}
 PARTITION_INFO_DISARMED[0] = PARTITION_DISARMED
+PARTITION_INFO_DISARMED[1] = PARTITION_DISARMED2
 
 PARTITION_INFO_ARMED_STAY = {}
 PARTITION_INFO_ARMED_STAY[0] = PARTITION_ARMED_STAY
@@ -174,13 +180,26 @@ METADATA_ARMED_STAY_NIGHT["Partitions"] = PARTITIONS_ARMED_STAY_NIGHT
 METADATA_ARMED_AWAY = METADATA_DISARMED.copy()
 METADATA_ARMED_AWAY["Partitions"] = PARTITIONS_ARMED_AWAY
 
-RESPONSE_DISARMED = {"ResultCode": 0, "ResultData": "Success", "PanelMetadataAndStatus": METADATA_DISARMED}
-RESPONSE_ARMED_STAY = {"ResultCode": 0, "ResultData": "Success", "PanelMetadataAndStatus": METADATA_ARMED_STAY}
+RESPONSE_DISARMED = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "PanelMetadataAndStatus": METADATA_DISARMED,
+    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+}
+RESPONSE_ARMED_STAY = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "PanelMetadataAndStatus": METADATA_ARMED_STAY,
+}
 RESPONSE_ARMED_STAY_NIGHT = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT,
 }
-RESPONSE_ARMED_AWAY = {"ResultCode": 0, "ResultData": "Success", "PanelMetadataAndStatus": METADATA_ARMED_AWAY}
+RESPONSE_ARMED_AWAY = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "PanelMetadataAndStatus": METADATA_ARMED_AWAY,
+}
 
 RESPONSE_AUTHENTICATE = {
     "ResultCode": 0,

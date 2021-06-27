@@ -9,6 +9,8 @@ from device import TotalConnectDevice
 from partition import TotalConnectPartition
 from user import TotalConnectUser
 
+PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
+
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
 ARM_TYPE_STAY_INSTANT = 2
@@ -523,6 +525,26 @@ class TotalConnectLocation:
     ALARMING_FIRE_SMOKE = 10212
     ALARMING_CARBON_MONOXIDE = 10213
 
+    KNOWN_PANEL_STATES = [
+        DISARMED,
+        DISARMED_BYPASS,
+        ARMED_AWAY,
+        ARMED_AWAY_BYPASS,
+        ARMED_AWAY_INSTANT,
+        ARMED_AWAY_INSTANT_BYPASS,
+        ARMED_CUSTOM_BYPASS,
+        ARMED_STAY,
+        ARMED_STAY_BYPASS,
+        ARMED_STAY_INSTANT,
+        ARMED_STAY_INSTANT_BYPASS,
+        ARMED_STAY_NIGHT,
+        ARMING,
+        DISARMING,
+        ALARMING,
+        ALARMING_FIRE_SMOKE,
+        ALARMING_CARBON_MONOXIDE,
+    ]
+
     def __init__(self, location_info_basic, parent):
         """Initialize based on a 'LocationInfoBasic'."""
         self.location_id = location_info_basic["LocationID"]
@@ -631,13 +653,31 @@ class TotalConnectLocation:
             )
             return False
 
-        if "PanelMetadataAndStatus" in result:
-            status = self.set_status(result["PanelMetadataAndStatus"])
-            return status
-        else:
+        if "PanelMetadataAndStatus" not in result:
             logging.warning("Panel_meta_data is empty.")
+            return False
 
-        return result
+        if not self.set_status(result["PanelMetadataAndStatus"]):
+            return False
+
+        if "ArmingState" not in result:
+            logging.warning(
+                "GetPanelMetaDataAndFullStatus result does not contain ArmingState."
+            )
+            return False
+
+        return self.set_arming_state(result["ArmingState"])
+
+    def set_arming_state(self, new_state):
+        """Set arming state.  True on success."""
+        if new_state is None:
+            return False
+
+        if new_state not in self.KNOWN_PANEL_STATES:
+            logging.warning(f"Security panel returned state '{new_state}' which is not known.  Please submit a ticket at {PROJECT_URL}")
+
+        self.arming_state = new_state
+        return True
 
     def set_status(self, data):
         """Update from 'PanelMetadataAndStatus'. Return true on success."""
@@ -696,7 +736,7 @@ class TotalConnectLocation:
         return False
 
     def update_partitions(self, data):
-        """Update partition info."""
+        """Update partition info from Partitions."""
         if "PartitionInfo" not in data:
             return False
 
@@ -705,8 +745,11 @@ class TotalConnectLocation:
         if partition_info is None:
             return False
 
+        # TODO:  next line is WRONG, need to update partion.arming_state, NOT location.arming_state
         self.arming_state = partition_info[0]["ArmingState"]
+        
         # TODO:  loop through partitions and update
+
         return True
 
     def update_zones(self, data):
