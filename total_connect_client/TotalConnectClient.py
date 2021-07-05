@@ -317,9 +317,9 @@ class TotalConnectClient:
                 logging.warning(f"No usercode for location {location_id}.")
 
             new_location.get_partition_details()
+            new_location.get_zone_details()
+            new_location.get_panel_meta_data()
             self.locations[location_id] = new_location
-            self.get_zone_details(location_id)
-            self.get_panel_meta_data(location_id)
 
         if len(self.locations) < 1:
             Exception("No locations found!")
