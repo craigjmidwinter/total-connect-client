@@ -978,18 +978,18 @@ class TotalConnectZone:
         """Return a string that is printable."""
         return (
             f"Zone {self.id} - {self.description}\n"
-            f"Partition: {self.partition}\t\t"
+            f"  Partition: {self.partition}\t\t"
             f"Zone Type: {self.zone_type_id}\t"
             f"CanBeBypassed: {self.can_be_bypassed}\t"
             f"Status: {self.status}\n"
-            f"Battery Level: {self.battery_level}\t"
+            f"  Battery Level: {self.battery_level}\t"
             f"Signal Stength: {self.signal_strength}\n"
-            f"Serial Number: {self.sensor_serial_number}\t"
+            f"  Serial Number: {self.sensor_serial_number}\t"
             f"Loop: {self.loop_number}\t"
             f"Response Type: {self.response_type}\n"
-            f"Supervision Type: {self.supervision_type}\t"
+            f"  Supervision Type: {self.supervision_type}\t"
             f"Alarm Report State: {self.alarm_report_state}\n"
-            f"Chime State: {self.chime_state}\t"
+            f"  Chime State: {self.chime_state}\t"
             f"Device Type: {self.device_type}\n\n"
         )
 
