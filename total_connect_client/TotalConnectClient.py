@@ -437,6 +437,10 @@ class TotalConnectClient:
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
         # DEPRECATED
+        logging.debug(
+            "Using deprecated client.get_panel_meta_data(). "
+            "Use location.get_panel_meta_data()."
+            )
         return self.locations[location_id].get_panel_meta_data()
 
     def zone_status(self, location_id, zone_id):
@@ -501,6 +505,11 @@ class TotalConnectClient:
     def get_zone_details(self, location_id):
         """Get Zone details. Return True if successful."""
         # DEPRECATED
+        logging.debug(
+            "Using deprecated client.get_zone_details(). "
+            "Use location.get_zone_details()."
+            )
+        
         return self.locations[location_id].get_zone_details()
 
 
