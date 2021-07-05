@@ -3,6 +3,8 @@ Total-Connect-Client is a super simple python client for interacting with TotalC
 
 Started by @craigjmidwinter to add alarm support for his personal HomeAssistant set-up, with later contributions from others.
 
+The package can be downloaded at [PyPI](https://pypi.org/project/total-connect-client/).
+
 The code currently supports:
  - Arming (away, stay, night)
  - Disarming
