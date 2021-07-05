@@ -300,6 +300,6 @@ def test_proa7_zones():
         "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
     }
 
-    z = tcz(ZONE_MEDICAL)
-    assert z.is_type_medical() is True
-    assert z.is_type_button() is True
+    zone = tcz(ZONE_MEDICAL)
+    assert zone.is_type_medical() is True
+    assert zone.is_type_button() is True

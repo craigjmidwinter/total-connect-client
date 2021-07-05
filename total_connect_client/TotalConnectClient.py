@@ -623,9 +623,15 @@ class TotalConnectLocation:
 
     def set_zone_details(self, zone_status):
         """Update from GetZonesListInStateEx_V1. Return true if successful."""
-        zones = zone_status.get("Zones")
-        if zones is None:
+        if zone_status is None:
             return False
+
+        if "Zones" not in zone_status:
+            return False
+        if zone_status["Zones"] is None:
+            return False
+
+        zones = zone_status["Zones"]
 
         zone_info = zones.get("ZoneStatusInfoWithPartitionId")
         if zone_info is None:
@@ -725,9 +731,8 @@ class TotalConnectLocation:
             )
             return False
 
-        zone_status = result.get("ZoneStatus")
-        if zone_status is not None:
-            return self.set_zone_details(zone_status)
+        if "ZoneStatus" in result:
+            return self.set_zone_details(result["ZoneStatus"])
 
         logging.error(
             f"Could not get zone details. "
@@ -924,29 +929,68 @@ class TotalConnectZone:
     def __init__(self, zone):
         """Initialize."""
         self.id = zone.get("ZoneID")
-        self.description = zone.get("ZoneDescription")
-        self.status = zone.get("ZoneStatus")
-        self.partition = zone.get("PartitionID")
-        self.zone_type_id = zone.get("ZoneTypeId")
-        self.can_be_bypassed = zone.get("CanBeBypassed")
+        self.partition = None
+        self.status = None
+        self.zone_type_id = None
+        self.can_be_bypassed = None
+        self.battery_level = None
+        self.signal_strength = None
+        self.sensor_serial_number = None
+        self.loop_number = None
+        self.response_type = None
+        self.alarm_report_state = None
+        self.supervision_type = None
+        self.chime_state = None
+        self.device_type = None
+        self.update(zone)
 
     def update(self, zone):
         """Update the zone."""
-        if self.id == zone.get("ZoneID"):
-            self.description = zone.get("ZoneDescription")
-            self.partition = zone.get("PartitionID")
-            self.status = zone.get("ZoneStatus")
-        else:
+        if self.id != zone.get("ZoneID"):
             raise Exception("ZoneID does not match in TotalConnectZone.")
+
+        self.description = zone.get("ZoneDescription")
+        self.partition = zone.get("PartitionID")
+        self.status = zone.get("ZoneStatus")
+        self.can_be_bypassed = zone.get("CanBeBypassed")
+
+        if "ZoneTypeId" in zone:
+            self.zone_type_id = zone["ZoneTypeId"]
+
+        if "Batterylevel" in zone:
+            self.battery_level = zone["Batterylevel"]
+
+        if "Signalstrength" in zone:
+            self.signal_strength = zone["Signalstrength"]
+
+        if "zoneAdditionalInfo" in zone:
+            info = zone["zoneAdditionalInfo"]
+            if info is not None:
+                self.sensor_serial_number = info.get("SensorSerialNumber")
+                self.loop_number = info.get("LoopNumber")
+                self.response_type = info.get("ResponseType")
+                self.alarm_report_state = info.get("AlarmReportState")
+                self.supervision_type = info.get("ZoneSupervisionType")
+                self.chime_state = info.get("ChimeState")
+                self.device_type = info.get("DeviceType")
 
     def __str__(self):
         """Return a string that is printable."""
         return (
             f"Zone {self.id} - {self.description}\n"
-            f"Partition: {self.partition}\t"
-            f"Type: {self.zone_type_id}\t"
+            f"Partition: {self.partition}\t\t"
+            f"Zone Type: {self.zone_type_id}\t"
             f"CanBeBypassed: {self.can_be_bypassed}\t"
-            f"Status: {self.status}\n\n"
+            f"Status: {self.status}\n"
+            f"Battery Level: {self.battery_level}\t"
+            f"Signal Stength: {self.signal_strength}\n"
+            f"Serial Number: {self.sensor_serial_number}\t"
+            f"Loop: {self.loop_number}\t"
+            f"Response Type: {self.response_type}\n"
+            f"Supervision Type: {self.supervision_type}\t"
+            f"Alarm Report State: {self.alarm_report_state}\n"
+            f"Chime State: {self.chime_state}\t"
+            f"Device Type: {self.device_type}\n\n"
         )
 
     def is_bypassed(self):
