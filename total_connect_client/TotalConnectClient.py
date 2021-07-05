@@ -945,9 +945,15 @@ class TotalConnectZone:
         self.update(zone)
 
     def update(self, zone):
-        """Update the zone."""
+        """Update the zone.  True on success."""
+        if zone is None:
+            return False
+
         if self.id != zone.get("ZoneID"):
-            raise Exception("ZoneID does not match in TotalConnectZone.")
+            raise Exception(
+                f"ZoneID {zone.get('ZoneID')} does not match "
+                f"expected {self.id} in TotalConnectZone."
+            )
 
         self.description = zone.get("ZoneDescription")
         self.partition = zone.get("PartitionID")
@@ -973,6 +979,8 @@ class TotalConnectZone:
                 self.supervision_type = info.get("ZoneSupervisionType")
                 self.chime_state = info.get("ChimeState")
                 self.device_type = info.get("DeviceType")
+
+        return True
 
     def __str__(self):
         """Return a string that is printable."""
