@@ -1,6 +1,9 @@
 """Testing constants."""
 import TotalConnectClient
 
+from zone import ZONE_STATUS_NORMAL,ZONE_TYPE_SECURITY, ZONE_STATUS_LOW_BATTERY, ZONE_TYPE_LYRIC_CONTACT, ZONE_TYPE_LYRIC_MOTION, ZONE_TYPE_LYRIC_POLICE, ZONE_TYPE_LYRIC_TEMP, ZONE_TYPE_LYRIC_LOCAL_ALARM
+
+
 PASSWORD_BAD = "none"
 USERNAME_BAD = "none"
 
@@ -39,7 +42,7 @@ USER = {
 ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
     "PartitionId": "1",
 }
 
@@ -47,9 +50,9 @@ ZONE_LOW_BATTERY = {
     "ZoneID": "1",
     "ZoneDescription": "Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_LOW_BATTERY,
+    "ZoneStatus": ZONE_STATUS_LOW_BATTERY,
 }
 
 ZONE_INFO = []
@@ -66,28 +69,28 @@ ZONE_STATUS_NORMAL = {
     "Signalstrength": "-1",
     "zoneAdditionalInfo": None,
     "ZoneID": "1",
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
     "ZoneFlags": None,
 }
 
 ZONE_STATUS_LYRIC_CONTACT = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_CONTACT["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_CONTACT
+ZONE_STATUS_LYRIC_CONTACT["ZoneTypeId"] = ZONE_TYPE_LYRIC_CONTACT
 
 ZONE_STATUS_LYRIC_MOTION = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_MOTION["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_MOTION
+ZONE_STATUS_LYRIC_MOTION["ZoneTypeId"] = ZONE_TYPE_LYRIC_MOTION
 
 ZONE_STATUS_LYRIC_POLICE = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_POLICE["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_POLICE
+ZONE_STATUS_LYRIC_POLICE["ZoneTypeId"] = ZONE_TYPE_LYRIC_POLICE
 
 ZONE_STATUS_LYRIC_TEMP = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_TEMP
+ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = ZONE_TYPE_LYRIC_TEMP
 
 ZONE_STATUS_LYRIC_LOCAL_ALARM = ZONE_STATUS_NORMAL.copy()
 ZONE_STATUS_LYRIC_LOCAL_ALARM[
     "ZoneTypeId"
-] = TotalConnectClient.ZONE_TYPE_LYRIC_LOCAL_ALARM
+] = ZONE_TYPE_LYRIC_LOCAL_ALARM
 
 
 ZONE_STATUS_INFO = []

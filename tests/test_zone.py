@@ -14,37 +14,39 @@ from const import (
     ZONE_STATUS_NORMAL,
     ZONE_LOW_BATTERY,
 )
-from TotalConnectClient import TotalConnectZone as tcz
+from zone import TotalConnectZone as tcz
+from zone import ZONE_TYPE_SECURITY, ZONE_STATUS_BYPASSED, ZONE_STATUS_FAULT, ZONE_STATUS_TROUBLE, ZONE_STATUS_TRIGGERED,ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_CARBON_MONOXIDE, ZONE_TYPE_PROA7_MEDICAL
+
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_BYPASSED,
+    "ZoneStatus": ZONE_STATUS_BYPASSED,
 }
 
 ZONE_FAULTED = {
     "ZoneDescription": "Faulted",
     "ZoneID": "1",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_FAULT,
+    "ZoneStatus": ZONE_STATUS_FAULT,
 }
 
 ZONE_TAMPERED = {
     "ZoneDescription": "Tampered",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_TROUBLE,
+    "ZoneStatus": ZONE_STATUS_TROUBLE,
 }
 
 ZONE_BYPASSED_LOW_BATTERY = {
     "ZoneDescription": "Bypassed Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 65,
 }
@@ -52,7 +54,7 @@ ZONE_BYPASSED_LOW_BATTERY = {
 ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneDescription": "Trouble Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 72,
 }
@@ -60,33 +62,33 @@ ZONE_TROUBLE_LOW_BATTERY = {
 ZONE_TRIGGERED = {
     "ZoneDescription": "Triggered",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_TRIGGERED,
+    "ZoneStatus": ZONE_STATUS_TRIGGERED,
 }
 
 ZONE_BUTTON = {
     "ZoneDescription": "Button",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 0,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
 }
 
 ZONE_SMOKE = {
     "ZoneDescription": "Smoke",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_FIRE_SMOKE,
+    "ZoneTypeId": ZONE_TYPE_FIRE_SMOKE,
     "CanBeBypassed": 0,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
 }
 
 ZONE_GAS = {
     "ZoneDescription": "Gas",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_CARBON_MONOXIDE,
+    "ZoneTypeId": ZONE_TYPE_CARBON_MONOXIDE,
     "CanBeBypassed": 0,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
 }
 
 
@@ -295,9 +297,9 @@ def test_proa7_zones():
     ZONE_MEDICAL = {
         "ZoneDescription": "Gas",
         "PartitionId": "1",
-        "ZoneTypeId": TotalConnectClient.ZONE_TYPE_PROA7_MEDICAL,
+        "ZoneTypeId": ZONE_TYPE_PROA7_MEDICAL,
         "CanBeBypassed": 0,
-        "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+        "ZoneStatus": ZONE_STATUS_NORMAL,
     }
 
     zone = tcz(ZONE_MEDICAL)

@@ -15,7 +15,7 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_UNKNOWN,
 )
-from TotalConnectClient import ZONE_STATUS_NORMAL
+from zone import ZONE_STATUS_NORMAL
 
 
 class TestTotalConnectClient(unittest.TestCase):
