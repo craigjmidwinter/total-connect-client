@@ -16,6 +16,7 @@ RESULT_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
 
+
 class TotalConnectLocation:
     """TotalConnectLocation class."""
 
@@ -271,7 +272,7 @@ class TotalConnectLocation:
 
         # TODO:  next line is WRONG, need to update partion.arming_state, NOT location.arming_state
         self.arming_state = partition_info[0]["ArmingState"]
-        
+
         # TODO:  loop through partitions and update
 
         return True
@@ -459,7 +460,7 @@ class TotalConnectLocation:
 
     def arm_stay_night(self):
         """Arm the system (Stay - Night)."""
-        return self.arm(ARM_TYPE_STAY_NIGHT)        
+        return self.arm(ARM_TYPE_STAY_NIGHT)
 
     def arm(self, arm_type):
         """Arm the system. Return True if successful."""
@@ -479,7 +480,9 @@ class TotalConnectLocation:
             return False
 
         if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning(f"User code {self.usercode} is invalid for location {self.location_id}.")
+            logging.warning(
+                f"User code {self.usercode} is invalid for location {self.location_id}."
+            )
             return False
 
         logging.error(
@@ -487,7 +490,7 @@ class TotalConnectLocation:
             f"ResultCode: {result['ResultCode']}. "
             f"ResultData: {result['ResultData']}"
         )
-        return False        
+        return False
 
     def disarm(self):
         """Disarm the system. Return True if successful."""
@@ -503,7 +506,9 @@ class TotalConnectLocation:
             return True
 
         if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning(f"User code {self.usercode} is invalid for location {self.location_id}.")
+            logging.warning(
+                f"User code {self.usercode} is invalid for location {self.location_id}."
+            )
             return False
 
         logging.error(
