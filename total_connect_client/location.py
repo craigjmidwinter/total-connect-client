@@ -26,7 +26,7 @@ class TotalConnectLocation:
     COMMAND_FAILED = -4502
     USER_CODE_INVALID = -4106
     USER_CODE_UNAVAILABLE = -4114
-
+    ZONE_BYPASS_SUCCESS = 0
 
     # ArmingState
     DISARMED = 10200
@@ -513,3 +513,23 @@ class TotalConnectLocation:
         )
         return False
 
+    def zone_bypass(self, zone_id):
+        """Bypass a zone.  Return true if successful."""
+        result = self.parent.request(
+            f"Bypass(self.token, "
+            f"{self.location_id}, "
+            f"{self.security_device_id}, "
+            f"{zone_id}, "
+            f"'{self.usercode}')"
+        )
+
+        if result["ResultCode"] is self.ZONE_BYPASS_SUCCESS:
+            self.zones[zone_id].bypass()
+            return True
+
+        logging.error(
+            f"Could not bypass zone {zone_id} at location {self.location_id}."
+            f"ResultCode: {result['ResultCode']}. "
+            f"ResultData: {result['ResultData']}"
+        )
+        return False

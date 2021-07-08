@@ -18,7 +18,6 @@ ARM_TYPE_STAY_NIGHT = 4
 
 RESULT_SUCCESS = 0
 
-ZONE_BYPASS_SUCCESS = 0
 GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
@@ -453,24 +452,12 @@ class TotalConnectClient:
 
     def zone_bypass(self, zone_id, location_id):
         """Bypass a zone.  Return true if successful."""
-        result = self.request(
-            f"Bypass(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id}, "
-            f"{zone_id}, "
-            f"'{self.locations[location_id].usercode}')"
-        )
-
-        if result["ResultCode"] is ZONE_BYPASS_SUCCESS:
-            self.locations[location_id].zones[zone_id].bypass()
-            return True
-
-        logging.error(
-            f"Could not bypass zone {zone_id} at location {location_id}."
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.zone_bypass(). "
+            "Use location.zone_bypass()."
+            )
+        return self.locations[location_id].zone_bypass(zone_id)
 
     def get_zone_details(self, location_id):
         """Get Zone details. Return True if successful."""
