@@ -533,3 +533,12 @@ class TotalConnectLocation:
             f"ResultData: {result['ResultData']}"
         )
         return False
+
+    def zone_status(self, zone_id):
+        """Get status of a zone."""
+        z = self.zones.get(zone_id)
+        if z is None:
+            logging.error(f"Zone {zone_id} does not exist.")
+            return None
+
+        return z.status

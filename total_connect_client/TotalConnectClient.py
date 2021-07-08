@@ -428,12 +428,12 @@ class TotalConnectClient:
 
     def zone_status(self, location_id, zone_id):
         """Get status of a zone."""
-        z = self.locations[location_id].zones.get(zone_id)
-        if z is None:
-            logging.error(f"Zone {zone_id} does not exist.")
-            return None
-
-        return z.status
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.zone_status(). "
+            "Use location.zone_status()."
+            )
+        return self.locations[location_id].zone_status(zone_id)
 
     def get_armed_status(self, location_id):
         """Get the status of the panel."""
@@ -466,7 +466,6 @@ class TotalConnectClient:
             "Using deprecated client.get_zone_details(). "
             "Use location.get_zone_details()."
             )
-        
         return self.locations[location_id].get_zone_details()
 
 
