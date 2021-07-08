@@ -317,51 +317,57 @@ class TotalConnectClient:
 
     def arm_away(self, location_id):
         """Arm the system (Away)."""
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.arm_away(). "
+            "Use location.arm_away()."
+            )        
         return self.arm(ARM_TYPE_AWAY, location_id)
 
     def arm_stay(self, location_id):
         """Arm the system (Stay)."""
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.arm_stay(). "
+            "Use location.arm_stay()."
+            )
         return self.arm(ARM_TYPE_STAY, location_id)
 
     def arm_stay_instant(self, location_id):
         """Arm the system (Stay - Instant)."""
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.arm_stay_instant(). "
+            "Use location.arm_stay_instant()."
+            )
         return self.arm(ARM_TYPE_STAY_INSTANT, location_id)
 
     def arm_away_instant(self, location_id):
         """Arm the system (Away - Instant)."""
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.arm_away_instant(). "
+            "Use location.arm_away_instant()."
+            )
         return self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
 
     def arm_stay_night(self, location_id):
         """Arm the system (Stay - Night)."""
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.arm_stay_night(). "
+            "Use location.arm_stay_night()."
+            )
         return self.arm(ARM_TYPE_STAY_NIGHT, location_id)
 
     def arm(self, arm_type, location_id):
         """Arm the system. Return True if successful."""
-        result = self.request(
-            f"ArmSecuritySystem(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id}, "
-            f"{arm_type}, "
-            f"'{self.locations[location_id].usercode}')"
-        )
-
-        if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
-            return True
-
-        if result["ResultCode"] == self.COMMAND_FAILED:
-            logging.warning("Could not arm system. Check if a zone is faulted.")
-            return False
-
-        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning("User code is invalid.")
-            return False
-
-        logging.error(
-            f"Could not arm system. "
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.arm(). "
+            "Use location.arm()."
+            )
+        return self.locations[location_id].arm(arm_type)
 
     def arm_custom(self, arm_type, location_id):
         """Arm custom the system.  Return true if successul."""
@@ -437,27 +443,13 @@ class TotalConnectClient:
 
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""
-        result = self.request(
-            f"DisarmSecuritySystem(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id}, "
-            f"'{self.locations[location_id].usercode}')"
-        )
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.disarm(). "
+            "Use location.disarm()."
+            )
+        return self.locations[location_id].disarm()
 
-        if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
-            logging.info("System Disarmed")
-            return True
-
-        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning("User code is invalid.")
-            return False
-
-        logging.error(
-            f"Could not disarm system. "
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
 
     def zone_bypass(self, zone_id, location_id):
         """Bypass a zone.  Return true if successful."""

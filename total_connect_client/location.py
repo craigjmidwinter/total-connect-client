@@ -19,6 +19,16 @@ DEFAULT_USERCODE = "-1"
 class TotalConnectLocation:
     """TotalConnectLocation class."""
 
+    # Location relevant ResultCode
+    SUCCESS = 0
+    ARM_SUCCESS = 4500
+    DISARM_SUCCESS = 4500
+    COMMAND_FAILED = -4502
+    USER_CODE_INVALID = -4106
+    USER_CODE_UNAVAILABLE = -4114
+
+
+    # ArmingState
     DISARMED = 10200
     DISARMED_BYPASS = 10211
     ARMED_AWAY = 10201
@@ -430,3 +440,76 @@ class TotalConnectLocation:
             return True
 
         return False
+
+    def arm_away(self):
+        """Arm the system (Away)."""
+        return self.arm(ARM_TYPE_AWAY)
+
+    def arm_stay(self):
+        """Arm the system (Stay)."""
+        return self.arm(ARM_TYPE_STAY)
+
+    def arm_stay_instant(self):
+        """Arm the system (Stay - Instant)."""
+        return self.arm(ARM_TYPE_STAY_INSTANT)
+
+    def arm_away_instant(self):
+        """Arm the system (Away - Instant)."""
+        return self.arm(ARM_TYPE_AWAY_INSTANT)
+
+    def arm_stay_night(self):
+        """Arm the system (Stay - Night)."""
+        return self.arm(ARM_TYPE_STAY_NIGHT)        
+
+    def arm(self, arm_type):
+        """Arm the system. Return True if successful."""
+        result = self.parent.request(
+            f"ArmSecuritySystem(self.token, "
+            f"{self.location_id}, "
+            f"{self.security_device_id}, "
+            f"{arm_type}, "
+            f"'{self.usercode}')"
+        )
+
+        if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
+            return True
+
+        if result["ResultCode"] == self.COMMAND_FAILED:
+            logging.warning("Could not arm system. Check if a zone is faulted.")
+            return False
+
+        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
+            logging.warning(f"User code {self.usercode} is invalid for location {self.location_id}.")
+            return False
+
+        logging.error(
+            f"Could not arm system. "
+            f"ResultCode: {result['ResultCode']}. "
+            f"ResultData: {result['ResultData']}"
+        )
+        return False        
+
+    def disarm(self):
+        """Disarm the system. Return True if successful."""
+        result = self.parent.request(
+            f"DisarmSecuritySystem(self.token, "
+            f"{self.location_id}, "
+            f"{self.security_device_id}, "
+            f"'{self.usercode}')"
+        )
+
+        if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
+            logging.info("System Disarmed")
+            return True
+
+        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
+            logging.warning(f"User code {self.usercode} is invalid for location {self.location_id}.")
+            return False
+
+        logging.error(
+            f"Could not disarm system. "
+            f"ResultCode: {result['ResultCode']}. "
+            f"ResultData: {result['ResultData']}"
+        )
+        return False
+
