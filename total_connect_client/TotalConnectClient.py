@@ -402,20 +402,12 @@ class TotalConnectClient:
 
     def get_custom_arm_settings(self, location_id):
         """Get custom arm settings.  Return true if successful."""
-        result = self.request(
-            f"GetCustomArmSettings(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id})"
-        )
-
-        if result["ResultCode"] != self.SUCCESS:
-            logging.error(
-                f"Could not arm custom. ResultCode: {result['ResultCode']}. "
-                f"ResultData: {result['ResultData']}"
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.get_custom_arm_settings(). "
+            "Use location.get_custom_arm_settings()."
             )
-            return False
-
-        return result
+        return self.locations[location_id].get_custom_arm_settings()
 
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
@@ -437,8 +429,12 @@ class TotalConnectClient:
 
     def get_armed_status(self, location_id):
         """Get the status of the panel."""
-        self.get_panel_meta_data(location_id)
-        return self.locations[location_id].arming_state
+        # DEPRECATED
+        logging.debug(
+            "Using deprecated client.zone_status(). "
+            "Use location.zone_status()."
+            )
+        return self.locations[location_id].get_armed_status()
 
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""

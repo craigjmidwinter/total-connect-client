@@ -542,3 +542,26 @@ class TotalConnectLocation:
             return None
 
         return z.status
+
+    def get_armed_status(self):
+        """Get the status of the panel."""
+        self.get_panel_meta_data()
+        # TODO:  return state for the partition ???
+        return self.arming_state
+
+    def get_custom_arm_settings(self):
+        """Get custom arm settings."""
+        result = self.request(
+            f"GetCustomArmSettings(self.token, "
+            f"{self.location_id}, "
+            f"{self.security_device_id})"
+        )
+
+        if result["ResultCode"] != self.SUCCESS:
+            logging.error(
+                f"Could not arm custom. ResultCode: {result['ResultCode']}. "
+                f"ResultData: {result['ResultData']}"
+            )
+            return False
+
+        return result
