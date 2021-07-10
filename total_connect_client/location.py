@@ -342,7 +342,7 @@ class TotalConnectLocation:
         # loop through list and add partitions
         new_partition_list = []
         for partition in partition_details:
-            new_partition = TotalConnectPartition(partition)
+            new_partition = TotalConnectPartition(partition, self)
             self.partitions[new_partition.id] = new_partition
             new_partition_list.append(new_partition.id)
 
@@ -442,34 +442,51 @@ class TotalConnectLocation:
 
         return False
 
-    def arm_away(self):
+    def arm_away(self, partition_id=None):
         """Arm the system (Away)."""
-        return self.arm(ARM_TYPE_AWAY)
+        return self.arm(ARM_TYPE_AWAY, partition_id)
 
-    def arm_stay(self):
+    def arm_stay(self, partition_id=None):
         """Arm the system (Stay)."""
-        return self.arm(ARM_TYPE_STAY)
+        return self.arm(ARM_TYPE_STAY, partition_id)
 
-    def arm_stay_instant(self):
+    def arm_stay_instant(self, partition_id=None):
         """Arm the system (Stay - Instant)."""
-        return self.arm(ARM_TYPE_STAY_INSTANT)
+        return self.arm(ARM_TYPE_STAY_INSTANT, partition_id)
 
-    def arm_away_instant(self):
+    def arm_away_instant(self, partition_id=None):
         """Arm the system (Away - Instant)."""
-        return self.arm(ARM_TYPE_AWAY_INSTANT)
+        return self.arm(ARM_TYPE_AWAY_INSTANT, partition_id)
 
-    def arm_stay_night(self):
+    def arm_stay_night(self, partition_id=None):
         """Arm the system (Stay - Night)."""
-        return self.arm(ARM_TYPE_STAY_NIGHT)
+        return self.arm(ARM_TYPE_STAY_NIGHT, partition_id)
 
-    def arm(self, arm_type):
-        """Arm the system. Return True if successful."""
+    def arm(self, arm_type, partition_id=None):
+        """Arm the given partition. Return True if successful."""
+        # if no partition is given, arm all partitions
+        # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
+        partition_list = []
+        if partition_id is None:
+
+            partition_list = self._partition_list
+        else:
+            if partition_id not in self.partitions:
+                logging.error(
+                    f"Parition {partition_id} does not exist "
+                    f"for location {self.location_id}."
+                )
+                return False
+
+            partition_list.append(partition_id)
+
         result = self.parent.request(
-            f"ArmSecuritySystem(self.token, "
+            f"ArmSecuritySystemPartitionsV1(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id}, "
             f"{arm_type}, "
-            f"'{self.usercode}')"
+            f"'{self.usercode}', "
+            f"{partition_list})"
         )
 
         if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
@@ -492,13 +509,30 @@ class TotalConnectLocation:
         )
         return False
 
-    def disarm(self):
+    def disarm(self, partition_id=None):
         """Disarm the system. Return True if successful."""
+        # if no partition is given, disarm all partitions
+        # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
+        partition_list = []
+        if partition_id is None:
+
+            partition_list = self._partition_list
+        else:
+            if partition_id not in self.partitions:
+                logging.error(
+                    f"Parition {partition_id} does not exist "
+                    f"for location {self.location_id}."
+                )
+                return False
+
+            partition_list.append(partition_id)
+
         result = self.parent.request(
-            f"DisarmSecuritySystem(self.token, "
+            f"DisarmSecuritySystemPartitionsV1(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id}, "
-            f"'{self.usercode}')"
+            f"'{self.usercode}', "
+            f"{partition_list})"
         )
 
         if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
