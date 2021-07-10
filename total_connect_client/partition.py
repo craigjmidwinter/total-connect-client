@@ -21,7 +21,7 @@ class TotalConnectPartition:
         return data
 
     def update(self, info):
-        """Update partition based on PartitionInfo."""
+        """Update partition based on PartitionInfo. True on success."""
         if info is None:
             return False
 
@@ -32,21 +32,25 @@ class TotalConnectPartition:
         return True
 
     def arm_away(self):
-        """Arm the partition (Away)."""
+        """Arm the partition (Away). True on success."""
         return self.parent.arm_away(self.id)
 
     def arm_stay(self):
-        """Arm the partition (Stay)."""
+        """Arm the partition (Stay). True on success."""
         return self.parent.arm_stay(self.id)
 
     def arm_stay_instant(self):
-        """Arm the partition (Stay - Instant)."""
+        """Arm the partition (Stay - Instant). True on success."""
         return self.parent.arm_stay_instant(self.id)
 
     def arm_away_instant(self):
-        """Arm the partition (Away - Instant)."""
+        """Arm the partition (Away - Instant). True on success."""
         return self.parent.arm_away_instant(self.id)
 
     def arm_stay_night(self):
-        """Arm the partition (Stay - Night)."""
+        """Arm the partition (Stay - Night). True on success."""
         return self.parent.arm_stay_night(self.id)
+
+    def disarm(self):
+        """Disarm the partition. True on success."""
+        return self.parent.disarm(self.id)

@@ -509,13 +509,30 @@ class TotalConnectLocation:
         )
         return False
 
-    def disarm(self):
+    def disarm(self, partition_id=None):
         """Disarm the system. Return True if successful."""
+        # if no partition is given, disarm all partitions
+        # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
+        partition_list = []
+        if partition_id is None:
+
+            partition_list = self._partition_list
+        else:
+            if partition_id not in self.partitions:
+                logging.error(
+                    f"Parition {partition_id} does not exist "
+                    f"for location {self.location_id}."
+                )
+                return False
+
+            partition_list.append(partition_id)
+
         result = self.parent.request(
-            f"DisarmSecuritySystem(self.token, "
+            f"DisarmSecuritySystemPartitionsV1(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id}, "
-            f"'{self.usercode}')"
+            f"'{self.usercode}', "
+            f"{partition_list})"
         )
 
         if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
