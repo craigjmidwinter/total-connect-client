@@ -9,7 +9,7 @@ from const import PARTITION_DISARMED, PARTITION_DETAILS_1
 
 def tests_partition():
     """Test __init__()."""
-    test_partition = TotalConnectPartition(PARTITION_DETAILS_1)
+    test_partition = TotalConnectPartition(PARTITION_DETAILS_1, None)
     assert test_partition.id == 1
 
     test_partition.update(PARTITION_DISARMED)
