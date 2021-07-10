@@ -23,6 +23,8 @@ GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
 
+LOGGER = logging.getLogger(__name__)
+
 
 class AuthenticationError(Exception):
     """Authentication Error class."""
@@ -143,21 +145,21 @@ class TotalConnectClient:
             ):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
-                logging.debug(
-                    f"total-connect-client invalid session (attempt number {attempts})."
+                LOGGER.debug(
+                    f"invalid session (attempt number {attempts})."
                 )
                 self.token = False
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
-                logging.debug(
-                    f"total-connect-client connection error (attempt number {attempts})."
+                LOGGER.debug(
+                    f"connection error (attempt number {attempts})."
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
             if response.ResultCode == self.FAILED_TO_CONNECT:
-                logging.debug(
-                    f"total-connect-client failed to connect with security system "
+                LOGGER.debug(
+                    f"failed to connect with security system "
                     f"(attempt number {attempts})."
                 )
                 time.sleep(3)
@@ -167,11 +169,11 @@ class TotalConnectClient:
                 self.AUTHENTICATION_FAILED,
                 self.USER_CODE_UNAVAILABLE,
             ):
-                logging.debug("total-connect-client authentication failed.")
+                LOGGER.debug("authentication failed.")
                 return zeep.helpers.serialize_object(response)
 
-            logging.warning(
-                f"total-connect-client unknown result code "
+            LOGGER.warning(
+                f"unknown result code "
                 f"{response.ResultCode} with message: {response.ResultData}."
             )
             return zeep.helpers.serialize_object(response)
@@ -198,7 +200,7 @@ class TotalConnectClient:
                 )
 
             if response["ResultCode"] == self.SUCCESS:
-                logging.debug("Login Successful")
+                LOGGER.debug("Login Successful")
                 self.token = response["SessionID"]
                 self._valid_credentials = True
                 if not self._populated:
@@ -209,12 +211,12 @@ class TotalConnectClient:
 
             self._valid_credentials = False
             self.token = False
-            logging.error(
+            LOGGER.error(
                 f"Unable to authenticate with Total Connect. ResultCode: "
                 f"{response['ResultCode']}. ResultData: {response['ResultData']}"
             )
 
-        logging.debug(
+        LOGGER.debug(
             "total-connect-client attempting login with known bad credentials."
         )
         self.times["authenticate()"] = time.time() - start_time
@@ -233,12 +235,12 @@ class TotalConnectClient:
             self.USER_CODE_INVALID,
             self.USER_CODE_UNAVAILABLE,
         ):
-            logging.warning(
+            LOGGER.warning(
                 f"usercode '{usercode}' " f"invalid for device {device_id}."
             )
             return False
 
-        logging.error(
+        LOGGER.error(
             f"Unknown response for validate_usercode. "
             f"ResultCode: {response['ResultCode']}. "
             f"ResultData: {response['ResultData']}"
@@ -256,7 +258,7 @@ class TotalConnectClient:
             response = self.request("Logout(self.token)")
 
             if response["ResultCode"] == self.SUCCESS:
-                logging.info("Logout Successful")
+                LOGGER.info("Logout Successful")
                 self.token = False
                 return True
 
@@ -292,7 +294,7 @@ class TotalConnectClient:
             elif str(location_id) in self.usercodes:
                 new_location.usercode = self.usercodes[str(location_id)]
             else:
-                logging.warning(f"No usercode for location {location_id}.")
+                LOGGER.warning(f"No usercode for location {location_id}.")
 
             new_location.get_partition_details()
             new_location.get_zone_details()
@@ -306,7 +308,7 @@ class TotalConnectClient:
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
-        logging.info("total-connect-client initiating Keep Alive")
+        LOGGER.info("total-connect-client initiating Keep Alive")
 
         response = self.soapClient.service.KeepAlive(self.token)
 
@@ -383,7 +385,7 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] != self.SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not arm custom. ResultCode: {result['ResultCode']}. "
                 f"ResultData: {result['ResultData']}"
             )
