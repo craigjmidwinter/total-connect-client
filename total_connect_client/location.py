@@ -472,7 +472,7 @@ class TotalConnectLocation:
             partition_list = self._partition_list
         else:
             if partition_id not in self.partitions:
-                logging.error(
+                LOGGER.error(
                     f"Parition {partition_id} does not exist "
                     f"for location {self.location_id}."
                 )
@@ -519,7 +519,7 @@ class TotalConnectLocation:
             partition_list = self._partition_list
         else:
             if partition_id not in self.partitions:
-                logging.error(
+                LOGGER.error(
                     f"Parition {partition_id} does not exist "
                     f"for location {self.location_id}."
                 )
