@@ -32,6 +32,13 @@ GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
 
+# by default we log to the root logger, but when this is used
+# as a module in a larger system, one can override this:
+#    import logging, total_connect_client
+#    total_connect_client.LOGGER = logging.getLogger('total_connect_client')
+
+LOGGER = logging.getLogger()
+
 
 class AuthenticationError(Exception):
     """Authentication Error class."""
@@ -152,20 +159,20 @@ class TotalConnectClient:
             ):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
-                logging.debug(
+                LOGGER.debug(
                     f"total-connect-client invalid session (attempt number {attempts})."
                 )
                 self.token = False
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
-                logging.debug(
+                LOGGER.debug(
                     f"total-connect-client connection error (attempt number {attempts})."
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
             if response.ResultCode == self.FAILED_TO_CONNECT:
-                logging.debug(
+                LOGGER.debug(
                     f"total-connect-client failed to connect with security system "
                     f"(attempt number {attempts})."
                 )
@@ -176,10 +183,10 @@ class TotalConnectClient:
                 self.AUTHENTICATION_FAILED,
                 self.USER_CODE_UNAVAILABLE,
             ):
-                logging.debug("total-connect-client authentication failed.")
+                LOGGER.debug("total-connect-client authentication failed.")
                 return zeep.helpers.serialize_object(response)
 
-            logging.warning(
+            LOGGER.warning(
                 f"total-connect-client unknown result code "
                 f"{response.ResultCode} with message: {response.ResultData}."
             )
@@ -207,7 +214,7 @@ class TotalConnectClient:
                 )
 
             if response["ResultCode"] == self.SUCCESS:
-                logging.debug("Login Successful")
+                LOGGER.debug("Login Successful")
                 self.token = response["SessionID"]
                 self._valid_credentials = True
                 if not self._populated:
@@ -218,12 +225,12 @@ class TotalConnectClient:
 
             self._valid_credentials = False
             self.token = False
-            logging.error(
+            LOGGER.error(
                 f"Unable to authenticate with Total Connect. ResultCode: "
                 f"{response['ResultCode']}. ResultData: {response['ResultData']}"
             )
 
-        logging.debug(
+        LOGGER.debug(
             "total-connect-client attempting login with known bad credentials."
         )
         self.times["authenticate()"] = time.time() - start_time
@@ -242,12 +249,12 @@ class TotalConnectClient:
             self.USER_CODE_INVALID,
             self.USER_CODE_UNAVAILABLE,
         ):
-            logging.warning(
+            LOGGER.warning(
                 f"usercode '{usercode}' " f"invalid for device {device_id}."
             )
             return False
 
-        logging.error(
+        LOGGER.error(
             f"Unknown response for validate_usercode. "
             f"ResultCode: {response['ResultCode']}. "
             f"ResultData: {response['ResultData']}"
@@ -265,7 +272,7 @@ class TotalConnectClient:
             response = self.request("Logout(self.token)")
 
             if response["ResultCode"] == self.SUCCESS:
-                logging.info("Logout Successful")
+                LOGGER.info("Logout Successful")
                 self.token = False
                 return True
 
@@ -299,7 +306,7 @@ class TotalConnectClient:
             elif str(location_id) in self.usercodes:
                 self.locations[location_id].usercode = self.usercodes[str(location_id)]
             else:
-                logging.warning(f"No usercode for location {location_id}.")
+                LOGGER.warning(f"No usercode for location {location_id}.")
 
             self.get_zone_details(location_id)
             self.get_panel_meta_data(location_id)
@@ -311,7 +318,7 @@ class TotalConnectClient:
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
-        logging.info("total-connect-client initiating Keep Alive")
+        LOGGER.info("total-connect-client initiating Keep Alive")
 
         response = self.soapClient.service.KeepAlive(self.token)
 
@@ -354,14 +361,14 @@ class TotalConnectClient:
             return True
 
         if result["ResultCode"] == self.COMMAND_FAILED:
-            logging.warning("Could not arm system. Check if a zone is faulted.")
+            LOGGER.warning("Could not arm system. Check if a zone is faulted.")
             return False
 
         if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning("User code is invalid.")
+            LOGGER.warning("User code is invalid.")
             return False
 
-        logging.error(
+        LOGGER.error(
             f"Could not arm system. "
             f"ResultCode: {result['ResultCode']}. "
             f"ResultData: {result['ResultData']}"
@@ -386,7 +393,7 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] != self.SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not arm custom. ResultCode: {result['ResultCode']}. "
                 f"ResultData: {result['ResultData']}"
             )
@@ -409,7 +416,7 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] != self.SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not arm custom. ResultCode: {result['ResultCode']}. "
                 f"ResultData: {result['ResultData']}"
             )
@@ -425,7 +432,7 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] != self.SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not retrieve panel meta data. "
                 f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
             )
@@ -438,7 +445,7 @@ class TotalConnectClient:
             self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
             return status
         else:
-            logging.warning("Panel_meta_data is empty.")
+            LOGGER.warning("Panel_meta_data is empty.")
 
         self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
         return result
@@ -447,7 +454,7 @@ class TotalConnectClient:
         """Get status of a zone."""
         z = self.locations[location_id].zones.get(zone_id)
         if z is None:
-            logging.error(f"Zone {zone_id} does not exist.")
+            LOGGER.error(f"Zone {zone_id} does not exist.")
             return None
 
         return z.status
@@ -467,14 +474,14 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
-            logging.info("System Disarmed")
+            LOGGER.info("System Disarmed")
             return True
 
         if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning("User code is invalid.")
+            LOGGER.warning("User code is invalid.")
             return False
 
-        logging.error(
+        LOGGER.error(
             f"Could not disarm system. "
             f"ResultCode: {result['ResultCode']}. "
             f"ResultData: {result['ResultData']}"
@@ -495,7 +502,7 @@ class TotalConnectClient:
             self.locations[location_id].zones[zone_id].bypass()
             return True
 
-        logging.error(
+        LOGGER.error(
             f"Could not bypass zone {zone_id} at location {location_id}."
             f"ResultCode: {result['ResultCode']}. "
             f"ResultData: {result['ResultData']}"
@@ -512,7 +519,7 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] == self.FEATURE_NOT_SUPPORTED:
-            logging.warning(
+            LOGGER.warning(
                 "Getting Zone Details is a feature not supported by "
                 "your Total Connect account or hardware."
             )
@@ -520,7 +527,7 @@ class TotalConnectClient:
             return False
 
         if result["ResultCode"] != self.SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not get zone details. "
                 f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
             )
@@ -532,7 +539,7 @@ class TotalConnectClient:
             self.times[f"get_zone_details({location_id})"] = time.time() - start_time
             return self.locations[location_id].set_zone_details(zone_status)
 
-        logging.error(
+        LOGGER.error(
             f"Could not get zone details. "
             f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
         )
@@ -658,7 +665,7 @@ class TotalConnectLocation:
             return False
 
         if data["Zones"] is None:
-            logging.info(
+            LOGGER.info(
                 f"total-connect-client returned zero zones. "
                 f"Sync your panel using the TotalConnect app or website.)."
             )
@@ -875,7 +882,7 @@ class TotalConnectUser:
         self._config_admin = self._features["Configuration Administration"] == "1"
 
         if self.security_problem():
-            logging.warning(
+            LOGGER.warning(
                 f"Total Connect user {self._username} has one or "
                 "more permissions that are not necessary. Remove "
                 "permissions from this user or create a new user "
@@ -887,15 +894,15 @@ class TotalConnectUser:
         problem = False
 
         if self._master_user:
-            logging.warning(f"User {self._username} is a master user.")
+            LOGGER.warning(f"User {self._username} is a master user.")
             problem = True
 
         if self._user_admin:
-            logging.warning(f"User {self._username} is a user administrator.")
+            LOGGER.warning(f"User {self._username} is a user administrator.")
             problem = True
 
         if self._config_admin:
-            logging.warning(
+            LOGGER.warning(
                 f"User {self._username} " "is a configuration administrator."
             )
             problem = True
