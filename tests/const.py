@@ -1,7 +1,17 @@
 """Testing constants."""
 import TotalConnectClient
 
-from zone import ZONE_STATUS_NORMAL,ZONE_TYPE_SECURITY, ZONE_STATUS_LOW_BATTERY, ZONE_TYPE_LYRIC_CONTACT, ZONE_TYPE_LYRIC_MOTION, ZONE_TYPE_LYRIC_POLICE, ZONE_TYPE_LYRIC_TEMP, ZONE_TYPE_LYRIC_LOCAL_ALARM
+from zone import (
+    ZONE_STATUS_NORMAL,
+    ZONE_TYPE_SECURITY,
+    ZONE_STATUS_LOW_BATTERY,
+    ZONE_TYPE_LYRIC_CONTACT,
+    ZONE_TYPE_LYRIC_MOTION,
+    ZONE_TYPE_LYRIC_POLICE,
+    ZONE_TYPE_LYRIC_TEMP,
+    ZONE_TYPE_LYRIC_LOCAL_ALARM,
+)
+from partition import TotalConnectPartition
 
 
 PASSWORD_BAD = "none"
@@ -88,9 +98,7 @@ ZONE_STATUS_LYRIC_TEMP = ZONE_STATUS_NORMAL.copy()
 ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = ZONE_TYPE_LYRIC_TEMP
 
 ZONE_STATUS_LYRIC_LOCAL_ALARM = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_LOCAL_ALARM[
-    "ZoneTypeId"
-] = ZONE_TYPE_LYRIC_LOCAL_ALARM
+ZONE_STATUS_LYRIC_LOCAL_ALARM["ZoneTypeId"] = ZONE_TYPE_LYRIC_LOCAL_ALARM
 
 
 ZONE_STATUS_INFO = []
@@ -254,13 +262,13 @@ RESPONSE_UNKNOWN = {
 
 PARTITION_DETAILS_1 = {
     "PartitionID": 1,
-    "ArmingState": 0,
+    "ArmingState": TotalConnectPartition.DISARMED,
     "PartitionName": "Test1",
 }
 
 PARTITION_DETAILS_2 = {
     "PartitionID": 2,
-    "ArmingState": 0,
+    "ArmingState": TotalConnectPartition.DISARMED,
     "PartitionName": "Test2",
 }
 

@@ -59,3 +59,25 @@ def tests_arm_disarm():
 
     location.disarm.return_value = True
     assert partition.disarm() is True
+
+
+def tests_arming_state():
+    """Test status functions."""
+
+    partition = TotalConnectPartition(PARTITION_DETAILS_1, None)
+
+    assert partition.is_disarming() is False
+    assert partition.is_disarmed() is True
+    assert partition.is_arming() is False
+    assert partition.is_armed() is False
+    assert partition.is_armed_away() is False
+    assert partition.is_armed_custom_bypass() is False
+    assert partition.is_armed_home() is False
+    assert partition.is_armed_night() is False
+    assert partition.is_pending() is False
+    assert partition.is_triggered_police() is False
+    assert partition.is_triggered_fire() is False
+    assert partition.is_triggered_gas() is False
+    assert partition.is_triggered() is False
+
+    assert partition.get_armed_status() == TotalConnectPartition.DISARMED
