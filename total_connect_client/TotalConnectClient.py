@@ -2,6 +2,7 @@
 
 import logging
 import time
+import warnings
 
 import zeep
 
@@ -318,47 +319,52 @@ class TotalConnectClient:
 
     def arm_away(self, location_id):
         """Arm the system (Away)."""
-        # DEPRECATED
-        LOGGER.debug("Using deprecated client.arm_away(). " "Use location.arm_away().")
+        warnings.warn(
+            "Using deprecated client.arm_away(). " "Use location.arm_away().",
+            DeprecationWarning,
+        )
         return self.arm(ARM_TYPE_AWAY, location_id)
 
     def arm_stay(self, location_id):
         """Arm the system (Stay)."""
-        # DEPRECATED
-        LOGGER.debug("Using deprecated client.arm_stay(). " "Use location.arm_stay().")
+        warnings.warn(
+            "Using deprecated client.arm_stay(). " "Use location.arm_stay().",
+            DeprecationWarning,
+        )
         return self.arm(ARM_TYPE_STAY, location_id)
 
     def arm_stay_instant(self, location_id):
         """Arm the system (Stay - Instant)."""
-        # DEPRECATED
-        LOGGER.debug(
+        warnings.warn(
             "Using deprecated client.arm_stay_instant(). "
-            "Use location.arm_stay_instant()."
+            "Use location.arm_stay_instant().",
+            DeprecationWarning,
         )
         return self.arm(ARM_TYPE_STAY_INSTANT, location_id)
 
     def arm_away_instant(self, location_id):
         """Arm the system (Away - Instant)."""
-        # DEPRECATED
-        LOGGER.debug(
+        warnings.warn(
             "Using deprecated client.arm_away_instant(). "
-            "Use location.arm_away_instant()."
+            "Use location.arm_away_instant().",
+            DeprecationWarning,
         )
         return self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
 
     def arm_stay_night(self, location_id):
         """Arm the system (Stay - Night)."""
-        # DEPRECATED
-        LOGGER.debug(
+        warnings.warn(
             "Using deprecated client.arm_stay_night(). "
-            "Use location.arm_stay_night()."
+            "Use location.arm_stay_night().",
+            DeprecationWarning,
         )
         return self.arm(ARM_TYPE_STAY_NIGHT, location_id)
 
     def arm(self, arm_type, location_id):
         """Arm the system. Return True if successful."""
-        # DEPRECATED
-        LOGGER.debug("Using deprecated client.arm(). " "Use location.arm().")
+        warnings.warn(
+            "Using deprecated client.arm(). " "Use location.arm().", DeprecationWarning
+        )
         return self.locations[location_id].arm(arm_type)
 
     def arm_custom(self, arm_type, location_id):
@@ -395,57 +401,59 @@ class TotalConnectClient:
 
     def get_custom_arm_settings(self, location_id):
         """Get custom arm settings.  Return true if successful."""
-        # DEPRECATED
-        LOGGER.debug(
+        warnings.warn(
             "Using deprecated client.get_custom_arm_settings(). "
-            "Use location.get_custom_arm_settings()."
+            "Use location.get_custom_arm_settings().",
+            DeprecationWarning,
         )
         return self.locations[location_id].get_custom_arm_settings()
 
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
-        # DEPRECATED
-        LOGGER.debug(
+        warnings.warn(
             "Using deprecated client.get_panel_meta_data(). "
-            "Use location.get_panel_meta_data()."
+            "Use location.get_panel_meta_data().",
+            DeprecationWarning,
         )
         return self.locations[location_id].get_panel_meta_data()
 
     def zone_status(self, location_id, zone_id):
         """Get status of a zone."""
-        # DEPRECATED
-        LOGGER.debug(
-            "Using deprecated client.zone_status(). " "Use location.zone_status()."
+        warnings.warn(
+            "Using deprecated client.zone_status(). " "Use location.zone_status().",
+            DeprecationWarning,
         )
         return self.locations[location_id].zone_status(zone_id)
 
     def get_armed_status(self, location_id):
         """Get the status of the panel."""
-        # DEPRECATED
-        LOGGER.debug(
-            "Using deprecated client.zone_status(). " "Use location.zone_status()."
+        warnings.warn(
+            "Using deprecated client.zone_status(). " "Use location.zone_status().",
+            DeprecationWarning,
         )
         return self.locations[location_id].get_armed_status()
 
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""
-        # DEPRECATED
-        LOGGER.debug("Using deprecated client.disarm(). " "Use location.disarm().")
+        warnings.warn(
+            "Using deprecated client.disarm(). " "Use location.disarm().",
+            DeprecationWarning,
+        )
         return self.locations[location_id].disarm()
 
     def zone_bypass(self, zone_id, location_id):
         """Bypass a zone.  Return true if successful."""
-        # DEPRECATED
-        LOGGER.debug(
-            "Using deprecated client.zone_bypass(). " "Use location.zone_bypass()."
+        warnings.warn(
+            "Using deprecated client.zone_bypass(). " "Use location.zone_bypass().",
+            DeprecationWarning,
         )
         return self.locations[location_id].zone_bypass(zone_id)
 
     def get_zone_details(self, location_id):
         """Get Zone details. Return True if successful."""
-        # DEPRECATED
-        LOGGER.debug(
+        warnings.warn(
             "Using deprecated client.get_zone_details(). "
-            "Use location.get_zone_details()."
+            "Use location.get_zone_details().",
+            DeprecationWarning,
         )
         return self.locations[location_id].get_zone_details()
