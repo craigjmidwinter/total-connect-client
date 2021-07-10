@@ -16,6 +16,7 @@ RESULT_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
 
+LOGGER = logging.getLogger(__name__)
 
 class TotalConnectLocation:
     """TotalConnectLocation class."""
@@ -176,21 +177,21 @@ class TotalConnectLocation:
         )
 
         if result["ResultCode"] != RESULT_SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not retrieve panel meta data. "
                 f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
             )
             return False
 
         if "PanelMetadataAndStatus" not in result:
-            logging.warning("Panel_meta_data is empty.")
+            LOGGER.warning("Panel_meta_data is empty.")
             return False
 
         if not self.set_status(result["PanelMetadataAndStatus"]):
             return False
 
         if "ArmingState" not in result:
-            logging.warning(
+            LOGGER.warning(
                 "GetPanelMetaDataAndFullStatus result does not contain ArmingState."
             )
             return False
@@ -223,7 +224,7 @@ class TotalConnectLocation:
             return False
 
         if "Zones" not in data:
-            logging.warning("Zones not found in PanelMetaDataAndStatus in set_status()")
+            LOGGER.warning("Zones not found in PanelMetaDataAndStatus in set_status()")
             return False
 
         if not self.update_zones(data["Zones"]):
@@ -238,14 +239,14 @@ class TotalConnectLocation:
         )
 
         if result["ResultCode"] == self.parent.FEATURE_NOT_SUPPORTED:
-            logging.warning(
+            LOGGER.warning(
                 "Getting Zone Details is a feature not supported by "
                 "your Total Connect account or hardware."
             )
             return False
 
         if result["ResultCode"] != RESULT_SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not get zone details. "
                 f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
             )
@@ -254,7 +255,7 @@ class TotalConnectLocation:
         if "ZoneStatus" in result:
             return self.set_zone_details(result["ZoneStatus"])
 
-        logging.error(
+        LOGGER.error(
             f"Could not get zone details. "
             f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
         )
@@ -280,10 +281,9 @@ class TotalConnectLocation:
     def update_zones(self, data):
         """Update zone info from ZoneInfo or ZoneInfoEx."""
 
-        if data is None:
-            logging.info(
-                f"total-connect-client returned zero zones. "
-                f"Sync your panel using the TotalConnect app or website."
+        if not data:
+            LOGGER.info(
+                f"no zones found -- sync your panel using TotalConnect app or website"
             )
             return False
 
@@ -320,7 +320,7 @@ class TotalConnectLocation:
         )
 
         if result["ResultCode"] != RESULT_SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not get partition details for "
                 f"device {self.security_device_id} at "
                 f"location {self.location_id}."
@@ -476,16 +476,16 @@ class TotalConnectLocation:
             return True
 
         if result["ResultCode"] == self.COMMAND_FAILED:
-            logging.warning("Could not arm system. Check if a zone is faulted.")
+            LOGGER.warning("Could not arm system. Check if a zone is faulted.")
             return False
 
         if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning(
+            LOGGER.warning(
                 f"User code {self.usercode} is invalid for location {self.location_id}."
             )
             return False
 
-        logging.error(
+        LOGGER.error(
             f"Could not arm system. "
             f"ResultCode: {result['ResultCode']}. "
             f"ResultData: {result['ResultData']}"
@@ -502,16 +502,16 @@ class TotalConnectLocation:
         )
 
         if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
-            logging.info("System Disarmed")
+            LOGGER.info("System Disarmed")
             return True
 
         if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning(
+            LOGGER.warning(
                 f"User code {self.usercode} is invalid for location {self.location_id}."
             )
             return False
 
-        logging.error(
+        LOGGER.error(
             f"Could not disarm system. "
             f"ResultCode: {result['ResultCode']}. "
             f"ResultData: {result['ResultData']}"
@@ -532,7 +532,7 @@ class TotalConnectLocation:
             self.zones[zone_id].bypass()
             return True
 
-        logging.error(
+        LOGGER.error(
             f"Could not bypass zone {zone_id} at location {self.location_id}."
             f"ResultCode: {result['ResultCode']}. "
             f"ResultData: {result['ResultData']}"
@@ -543,7 +543,7 @@ class TotalConnectLocation:
         """Get status of a zone."""
         z = self.zones.get(zone_id)
         if z is None:
-            logging.error(f"Zone {zone_id} does not exist.")
+            LOGGER.error(f"Zone {zone_id} does not exist.")
             return None
 
         return z.status
@@ -563,7 +563,7 @@ class TotalConnectLocation:
         )
 
         if result["ResultCode"] != self.SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not arm custom. ResultCode: {result['ResultCode']}. "
                 f"ResultData: {result['ResultData']}"
             )

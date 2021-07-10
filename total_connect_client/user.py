@@ -2,6 +2,8 @@
 
 import logging
 
+LOGGER = logging.getLogger(__name__)
+
 
 class TotalConnectUser:
     """User for Total Connect."""
@@ -18,7 +20,7 @@ class TotalConnectUser:
         self._config_admin = self._features["Configuration Administration"] == "1"
 
         if self.security_problem():
-            logging.warning(
+            LOGGER.warning(
                 f"Total Connect user {self._username} has one or "
                 "more permissions that are not necessary. Remove "
                 "permissions from this user or create a new user "
@@ -30,15 +32,15 @@ class TotalConnectUser:
         problem = False
 
         if self._master_user:
-            logging.warning(f"User {self._username} is a master user.")
+            LOGGER.warning(f"User {self._username} is a master user.")
             problem = True
 
         if self._user_admin:
-            logging.warning(f"User {self._username} is a user administrator.")
+            LOGGER.warning(f"User {self._username} is a user administrator.")
             problem = True
 
         if self._config_admin:
-            logging.warning(
+            LOGGER.warning(
                 f"User {self._username} " "is a configuration administrator."
             )
             problem = True
