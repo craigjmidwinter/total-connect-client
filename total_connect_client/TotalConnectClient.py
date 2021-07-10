@@ -100,7 +100,7 @@ class TotalConnectClient:
             f"Module Flags:\n"
         )
 
-        for key, value in self._module_flags.items():
+        for key, value in (self._module_flags or {}).items():
             data = data + f"  {key}: {value}\n"
 
         data = data + str(self._user)
