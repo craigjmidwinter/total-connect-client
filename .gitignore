@@ -47,6 +47,7 @@ fabric.properties
 /example.py
 
 __pycache__/
+pyenv/
 
 test.log
 
@@ -59,3 +60,6 @@ total_connect_client.egg-info/
 
 # VS Code
 .vscode/
+
+# emacs backups
+*~
