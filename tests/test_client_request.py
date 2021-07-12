@@ -15,6 +15,7 @@ from const import (
     RESPONSE_FAILED_TO_CONNECT,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_INVALID_SESSION,
+    RESPONSE_PARTITION_DETAILS,
     RESPONSE_SESSION_INITIATED,
     RESPONSE_UNKNOWN,
 )
@@ -47,6 +48,7 @@ class TestTotalConnectClient(unittest.TestCase):
             fakeResponse(
                 RESPONSE_AUTHENTICATE["ResultCode"], "Authentication Succeess."
             ),
+            fakeResponse(RESPONSE_PARTITION_DETAILS["ResultCode"], "Partition Success"),
             fakeResponse(
                 RESPONSE_GET_ZONE_DETAILS_SUCCESS["ResultCode"], "Zone Details Success"
             ),
@@ -54,6 +56,7 @@ class TestTotalConnectClient(unittest.TestCase):
         ]
         serialize_responses = [
             RESPONSE_AUTHENTICATE,
+            RESPONSE_PARTITION_DETAILS,
             RESPONSE_GET_ZONE_DETAILS_SUCCESS,
             RESPONSE_DISARMED,
         ]
@@ -66,7 +69,7 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
-            assert mock_request.call_count == 3
+            assert mock_request.call_count == 4
             assert client.is_valid_credentials() is True
             assert client.is_logged_in() is True
 
@@ -172,6 +175,7 @@ class TestTotalConnectClient(unittest.TestCase):
             fakeResponse(
                 RESPONSE_AUTHENTICATE["ResultCode"], "Authentication Succeess."
             ),
+            fakeResponse(RESPONSE_PARTITION_DETAILS["ResultCode"], "Partition Success"),
             fakeResponse(
                 RESPONSE_GET_ZONE_DETAILS_SUCCESS["ResultCode"], "Zone Details Success"
             ),
@@ -187,6 +191,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # invalid_session responses don't get serialized
         serialize_responses = [
             RESPONSE_AUTHENTICATE,
+            RESPONSE_PARTITION_DETAILS,
             RESPONSE_GET_ZONE_DETAILS_SUCCESS,
             RESPONSE_DISARMED,
             RESPONSE_SESSION_INITIATED,
@@ -201,13 +206,13 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
-            assert mock_request.call_count == 3
+            assert mock_request.call_count == 4
             assert client.is_valid_credentials() is True
             assert client.is_logged_in() is True
 
             assert client.arm_away(self.location_id) is True
             # Three original requests + arm_away + authenticate + arm_away
-            assert mock_request.call_count == 6
+            assert mock_request.call_count == 7
 
     def tests_request_unknown_result_code(self):
         """Test an unknown result code."""

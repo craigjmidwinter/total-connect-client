@@ -12,6 +12,7 @@ ResultCode | ResultData | Notes
 -100 | Authentication failed
 -102 | INVALID_SESSION |  
 -120 | Feature Not Supported | When calling get_zone_details()
+-400 | Object reference not set to an instance of an object. | GetPanelMetaDataAndFullStatusEx_V2 without partition list
 -4002 | The specified location is not valid |
 -4007 | NoAutomationDeviceFoundAtSpecifiedLocationException |
 -4502 | Command failed. Please try again. | Trying to arm system with zone faulted. 

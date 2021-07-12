@@ -1,8 +1,33 @@
 """Testing constants."""
 import TotalConnectClient
 
+from zone import (
+    ZONE_STATUS_NORMAL,
+    ZONE_TYPE_SECURITY,
+    ZONE_STATUS_LOW_BATTERY,
+    ZONE_TYPE_LYRIC_CONTACT,
+    ZONE_TYPE_LYRIC_MOTION,
+    ZONE_TYPE_LYRIC_POLICE,
+    ZONE_TYPE_LYRIC_TEMP,
+    ZONE_TYPE_LYRIC_LOCAL_ALARM,
+)
+from partition import TotalConnectPartition
+
+
 PASSWORD_BAD = "none"
 USERNAME_BAD = "none"
+
+DEVICE_INFO_BASIC_1 = {
+    "DeviceID": 1234567,
+    "DeviceName": "test",
+    "DeviceClassID": 1,
+    "DeviceSerialNumber": "987654321ABC",
+    "DeviceFlags": "PromptForUserCode=0,PromptForInstallerCode=0,PromptForImportSecuritySettings=0,AllowUserSlotEditing=0,CalCapable=1,CanBeSentToPanel=0,CanArmNightStay=0,CanSupportMultiPartition=0,PartitionCount=0,MaxPartitionCount=0,OnBoardingSupport=0,PartitionAdded=0,DuplicateUserSyncStatus=0,PanelType=8,PanelVariant=1,BLEDisarmCapable=0,ArmHomeSupported=0,DuplicateUserCodeCheck=1,CanSupportRapid=0,IsKeypadSupported=1,WifiEnrollmentSupported=0,IsConnectedPanel=0,ArmNightInSceneSupported=0,BuiltInCameraSettingsSupported=0,ZWaveThermostatScheduleDisabled=0,MultipleAuthorityLevelSupported=0,VideoOnPanelSupported=0,EnableBLEMode=0,IsPanelWiFiResetSupported=0,IsCompetitorClearBypass=0,IsNotReadyStateSupported=0,isArmStatusWithoutExitDelayNotSupported=0",
+    "SecurityPanelTypeID": None,
+    "DeviceSerialText": None,
+}
+DEVICE_LIST = []
+DEVICE_LIST.append(DEVICE_INFO_BASIC_1)
 
 LOCATION_INFO_BASIC_NORMAL = {
     "LocationID": "123456",
@@ -10,7 +35,7 @@ LOCATION_INFO_BASIC_NORMAL = {
     "SecurityDeviceID": "987654",
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
     "LocationModuleFlags": "Security=1,Video=0,Automation=0,GPS=0,VideoPIR=0",
-    "DeviceList": None,
+    "DeviceList": DEVICE_LIST,
 }
 
 LOCATIONS = {"LocationInfoBasic": [LOCATION_INFO_BASIC_NORMAL]}
@@ -27,7 +52,7 @@ USER = {
 ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
     "PartitionId": "1",
 }
 
@@ -35,9 +60,9 @@ ZONE_LOW_BATTERY = {
     "ZoneID": "1",
     "ZoneDescription": "Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_LOW_BATTERY,
+    "ZoneStatus": ZONE_STATUS_LOW_BATTERY,
 }
 
 ZONE_INFO = []
@@ -54,28 +79,26 @@ ZONE_STATUS_NORMAL = {
     "Signalstrength": "-1",
     "zoneAdditionalInfo": None,
     "ZoneID": "1",
-    "ZoneStatus": TotalConnectClient.ZONE_STATUS_NORMAL,
-    "ZoneTypeId": TotalConnectClient.ZONE_TYPE_SECURITY,
+    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
     "ZoneFlags": None,
 }
 
 ZONE_STATUS_LYRIC_CONTACT = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_CONTACT["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_CONTACT
+ZONE_STATUS_LYRIC_CONTACT["ZoneTypeId"] = ZONE_TYPE_LYRIC_CONTACT
 
 ZONE_STATUS_LYRIC_MOTION = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_MOTION["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_MOTION
+ZONE_STATUS_LYRIC_MOTION["ZoneTypeId"] = ZONE_TYPE_LYRIC_MOTION
 
 ZONE_STATUS_LYRIC_POLICE = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_POLICE["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_POLICE
+ZONE_STATUS_LYRIC_POLICE["ZoneTypeId"] = ZONE_TYPE_LYRIC_POLICE
 
 ZONE_STATUS_LYRIC_TEMP = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = TotalConnectClient.ZONE_TYPE_LYRIC_TEMP
+ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = ZONE_TYPE_LYRIC_TEMP
 
 ZONE_STATUS_LYRIC_LOCAL_ALARM = ZONE_STATUS_NORMAL.copy()
-ZONE_STATUS_LYRIC_LOCAL_ALARM[
-    "ZoneTypeId"
-] = TotalConnectClient.ZONE_TYPE_LYRIC_LOCAL_ALARM
+ZONE_STATUS_LYRIC_LOCAL_ALARM["ZoneTypeId"] = ZONE_TYPE_LYRIC_LOCAL_ALARM
 
 
 ZONE_STATUS_INFO = []
@@ -99,6 +122,11 @@ PARTITION_DISARMED = {
     "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
 }
 
+PARTITION_DISARMED2 = {
+    "PartitionID": "2",
+    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+}
+
 PARTITION_ARMED_STAY = {
     "PartitionID": "1",
     "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY,
@@ -116,6 +144,7 @@ PARTITION_ARMED_AWAY = {
 
 PARTITION_INFO_DISARMED = {}
 PARTITION_INFO_DISARMED[0] = PARTITION_DISARMED
+PARTITION_INFO_DISARMED[1] = PARTITION_DISARMED2
 
 PARTITION_INFO_ARMED_STAY = {}
 PARTITION_INFO_ARMED_STAY[0] = PARTITION_ARMED_STAY
@@ -162,16 +191,30 @@ METADATA_ARMED_STAY_NIGHT["Partitions"] = PARTITIONS_ARMED_STAY_NIGHT
 METADATA_ARMED_AWAY = METADATA_DISARMED.copy()
 METADATA_ARMED_AWAY["Partitions"] = PARTITIONS_ARMED_AWAY
 
-RESPONSE_DISARMED = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_DISARMED}
-RESPONSE_ARMED_STAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_STAY}
+RESPONSE_DISARMED = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "PanelMetadataAndStatus": METADATA_DISARMED,
+    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+}
+RESPONSE_ARMED_STAY = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "PanelMetadataAndStatus": METADATA_ARMED_STAY,
+}
 RESPONSE_ARMED_STAY_NIGHT = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT,
 }
-RESPONSE_ARMED_AWAY = {"ResultCode": 0, "PanelMetadataAndStatus": METADATA_ARMED_AWAY}
+RESPONSE_ARMED_AWAY = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "PanelMetadataAndStatus": METADATA_ARMED_AWAY,
+}
 
 RESPONSE_AUTHENTICATE = {
     "ResultCode": 0,
+    "ResultData": "Success",
     "SessionID": 1,
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
@@ -215,4 +258,25 @@ RESPONSE_FEATURE_NOT_SUPPORTED = {
 RESPONSE_UNKNOWN = {
     "ResultCode": -123456,
     "ResultData": "testing unknown result code",
+}
+
+PARTITION_DETAILS_1 = {
+    "PartitionID": 1,
+    "ArmingState": TotalConnectPartition.DISARMED,
+    "PartitionName": "Test1",
+}
+
+PARTITION_DETAILS_2 = {
+    "PartitionID": 2,
+    "ArmingState": TotalConnectPartition.DISARMED,
+    "PartitionName": "Test2",
+}
+
+PARTITION_DETAILS = []
+PARTITION_DETAILS.append(PARTITION_DETAILS_1)
+
+RESPONSE_PARTITION_DETAILS = {
+    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultData": "testing partition details",
+    "PartitionsInfoList": PARTITION_DETAILS,
 }

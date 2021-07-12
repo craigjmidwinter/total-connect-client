@@ -11,6 +11,7 @@ from const import (
     RESPONSE_AUTHENTICATE_EMPTY,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+    RESPONSE_PARTITION_DETAILS,
 )
 
 
@@ -30,6 +31,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test init with usercodes == None."""
         responses = [
             RESPONSE_AUTHENTICATE,
+            RESPONSE_PARTITION_DETAILS,
             RESPONSE_GET_ZONE_DETAILS_SUCCESS,
             RESPONSE_DISARMED,
         ]
@@ -40,7 +42,7 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
-            assert mock_request.call_count == 3
+            assert mock_request.call_count == 4
 
         assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
 
@@ -64,6 +66,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test init with usercodes == a string."""
         responses = [
             RESPONSE_AUTHENTICATE,
+            RESPONSE_PARTITION_DETAILS,
             RESPONSE_GET_ZONE_DETAILS_SUCCESS,
             RESPONSE_DISARMED,
         ]
@@ -74,6 +77,6 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes="123456"
             )
-            assert mock_request.call_count == 3
+            assert mock_request.call_count == 4
 
         assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
