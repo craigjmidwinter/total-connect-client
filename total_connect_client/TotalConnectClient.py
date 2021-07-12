@@ -2,8 +2,14 @@
 
 import logging
 import time
+import warnings
 
 import zeep
+
+from location import TotalConnectLocation
+from user import TotalConnectUser
+
+PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
@@ -11,26 +17,13 @@ ARM_TYPE_STAY_INSTANT = 2
 ARM_TYPE_AWAY_INSTANT = 3
 ARM_TYPE_STAY_NIGHT = 4
 
-ZONE_STATUS_NORMAL = 0
-ZONE_STATUS_BYPASSED = 1
-ZONE_STATUS_FAULT = 2
-ZONE_STATUS_TROUBLE = 8  # is also Tampered
-ZONE_STATUS_LOW_BATTERY = 64
-ZONE_STATUS_TRIGGERED = 256
+RESULT_SUCCESS = 0
 
-ZONE_TYPE_SECURITY = 0
-ZONE_TYPE_LYRIC_CONTACT = 1
-ZONE_TYPE_LYRIC_MOTION = 4
-ZONE_TYPE_LYRIC_POLICE = 6
-ZONE_TYPE_FIRE_SMOKE = 9
-ZONE_TYPE_LYRIC_TEMP = 12
-ZONE_TYPE_CARBON_MONOXIDE = 14
-ZONE_TYPE_LYRIC_LOCAL_ALARM = 89
-
-ZONE_BYPASS_SUCCESS = 0
 GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
+
+LOGGER = logging.getLogger(__name__)
 
 
 class AuthenticationError(Exception):
@@ -74,8 +67,8 @@ class TotalConnectClient:
         self.soap_base = "self.soapClient.service."
         self.soap_ready = False
 
-        self.applicationId = "14588"
-        self.applicationVersion = "1.0.34"
+        self.application_id = "14588"
+        self.application_version = "1.0.34"
         self.username = username
         self.password = password
 
@@ -152,21 +145,21 @@ class TotalConnectClient:
             ):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
-                logging.debug(
-                    f"total-connect-client invalid session (attempt number {attempts})."
+                LOGGER.debug(
+                    f"invalid session (attempt number {attempts})."
                 )
                 self.token = False
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
-                logging.debug(
-                    f"total-connect-client connection error (attempt number {attempts})."
+                LOGGER.debug(
+                    f"connection error (attempt number {attempts})."
                 )
                 time.sleep(3)
                 return self.request(request, attempts)
             if response.ResultCode == self.FAILED_TO_CONNECT:
-                logging.debug(
-                    f"total-connect-client failed to connect with security system "
+                LOGGER.debug(
+                    f"failed to connect with security system "
                     f"(attempt number {attempts})."
                 )
                 time.sleep(3)
@@ -176,11 +169,11 @@ class TotalConnectClient:
                 self.AUTHENTICATION_FAILED,
                 self.USER_CODE_UNAVAILABLE,
             ):
-                logging.debug("total-connect-client authentication failed.")
+                LOGGER.debug("authentication failed.")
                 return zeep.helpers.serialize_object(response)
 
-            logging.warning(
-                f"total-connect-client unknown result code "
+            LOGGER.warning(
+                f"unknown result code "
                 f"{response.ResultCode} with message: {response.ResultData}."
             )
             return zeep.helpers.serialize_object(response)
@@ -197,17 +190,17 @@ class TotalConnectClient:
             if self._populated:
                 response = self.request(
                     "AuthenticateUserLogin(self.username, self.password, "
-                    "self.applicationId, self.applicationVersion)"
+                    "self.application_id, self.application_version)"
                 )
             else:
                 # this request is very slow, so only use it when necessary
                 response = self.request(
                     "LoginAndGetSessionDetails(self.username, self.password, "
-                    "self.applicationId, self.applicationVersion)"
+                    "self.application_id, self.application_version)"
                 )
 
             if response["ResultCode"] == self.SUCCESS:
-                logging.debug("Login Successful")
+                LOGGER.debug("Login Successful")
                 self.token = response["SessionID"]
                 self._valid_credentials = True
                 if not self._populated:
@@ -218,12 +211,12 @@ class TotalConnectClient:
 
             self._valid_credentials = False
             self.token = False
-            logging.error(
+            LOGGER.error(
                 f"Unable to authenticate with Total Connect. ResultCode: "
                 f"{response['ResultCode']}. ResultData: {response['ResultData']}"
             )
 
-        logging.debug(
+        LOGGER.debug(
             "total-connect-client attempting login with known bad credentials."
         )
         self.times["authenticate()"] = time.time() - start_time
@@ -242,12 +235,12 @@ class TotalConnectClient:
             self.USER_CODE_INVALID,
             self.USER_CODE_UNAVAILABLE,
         ):
-            logging.warning(
+            LOGGER.warning(
                 f"usercode '{usercode}' " f"invalid for device {device_id}."
             )
             return False
 
-        logging.error(
+        LOGGER.error(
             f"Unknown response for validate_usercode. "
             f"ResultCode: {response['ResultCode']}. "
             f"ResultData: {response['ResultData']}"
@@ -265,7 +258,7 @@ class TotalConnectClient:
             response = self.request("Logout(self.token)")
 
             if response["ResultCode"] == self.SUCCESS:
-                logging.info("Logout Successful")
+                LOGGER.info("Logout Successful")
                 self.token = False
                 return True
 
@@ -288,21 +281,25 @@ class TotalConnectClient:
 
         for location in location_data:
             location_id = location["LocationID"]
-            self.locations[location_id] = TotalConnectLocation(location, self)
+
+            # self.locations[location_id] = TotalConnectLocation(location, self)
+            new_location = TotalConnectLocation(location, self)
 
             # set auto_bypass
-            self.locations[location_id].auto_bypass_low_battery = self.auto_bypass_low_battery
+            new_location.auto_bypass_low_battery = self.auto_bypass_low_battery
 
             # set the usercode for the location
             if location_id in self.usercodes:
-                self.locations[location_id].usercode = self.usercodes[location_id]
+                new_location.usercode = self.usercodes[location_id]
             elif str(location_id) in self.usercodes:
-                self.locations[location_id].usercode = self.usercodes[str(location_id)]
+                new_location.usercode = self.usercodes[str(location_id)]
             else:
-                logging.warning(f"No usercode for location {location_id}.")
+                LOGGER.warning(f"No usercode for location {location_id}.")
 
-            self.get_zone_details(location_id)
-            self.get_panel_meta_data(location_id)
+            new_location.get_partition_details()
+            new_location.get_zone_details()
+            new_location.get_panel_meta_data()
+            self.locations[location_id] = new_location
 
         if len(self.locations) < 1:
             Exception("No locations found!")
@@ -311,7 +308,7 @@ class TotalConnectClient:
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
-        logging.info("total-connect-client initiating Keep Alive")
+        LOGGER.info("total-connect-client initiating Keep Alive")
 
         response = self.soapClient.service.KeepAlive(self.token)
 
@@ -322,55 +319,57 @@ class TotalConnectClient:
 
     def arm_away(self, location_id):
         """Arm the system (Away)."""
+        warnings.warn(
+            "Using deprecated client.arm_away(). " "Use location.arm_away().",
+            DeprecationWarning,
+        )
         return self.arm(ARM_TYPE_AWAY, location_id)
 
     def arm_stay(self, location_id):
         """Arm the system (Stay)."""
+        warnings.warn(
+            "Using deprecated client.arm_stay(). " "Use location.arm_stay().",
+            DeprecationWarning,
+        )
         return self.arm(ARM_TYPE_STAY, location_id)
 
     def arm_stay_instant(self, location_id):
         """Arm the system (Stay - Instant)."""
+        warnings.warn(
+            "Using deprecated client.arm_stay_instant(). "
+            "Use location.arm_stay_instant().",
+            DeprecationWarning,
+        )
         return self.arm(ARM_TYPE_STAY_INSTANT, location_id)
 
     def arm_away_instant(self, location_id):
         """Arm the system (Away - Instant)."""
+        warnings.warn(
+            "Using deprecated client.arm_away_instant(). "
+            "Use location.arm_away_instant().",
+            DeprecationWarning,
+        )
         return self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
 
     def arm_stay_night(self, location_id):
         """Arm the system (Stay - Night)."""
+        warnings.warn(
+            "Using deprecated client.arm_stay_night(). "
+            "Use location.arm_stay_night().",
+            DeprecationWarning,
+        )
         return self.arm(ARM_TYPE_STAY_NIGHT, location_id)
 
     def arm(self, arm_type, location_id):
         """Arm the system. Return True if successful."""
-        result = self.request(
-            f"ArmSecuritySystem(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id}, "
-            f"{arm_type}, "
-            f"'{self.locations[location_id].usercode}')"
+        warnings.warn(
+            "Using deprecated client.arm(). " "Use location.arm().", DeprecationWarning
         )
-
-        if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
-            return True
-
-        if result["ResultCode"] == self.COMMAND_FAILED:
-            logging.warning("Could not arm system. Check if a zone is faulted.")
-            return False
-
-        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning("User code is invalid.")
-            return False
-
-        logging.error(
-            f"Could not arm system. "
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
+        return self.locations[location_id].arm(arm_type)
 
     def arm_custom(self, arm_type, location_id):
         """Arm custom the system.  Return true if successul."""
-        ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": ZONE_STATUS_NORMAL}
+        ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": 0}
 
         ZONES_LIST = {}
         ZONES_LIST[0] = ZONE_INFO
@@ -386,7 +385,7 @@ class TotalConnectClient:
         )
 
         if result["ResultCode"] != self.SUCCESS:
-            logging.error(
+            LOGGER.error(
                 f"Could not arm custom. ResultCode: {result['ResultCode']}. "
                 f"ResultData: {result['ResultData']}"
             )
@@ -402,518 +401,59 @@ class TotalConnectClient:
 
     def get_custom_arm_settings(self, location_id):
         """Get custom arm settings.  Return true if successful."""
-        result = self.request(
-            f"GetCustomArmSettings(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id})"
+        warnings.warn(
+            "Using deprecated client.get_custom_arm_settings(). "
+            "Use location.get_custom_arm_settings().",
+            DeprecationWarning,
         )
-
-        if result["ResultCode"] != self.SUCCESS:
-            logging.error(
-                f"Could not arm custom. ResultCode: {result['ResultCode']}. "
-                f"ResultData: {result['ResultData']}"
-            )
-            return False
-
-        return result
+        return self.locations[location_id].get_custom_arm_settings()
 
     def get_panel_meta_data(self, location_id):
         """Get all meta data about the alarm panel."""
-        start_time = time.time()
-        result = self.request(
-            f"GetPanelMetaDataAndFullStatus(self.token, {location_id}, 0, 0, 1)"
+        warnings.warn(
+            "Using deprecated client.get_panel_meta_data(). "
+            "Use location.get_panel_meta_data().",
+            DeprecationWarning,
         )
-
-        if result["ResultCode"] != self.SUCCESS:
-            logging.error(
-                f"Could not retrieve panel meta data. "
-                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
-            )
-            return False
-
-        if "PanelMetadataAndStatus" in result:
-            status = self.locations[location_id].set_status(
-                result["PanelMetadataAndStatus"]
-            )
-            self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
-            return status
-        else:
-            logging.warning("Panel_meta_data is empty.")
-
-        self.times[f"get_panel_meta_data({location_id})"] = time.time() - start_time
-        return result
+        return self.locations[location_id].get_panel_meta_data()
 
     def zone_status(self, location_id, zone_id):
         """Get status of a zone."""
-        z = self.locations[location_id].zones.get(zone_id)
-        if z is None:
-            logging.error(f"Zone {zone_id} does not exist.")
-            return None
-
-        return z.status
+        warnings.warn(
+            "Using deprecated client.zone_status(). " "Use location.zone_status().",
+            DeprecationWarning,
+        )
+        return self.locations[location_id].zone_status(zone_id)
 
     def get_armed_status(self, location_id):
         """Get the status of the panel."""
-        self.get_panel_meta_data(location_id)
-        return self.locations[location_id].arming_state
+        warnings.warn(
+            "Using deprecated client.zone_status(). " "Use location.zone_status().",
+            DeprecationWarning,
+        )
+        return self.locations[location_id].get_armed_status()
 
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""
-        result = self.request(
-            f"DisarmSecuritySystem(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id}, "
-            f"'{self.locations[location_id].usercode}')"
+        warnings.warn(
+            "Using deprecated client.disarm(). " "Use location.disarm().",
+            DeprecationWarning,
         )
-
-        if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
-            logging.info("System Disarmed")
-            return True
-
-        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            logging.warning("User code is invalid.")
-            return False
-
-        logging.error(
-            f"Could not disarm system. "
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
+        return self.locations[location_id].disarm()
 
     def zone_bypass(self, zone_id, location_id):
         """Bypass a zone.  Return true if successful."""
-        result = self.request(
-            f"Bypass(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id}, "
-            f"{zone_id}, "
-            f"'{self.locations[location_id].usercode}')"
+        warnings.warn(
+            "Using deprecated client.zone_bypass(). " "Use location.zone_bypass().",
+            DeprecationWarning,
         )
-
-        if result["ResultCode"] is ZONE_BYPASS_SUCCESS:
-            self.locations[location_id].zones[zone_id].bypass()
-            return True
-
-        logging.error(
-            f"Could not bypass zone {zone_id} at location {location_id}."
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
+        return self.locations[location_id].zone_bypass(zone_id)
 
     def get_zone_details(self, location_id):
         """Get Zone details. Return True if successful."""
-        start_time = time.time()
-        result = self.request(
-            "GetZonesListInStateEx_V1(self.token, "
-            + str(location_id)
-            + ', {"int": ["1"]}, 0)'
+        warnings.warn(
+            "Using deprecated client.get_zone_details(). "
+            "Use location.get_zone_details().",
+            DeprecationWarning,
         )
-
-        if result["ResultCode"] == self.FEATURE_NOT_SUPPORTED:
-            logging.warning(
-                "Getting Zone Details is a feature not supported by "
-                "your Total Connect account or hardware."
-            )
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-            return False
-
-        if result["ResultCode"] != self.SUCCESS:
-            logging.error(
-                f"Could not get zone details. "
-                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
-            )
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-            return False
-
-        zone_status = result.get("ZoneStatus")
-        if zone_status is not None:
-            self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-            return self.locations[location_id].set_zone_details(zone_status)
-
-        logging.error(
-            f"Could not get zone details. "
-            f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
-        )
-        self.times[f"get_zone_details({location_id})"] = time.time() - start_time
-        return False
-
-
-class TotalConnectLocation:
-    """TotalConnectLocation class."""
-
-    DISARMED = 10200
-    DISARMED_BYPASS = 10211
-    ARMED_AWAY = 10201
-    ARMED_AWAY_BYPASS = 10202
-    ARMED_AWAY_INSTANT = 10205
-    ARMED_AWAY_INSTANT_BYPASS = 10206
-    ARMED_CUSTOM_BYPASS = 10223
-    ARMED_STAY = 10203
-    ARMED_STAY_BYPASS = 10204
-    ARMED_STAY_INSTANT = 10209
-    ARMED_STAY_INSTANT_BYPASS = 10210
-    ARMED_STAY_NIGHT = 10218
-    ARMING = 10307
-    DISARMING = 10308
-    ALARMING = 10207
-    ALARMING_FIRE_SMOKE = 10212
-    ALARMING_CARBON_MONOXIDE = 10213
-
-    def __init__(self, location_info_basic, parent):
-        """Initialize based on a 'LocationInfoBasic'."""
-        self.location_id = location_info_basic["LocationID"]
-        self.location_name = location_info_basic["LocationName"]
-        self._photo_url = location_info_basic["PhotoURL"]
-        self._module_flags = dict(
-            x.split("=") for x in location_info_basic["LocationModuleFlags"].split(",")
-        )
-        self.security_device_id = location_info_basic["SecurityDeviceID"]
-        self._device_list = location_info_basic["DeviceList"]
-        self.parent = parent
-        self.ac_loss = None
-        self.low_battery = None
-        self.cover_tampered = None
-        self.last_updated_timestamp_ticks = None
-        self.configuration_sequence_number = None
-        self.arming_state = None
-        self.zones = {}
-        self.usercode = DEFAULT_USERCODE
-        self._auto_bypass_low_battery = False
-
-    def __str__(self):
-        """Return a text string that is printable."""
-        data = (
-            f"LOCATION {self.location_id} - {self.location_name}\n\n"
-            f"PhotoURL: {self._photo_url}\n"
-            f"SecurityDeviceID: {self.security_device_id}\n"
-            f"DeviceList: {self._device_list}\n"
-            f"AcLoss: {self.ac_loss}\n"
-            f"LowBattery: {self.low_battery}\n"
-            f"IsCoverTampered: {self.cover_tampered}\n"
-            f"Arming State: {self.arming_state}\n"
-            f"LocationModuleFlags:\n"
-        )
-
-        for key, value in self._module_flags.items():
-            data = data + f"  {key}: {value}\n"
-
-        data = data + "\n"
-
-        zones = f"ZONES: {len(self.zones)}\n\n"
-        for zone in self.zones:
-            zones = zones + str(self.zones[zone])
-
-        return data + zones
-
-    @property
-    def auto_bypass_low_battery(self):
-        """Return true if set to automatically bypass a low battery."""
-        return self._auto_bypass_low_battery
-
-    @auto_bypass_low_battery.setter
-    def auto_bypass_low_battery(self, value: bool):
-        """Set to automatically bypass a low battery."""
-        self._auto_bypass_low_battery = value
-
-    def set_zone_details(self, zone_status):
-        """Update from GetZonesListInStateEx_V1. Return true if successful."""
-        zones = zone_status.get("Zones")
-        if zones is None:
-            return False
-
-        zone_info = zones.get("ZoneStatusInfoWithPartitionId")
-        if zone_info is None:
-            return False
-
-        # probabaly shouldn't clear zones
-        # self.locations[location_id].zones.clear()
-
-        for zone in zone_info:
-            self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
-
-        return True
-
-    def set_status(self, data):
-        """Update from 'PanelMetadataAndStatus'. Return true on success."""
-        if data is None:
-            return False
-
-        self.ac_loss = data.get("IsInACLoss")
-        self.low_battery = data.get("IsInLowBattery")
-        self.cover_tampered = data.get("IsCoverTampered")
-        self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
-        self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
-
-        if "Partitions" not in data:
-            return False
-
-        if "PartitionInfo" not in data["Partitions"]:
-            return False
-
-        self.arming_state = data["Partitions"]["PartitionInfo"][0]["ArmingState"]
-
-        if "Zones" not in data:
-            return False
-
-        if data["Zones"] is None:
-            logging.info(
-                f"total-connect-client returned zero zones. "
-                f"Sync your panel using the TotalConnect app or website.)."
-            )
-            return False
-
-        if "ZoneInfo" not in data["Zones"]:
-            return False
-
-        for zone in data["Zones"]["ZoneInfo"]:
-            if zone["ZoneID"] in self.zones:
-                self.zones[zone["ZoneID"]].update(zone)
-            else:
-                self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
-
-            if (
-                self.zones[zone["ZoneID"]].is_low_battery()
-                and self._auto_bypass_low_battery
-            ):
-                self.parent.zone_bypass(zone["ZoneID"], self.location_id)
-
-        return True
-
-    def is_low_battery(self):
-        """Return true if low battery."""
-        return self.low_battery is True
-
-    def is_ac_loss(self):
-        """Return true if AC loss."""
-        return self.ac_loss is True
-
-    def is_cover_tampered(self):
-        """Return true if cover is tampered."""
-        return self.cover_tampered is True
-
-    def is_arming(self):
-        """Return true if the system is in the process of arming."""
-        return self.arming_state == self.ARMING
-
-    def is_disarming(self):
-        """Return true if the system is in the process of disarming."""
-        return self.arming_state == self.DISARMING
-
-    def is_pending(self):
-        """Return true if the system is pending an action."""
-        return self.is_disarming() or self.is_arming()
-
-    def is_disarmed(self):
-        """Return True if the system is disarmed."""
-        return self.arming_state in (self.DISARMED, self.DISARMED_BYPASS)
-
-    def is_armed_away(self):
-        """Return True if the system is armed away in any way."""
-        return self.arming_state in (
-            self.ARMED_AWAY,
-            self.ARMED_AWAY_BYPASS,
-            self.ARMED_AWAY_INSTANT,
-            self.ARMED_AWAY_INSTANT_BYPASS,
-        )
-
-    def is_armed_custom_bypass(self):
-        """Return True if the system is armed custom bypass in any way."""
-        return self.arming_state == self.ARMED_CUSTOM_BYPASS
-
-    def is_armed_home(self):
-        """Return True if the system is armed home/stay in any way."""
-        return self.arming_state in (
-            self.ARMED_STAY,
-            self.ARMED_STAY_BYPASS,
-            self.ARMED_STAY_INSTANT,
-            self.ARMED_STAY_INSTANT_BYPASS,
-            self.ARMED_STAY_NIGHT,
-        )
-
-    def is_armed_night(self):
-        """Return True if the system is armed night in any way."""
-        return self.arming_state == self.ARMED_STAY_NIGHT
-
-    def is_armed(self):
-        """Return True if the system is armed in any way."""
-        return (
-            self.is_armed_away()
-            or self.is_armed_custom_bypass()
-            or self.is_armed_home()
-            or self.is_armed_night()
-        )
-
-    def is_triggered_police(self):
-        """Return True if the system is triggered for police or medical."""
-        return self.arming_state == self.ALARMING
-
-    def is_triggered_fire(self):
-        """Return True if the system is triggered for fire or smoke."""
-        return self.arming_state == self.ALARMING_FIRE_SMOKE
-
-    def is_triggered_gas(self):
-        """Return True if the system is triggered for carbon monoxide."""
-        return self.arming_state == self.ALARMING_CARBON_MONOXIDE
-
-    def is_triggered(self):
-        """Return True if the system is triggered in any way."""
-        return (
-            self.is_triggered_fire()
-            or self.is_triggered_gas()
-            or self.is_triggered_police()
-        )
-
-    def set_usercode(self, usercode):
-        """Set the usercode. Return true if successful."""
-        if self.parent.validate_usercode(self.security_device_id, usercode):
-            self.usercode = usercode
-            return True
-
-        return False
-
-
-class TotalConnectZone:
-    """TotalConnectZone class."""
-
-    def __init__(self, zone):
-        """Initialize."""
-        self.id = zone.get("ZoneID")
-        self.description = zone.get("ZoneDescription")
-        self.status = zone.get("ZoneStatus")
-        self.partition = zone.get("PartitionID")
-        self.zone_type_id = zone.get("ZoneTypeId")
-        self.can_be_bypassed = zone.get("CanBeBypassed")
-
-    def update(self, zone):
-        """Update the zone."""
-        if self.id == zone.get("ZoneID"):
-            self.description = zone.get("ZoneDescription")
-            self.partition = zone.get("PartitionID")
-            self.status = zone.get("ZoneStatus")
-        else:
-            raise Exception("ZoneID does not match in TotalConnectZone.")
-
-    def __str__(self):
-        """Return a string that is printable."""
-        return (
-            f"Zone {self.id} - {self.description}\n"
-            f"Partition: {self.partition}\t"
-            f"Type: {self.zone_type_id}\t"
-            f"CanBeBypassed: {self.can_be_bypassed}\t"
-            f"Status: {self.status}\n\n"
-        )
-
-    def is_bypassed(self):
-        """Return true if the zone is bypassed."""
-        return self.status & ZONE_STATUS_BYPASSED > 0
-
-    def bypass(self):
-        """Set is_bypassed status."""
-        self.status = ZONE_STATUS_BYPASSED
-
-    def is_faulted(self):
-        """Return true if the zone is faulted."""
-        return self.status & ZONE_STATUS_FAULT > 0
-
-    def is_tampered(self):
-        """Return true if zone is tampered."""
-        return self.status & ZONE_STATUS_TROUBLE > 0
-
-    def is_low_battery(self):
-        """Return true if low battery."""
-        return self.status & ZONE_STATUS_LOW_BATTERY > 0
-
-    def is_troubled(self):
-        """Return true if zone is troubled."""
-        return self.status & ZONE_STATUS_TROUBLE > 0
-
-    def is_triggered(self):
-        """Return true if zone is triggered."""
-        return self.status & ZONE_STATUS_TRIGGERED > 0
-
-    def is_type_button(self):
-        """Return true if zone is a button."""
-        return self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0
-
-    def is_type_security(self):
-        """Return true if zone type is security."""
-        return self.zone_type_id in (
-            ZONE_TYPE_SECURITY,
-            ZONE_TYPE_LYRIC_CONTACT,
-            ZONE_TYPE_LYRIC_MOTION,
-            ZONE_TYPE_LYRIC_POLICE,
-            ZONE_TYPE_LYRIC_LOCAL_ALARM,
-        )
-
-    def is_type_motion(self):
-        """Return true if zone type is motion."""
-        return self.zone_type_id == ZONE_TYPE_LYRIC_MOTION
-
-    def is_type_fire(self):
-        """Return true if zone type is fire or smoke."""
-        return self.zone_type_id in (ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_LYRIC_TEMP)
-
-    def is_type_carbon_monoxide(self):
-        """Return true if zone type is carbon monoxide."""
-        return self.zone_type_id == ZONE_TYPE_CARBON_MONOXIDE
-
-
-class TotalConnectUser:
-    """User for Total Connect."""
-
-    def __init__(self, user_info):
-        """Initialize based on UserInfo from LoginAndGetSessionDetails."""
-        self._user_id = user_info["UserID"]
-        self._username = user_info["Username"]
-        self._features = dict(
-            x.split("=") for x in user_info["UserFeatureList"].split(",")
-        )
-        self._master_user = self._features["Master"] == "1"
-        self._user_admin = self._features["User Administration"] == "1"
-        self._config_admin = self._features["Configuration Administration"] == "1"
-
-        if self.security_problem():
-            logging.warning(
-                f"Total Connect user {self._username} has one or "
-                "more permissions that are not necessary. Remove "
-                "permissions from this user or create a new user "
-                "with minimal permissions."
-            )
-
-    def security_problem(self):
-        """Run security checks. Return true if problem."""
-        problem = False
-
-        if self._master_user:
-            logging.warning(f"User {self._username} is a master user.")
-            problem = True
-
-        if self._user_admin:
-            logging.warning(f"User {self._username} is a user administrator.")
-            problem = True
-
-        if self._config_admin:
-            logging.warning(
-                f"User {self._username} " "is a configuration administrator."
-            )
-            problem = True
-
-        return problem
-
-    def __str__(self):
-        """Return a string that is printable."""
-        data = (
-            f"Username: {self._username}\n"
-            f"UserID: {self._user_id}\n"
-            f"Master User: {self._master_user}\n"
-            f"User Administrator: {self._user_admin}\n"
-            f"Configuration Administrator: {self._config_admin}\n"
-            "User features:\n"
-        )
-
-        for key, value in self._features.items():
-            data = data + f"  {key}: {value}\n"
-
-        return data + "\n"
+        return self.locations[location_id].get_zone_details()
