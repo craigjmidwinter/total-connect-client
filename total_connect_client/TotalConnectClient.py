@@ -279,7 +279,7 @@ class TotalConnectClient:
 
     def is_logged_in(self):
         """Return true if the client is logged into Total Connect service."""
-        return self.token is not False
+        return self.token is not None
 
     def log_out(self):
         """Return true on logout of Total Connect service, or if not logged in."""
@@ -288,7 +288,7 @@ class TotalConnectClient:
 
             if response["ResultCode"] == self.SUCCESS:
                 LOGGER.info("Logout Successful")
-                self.token = False
+                self.token = None
                 return True
 
         return False
