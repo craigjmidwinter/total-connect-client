@@ -209,7 +209,7 @@ class TotalConnectClient:
         self.locations will not be refreshed if it was non-empty on entry.
         """
         if self._invalid_credentials:
-            LOGGER.error("not authenticating: these credentials already failed")
+            LOGGER.error(f"not authenticating: password already failed for user {self.username}")
             return False
 
         start_time = time.time()
