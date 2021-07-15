@@ -67,8 +67,8 @@ class TotalConnectClient:
         self.soap_base = "self.soapClient.service."
         self.soap_ready = False
 
-        self.application_id = "14588"
-        self.application_version = "1.0.34"
+        self.applicationId = "14588"
+        self.applicationVersion = "1.0.34"
         self.username = username
         self.password = password
 
