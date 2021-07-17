@@ -25,6 +25,9 @@ def create_client():
         client = TotalConnectClient.TotalConnectClient(
             "username", "password", {"123456": "1234"}
         )
+        assert mock_request.call_count == 1
+        if client.locations:  # force client to fetch them
+            pass
         assert mock_request.call_count == 4
 
     return client

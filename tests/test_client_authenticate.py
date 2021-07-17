@@ -68,7 +68,7 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ), patch(
-            "TotalConnectClient.TotalConnectClient.populate_details", return_value=True
+            "TotalConnectClient.TotalConnectClient._make_locations", return_value=['fakelocations']
         ):
             # ensure we start logged out (first SUCCESS)
             self.client.log_out()

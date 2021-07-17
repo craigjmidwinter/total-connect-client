@@ -42,6 +42,9 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
+            assert mock_request.call_count == 1
+            if client.locations:  # force client to fetch them
+                pass
             assert mock_request.call_count == 4
 
         assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
@@ -77,6 +80,9 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes="123456"
             )
+            assert mock_request.call_count == 1
+            if client.locations:  # force client to fetch them
+                pass
             assert mock_request.call_count == 4
 
         assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
