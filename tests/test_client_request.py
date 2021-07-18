@@ -69,6 +69,9 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
+            assert mock_request.call_count == 1
+            if client.locations:  # force client to fetch them
+                pass
             assert mock_request.call_count == 4
             assert client.is_valid_credentials() is True
             assert client.is_logged_in() is True
@@ -206,6 +209,9 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient.TotalConnectClient(
                 "username", "password", usercodes=None
             )
+            assert mock_request.call_count == 1
+            if client.locations:  # force client to fetch them
+                pass
             assert mock_request.call_count == 4
             assert client.is_valid_credentials() is True
             assert client.is_logged_in() is True

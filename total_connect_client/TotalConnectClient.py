@@ -78,16 +78,36 @@ class TotalConnectClient:
             self.usercodes = usercodes
 
         self.auto_bypass_low_battery = auto_bypass_battery
-        self.token = False
-        self._valid_credentials = (
-            None  # None at start, True after login, False if login fails
-        )
-        self._populated = False
+        self.token = None
+        self._invalid_credentials = False
+
         self._module_flags = None
         self._user = None
-        self.locations = {}
+        self._locations = {}
+        self._locations_unfetched = {}
         self.authenticate()
         self.times["__init__"] = time.time() - self.time_start
+
+    @property
+    def locations(self):
+        """Raises an exception if the panel cannot be reached to retrieve
+        metadata or details. This can be retried later and will succeed
+        if/when the panel becomes reachable.
+        """
+        # to_fetch is needed because items() is invalidated by del
+        to_fetch = [i for i in self._locations_unfetched.items()]
+        for (locationid, location) in to_fetch:
+            try:
+                location.get_partition_details()
+                location.get_zone_details()
+                location.get_panel_meta_data()
+                # if we get here, it has been fetched successfully
+                del self._locations_unfetched[locationid]
+            except Exception:
+                LOGGER.error(f"exception during initial fetch of {locationid}")
+                raise
+        assert not self._locations_unfetched
+        return self._locations
 
     def __str__(self):
         """Return a text string that is printable."""
@@ -97,7 +117,7 @@ class TotalConnectClient:
             f"Password: {self.password}\n"
             f"Usercode: {self.usercodes}\n"
             f"Auto Bypass Low Battery: {self.auto_bypass_low_battery}\n"
-            f"Valid Credentials: {self._valid_credentials}\n"
+            f"Invalid Credentials: {self._invalid_credentials}\n"
             f"Module Flags:\n"
         )
 
@@ -148,7 +168,7 @@ class TotalConnectClient:
                 LOGGER.debug(
                     f"invalid session (attempt number {attempts})."
                 )
-                self.token = False
+                self.token = None
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
@@ -183,42 +203,51 @@ class TotalConnectClient:
         )
 
     def authenticate(self):
-        """Login to the system and populate details.  Return true if successful."""
+        """Login to the system.  Return True if successful.
+        Upon success, self.token is a valid credential for further
+        API calls, and self._user and self.locations are valid.
+        self.locations will not be refreshed if it was non-empty on entry.
+        """
+        if self._invalid_credentials:
+            LOGGER.error(f"not authenticating: password already failed for user {self.username}")
+            return False
+
         start_time = time.time()
-        if self._valid_credentials is not False:
 
-            if self._populated:
-                response = self.request(
-                    "AuthenticateUserLogin(self.username, self.password, "
-                    "self.application_id, self.application_version)"
-                )
-            else:
-                # this request is very slow, so only use it when necessary
-                response = self.request(
-                    "LoginAndGetSessionDetails(self.username, self.password, "
-                    "self.application_id, self.application_version)"
-                )
-
-            if response["ResultCode"] == self.SUCCESS:
-                LOGGER.debug("Login Successful")
-                self.token = response["SessionID"]
-                self._valid_credentials = True
-                if not self._populated:
-                    self.populate_details(response)
-                    self._populated = True
-                self.times["authenticate()"] = time.time() - start_time
-                return True
-
-            self._valid_credentials = False
-            self.token = False
-            LOGGER.error(
-                f"Unable to authenticate with Total Connect. ResultCode: "
-                f"{response['ResultCode']}. ResultData: {response['ResultData']}"
+        if self._locations:
+            response = self.request(
+                "AuthenticateUserLogin(self.username, self.password, "
+                "self.applicationId, self.applicationVersion)"
+            )
+        else:
+            # this request is very slow, so only use it when necessary
+            response = self.request(
+                "LoginAndGetSessionDetails(self.username, self.password, "
+                "self.applicationId, self.applicationVersion)"
             )
 
-        LOGGER.debug(
-            "total-connect-client attempting login with known bad credentials."
+        if response["ResultCode"] == self.SUCCESS:
+            self.token = response["SessionID"]
+            if not self._locations:
+                self._module_flags = dict(
+                    x.split("=") for x in response["ModuleFlags"].split(",")
+                )
+                self._user = TotalConnectUser(response["UserInfo"])
+                self._locations_unfetched = self._make_locations(response)
+                self._locations = self._locations_unfetched.copy()
+                if not self._locations:
+                    raise Exception("No locations found!")
+            LOGGER.info(f"{self.username} authenticated with {len(self._locations)} locations")
+            self.times["authenticate()"] = time.time() - start_time
+            return True
+
+        self._invalid_credentials = True
+        self.token = None
+        LOGGER.error(
+            f"Unable to authenticate with Total Connect. ResultCode: "
+            f"{response['ResultCode']}. ResultData: {response['ResultData']}"
         )
+
         self.times["authenticate()"] = time.time() - start_time
         return False
 
@@ -250,7 +279,7 @@ class TotalConnectClient:
 
     def is_logged_in(self):
         """Return true if the client is logged into Total Connect service."""
-        return self.token is not False
+        return self.token is not None
 
     def log_out(self):
         """Return true on logout of Total Connect service, or if not logged in."""
@@ -259,52 +288,39 @@ class TotalConnectClient:
 
             if response["ResultCode"] == self.SUCCESS:
                 LOGGER.info("Logout Successful")
-                self.token = False
+                self.token = None
                 return True
 
         return False
 
     def is_valid_credentials(self):
-        """Return true if the credentials are known to be valid."""
-        return self._valid_credentials is True
+        """Return True if the credentials are known to be valid."""
+        return self.token is not None
 
-    def populate_details(self, response):
-        """Populate system details."""
+    def _make_locations(self, response):
+        """Return a dict mapping LocationID to TotalConnectLocation."""
         start_time = time.time()
-        location_data = response["Locations"]["LocationInfoBasic"]
+        new_locations = {}
 
-        self._module_flags = dict(
-            x.split("=") for x in response["ModuleFlags"].split(",")
-        )
-
-        self._user = TotalConnectUser(response["UserInfo"])
-
-        for location in location_data:
+        for location in response["Locations"]["LocationInfoBasic"]:
             location_id = location["LocationID"]
-
-            # self.locations[location_id] = TotalConnectLocation(location, self)
-            new_location = TotalConnectLocation(location, self)
+            new_locations[location_id] = TotalConnectLocation(location, self)
 
             # set auto_bypass
-            new_location.auto_bypass_low_battery = self.auto_bypass_low_battery
+            new_locations[location_id].auto_bypass_low_battery = self.auto_bypass_low_battery
 
             # set the usercode for the location
-            if location_id in self.usercodes:
-                new_location.usercode = self.usercodes[location_id]
-            elif str(location_id) in self.usercodes:
-                new_location.usercode = self.usercodes[str(location_id)]
+            usercode = (self.usercodes.get(location_id) or
+                        self.usercodes.get(str(location_id)) or
+                        self.usercodes.get('default'))
+            if usercode:
+                new_locations[location_id].usercode = usercode
             else:
-                LOGGER.warning(f"No usercode for location {location_id}.")
+                LOGGER.warning(f"no usercode for location {location_id}")
+                new_locations[location_id].usercode = DEFAULT_USERCODE
 
-            new_location.get_partition_details()
-            new_location.get_zone_details()
-            new_location.get_panel_meta_data()
-            self.locations[location_id] = new_location
-
-        if len(self.locations) < 1:
-            Exception("No locations found!")
-
-        self.times["populate_details()"] = time.time() - start_time
+        self.times["_make_locations()"] = time.time() - start_time
+        return new_locations
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
