@@ -1,15 +1,16 @@
 """Test client.zone_bypass()."""
 
-import unittest
 from unittest.mock import patch
+import unittest
+import pytest
 
 import TotalConnectClient
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
-from location import TotalConnectLocation
+from exceptions import BadResultCodeError
 
 RESPONSE_ZONE_BYPASS_SUCCESS = {
-    "ResultCode": TotalConnectLocation.ZONE_BYPASS_SUCCESS,
+    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
     "ResultData": "None",
 }
 
@@ -43,7 +44,7 @@ class TestTotalConnectClient(unittest.TestCase):
             assert zone.is_bypassed() is False
 
             # now bypass the zone
-            assert self.client.zone_bypass("1", self.location_id) is True
+            self.client.zone_bypass("1", self.location_id)
 
             # should now be bypassed
             assert zone.is_bypassed() is True
@@ -59,7 +60,8 @@ class TestTotalConnectClient(unittest.TestCase):
             assert zone.is_bypassed() is False
 
             # try to bypass the zone
-            assert self.client.zone_bypass("1", self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.zone_bypass("1", self.location_id)
 
             # should not be bypassed
             assert zone.is_bypassed() is False

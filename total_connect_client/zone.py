@@ -1,8 +1,6 @@
 """Total Connect Zone."""
 
 
-import logging
-
 ZONE_STATUS_NORMAL = 0
 ZONE_STATUS_BYPASSED = 1
 ZONE_STATUS_FAULT = 2
@@ -26,7 +24,7 @@ ZONE_TYPE_LYRIC_LOCAL_ALARM = 89
 
 
 class TotalConnectZone:
-    """TotalConnectZone class."""
+    """Do not create instances of this class yourself."""
 
     def __init__(self, zone):
         """Initialize."""
@@ -47,42 +45,28 @@ class TotalConnectZone:
         self.update(zone)
 
     def update(self, zone):
-        """Update the zone.  True on success."""
-        if zone is None:
-            return False
-
-        if self.id != zone.get("ZoneID"):
-            raise Exception(
-                f"ZoneID {zone.get('ZoneID')} does not match "
-                f"expected {self.id} in TotalConnectZone."
-            )
+        """Update the zone."""
+        assert zone
+        zid = zone.get("ZoneID")
+        assert self.id == zid, (self.id, zid)
 
         self.description = zone.get("ZoneDescription")
         self.partition = zone.get("PartitionID")
         self.status = zone.get("ZoneStatus")
         self.can_be_bypassed = zone.get("CanBeBypassed")
 
-        if "ZoneTypeId" in zone:
-            self.zone_type_id = zone["ZoneTypeId"]
-
-        if "Batterylevel" in zone:
-            self.battery_level = zone["Batterylevel"]
-
-        if "Signalstrength" in zone:
-            self.signal_strength = zone["Signalstrength"]
-
-        if "zoneAdditionalInfo" in zone:
-            info = zone["zoneAdditionalInfo"]
-            if info is not None:
-                self.sensor_serial_number = info.get("SensorSerialNumber")
-                self.loop_number = info.get("LoopNumber")
-                self.response_type = info.get("ResponseType")
-                self.alarm_report_state = info.get("AlarmReportState")
-                self.supervision_type = info.get("ZoneSupervisionType")
-                self.chime_state = info.get("ChimeState")
-                self.device_type = info.get("DeviceType")
-
-        return True
+        self.zone_type_id = zone.get("ZoneTypeId", self.zone_type_id)
+        self.battery_level = zone.get("Batterylevel", self.battery_level)
+        self.signal_strength = zone.get("Signalstrength", self.signal_strength)
+        info = zone.get("zoneAdditionalInfo")
+        if info:
+            self.sensor_serial_number = info.get("SensorSerialNumber")
+            self.loop_number = info.get("LoopNumber")
+            self.response_type = info.get("ResponseType")
+            self.alarm_report_state = info.get("AlarmReportState")
+            self.supervision_type = info.get("ZoneSupervisionType")
+            self.chime_state = info.get("ChimeState")
+            self.device_type = info.get("DeviceType")
 
     def __str__(self):
         """Return a string that is printable."""
@@ -107,9 +91,10 @@ class TotalConnectZone:
         """Return true if the zone is bypassed."""
         return self.status & ZONE_STATUS_BYPASSED > 0
 
-    def bypass(self):
+    def _mark_as_bypassed(self):
         """Set is_bypassed status."""
-        self.status = ZONE_STATUS_BYPASSED
+        # TODO: when does this get reset to no longer bypassed?
+        self.status |= ZONE_STATUS_BYPASSED
 
     def is_faulted(self):
         """Return true if the zone is faulted."""
@@ -135,7 +120,8 @@ class TotalConnectZone:
         """Return true if zone is a button."""
 
         # as seen so far, any security zone that cannot be bypassed is a button on a panel
-        if self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0:
+        # FIXME: should this be self.is_type_security() instead?
+        if self.zone_type_id == ZONE_TYPE_SECURITY and not self.can_be_bypassed:
             return True
 
         if self.zone_type_id in (ZONE_TYPE_PROA7_MEDICAL, ZONE_TYPE_PROA7_POLICE):

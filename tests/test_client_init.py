@@ -13,6 +13,7 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_PARTITION_DETAILS,
 )
+from exceptions import TotalConnectError
 
 
 class TestTotalConnectClient(unittest.TestCase):
@@ -47,7 +48,6 @@ class TestTotalConnectClient(unittest.TestCase):
                 pass
             assert mock_request.call_count == 4
 
-        assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
 
     def tests_init_locations_empty(self):
         """Test init with no locations."""
@@ -57,13 +57,9 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ) as mock_request, pytest.raises(Exception):
+        ) as mock_request, pytest.raises(TotalConnectError):
 
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
-            assert client.locations == {}
-            assert mock_request.call_count == 1
+            TotalConnectClient.TotalConnectClient("username", "password", usercodes=None)
 
     def tests_init_usercodes_string(self):
         """Test init with usercodes == a string."""
@@ -77,12 +73,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes="123456"
-            )
-            assert mock_request.call_count == 1
-            if client.locations:  # force client to fetch them
-                pass
-            assert mock_request.call_count == 4
-
-        assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
+            with pytest.raises(AttributeError):
+                # string is not a valid type for usercodes (only dict)
+                TotalConnectClient.TotalConnectClient(
+                    "username", "password", usercodes="123456"
+                )

@@ -5,6 +5,9 @@ from unittest.mock import Mock
 
 from const import PARTITION_DETAILS_1, PARTITION_DISARMED
 from partition import TotalConnectPartition
+from exceptions import PartialResponseError
+
+import pytest
 
 
 def tests_partition():
@@ -18,10 +21,12 @@ def tests_partition():
     # remove ArmingState
     data = deepcopy(PARTITION_DETAILS_1)
     del data["ArmingState"]
-    assert test_partition.update(data) is False
+    with pytest.raises(PartialResponseError):
+        test_partition.update(data)
 
     # no info
-    assert test_partition.update(None) is False
+    with pytest.raises(PartialResponseError):
+        test_partition.update(None)
 
 
 def tests_str():
@@ -42,23 +47,23 @@ def tests_arm_disarm():
     location = Mock()
     partition = TotalConnectPartition(PARTITION_DETAILS_1, location)
 
-    location.arm_away.return_value = True
-    assert partition.arm_away() is True
+    location.arm_away.return_value = None
+    partition.arm_away()
 
-    location.arm_stay.return_value = True
-    assert partition.arm_stay() is True
+    location.arm_stay.return_value = None
+    partition.arm_stay()
 
-    location.arm_stay_instant.return_value = True
-    assert partition.arm_stay_instant() is True
+    location.arm_stay_instant.return_value = None
+    partition.arm_stay_instant()
 
-    location.arm_away_instant.return_value = True
-    assert partition.arm_away_instant() is True
+    location.arm_away_instant.return_value = None
+    partition.arm_away_instant()
 
-    location.arm_stay_night.return_value = True
-    assert partition.arm_stay_night() is True
+    location.arm_stay_night.return_value = None
+    partition.arm_stay_night()
 
-    location.disarm.return_value = True
-    assert partition.disarm() is True
+    location.disarm.return_value = None
+    partition.disarm()
 
 
 def tests_arming_state():

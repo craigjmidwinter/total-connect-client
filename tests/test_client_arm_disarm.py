@@ -1,7 +1,8 @@
 """Test total_connect_client."""
 
-import unittest
 from unittest.mock import patch
+import unittest
+import pytest
 
 import TotalConnectClient
 from common import create_client
@@ -13,6 +14,7 @@ from const import (
     RESPONSE_DISARMED,
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
+from exceptions import BadResultCodeError, AuthenticationError
 
 RESPONSE_ARM_SUCCESS = {
     "ResultCode": TotalConnectClient.TotalConnectClient.ARM_SUCCESS,
@@ -71,8 +73,7 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should succeed
-            assert self.client.arm_away(self.location_id) is True
+            self.client.arm_away(self.location_id)
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
@@ -84,8 +85,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_away(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_away(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -98,8 +99,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_away(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_away(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -112,8 +113,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_away(self.location_id) is False
+            with pytest.raises(AuthenticationError):
+                self.client.arm_away(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -126,8 +127,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_away(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_away(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -142,8 +143,7 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should succeed
-            assert self.client.arm_away_instant(self.location_id) is True
+            self.client.arm_away_instant(self.location_id)
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
@@ -155,8 +155,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_away_instant(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_away_instant(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -169,8 +169,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_away_instant(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_away_instant(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -185,8 +185,7 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system
-            assert self.client.arm_stay(self.location_id) is True
+            self.client.arm_stay(self.location_id)
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
@@ -198,8 +197,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_stay(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_stay(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -212,8 +211,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_stay(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_stay(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -228,8 +227,7 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system
-            assert self.client.arm_stay_instant(self.location_id) is True
+            self.client.arm_stay_instant(self.location_id)
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
@@ -241,8 +239,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_stay_instant(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_stay_instant(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -255,8 +253,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_stay_instant(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_stay_instant(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -271,8 +269,7 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system
-            assert self.client.arm_stay_night(self.location_id) is True
+            self.client.arm_stay_night(self.location_id)
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
@@ -284,8 +281,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_stay_night(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_stay_night(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -298,8 +295,8 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch(
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
-            # arm the system, should fail
-            assert self.client.arm_stay_night(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.arm_stay_night(self.location_id)
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
@@ -320,12 +317,12 @@ class TestTotalConnectClient(unittest.TestCase):
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             # arm the system and confirm armed_away
-            assert self.client.arm_away(self.location_id) is True
+            self.client.arm_away(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_armed_away() is True
 
             # now disarm
-            assert self.client.disarm(self.location_id) is True
+            self.client.disarm(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_disarmed() is True
 
@@ -343,12 +340,13 @@ class TestTotalConnectClient(unittest.TestCase):
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             # arm the system and confirm armed_away
-            assert self.client.arm_away(self.location_id) is True
+            self.client.arm_away(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_armed_away() is True
 
             # now disarm, should fail
-            assert self.client.disarm(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.disarm(self.location_id)
 
             # should still be armed_away
             self.client.get_panel_meta_data(self.location_id)
@@ -368,14 +366,14 @@ class TestTotalConnectClient(unittest.TestCase):
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             # arm the system and confirm armed_away
-            assert self.client.arm_away(self.location_id) is True
+            self.client.arm_away(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_armed_away() is True
 
-            # now disarm, should fail
-            assert self.client.disarm(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.disarm(self.location_id)
 
-            # should still be armed_away
+            # should still be armed_away when disarming fails
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_armed_away() is True
 
@@ -392,6 +390,6 @@ class TestTotalConnectClient(unittest.TestCase):
             assert self.client.locations[self.location_id].is_disarmed() is True
 
             # now disarm
-            assert self.client.disarm(self.location_id) is True
+            self.client.disarm(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_disarmed() is True

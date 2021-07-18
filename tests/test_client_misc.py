@@ -1,7 +1,8 @@
 """Test total_connect_client."""
 
-import unittest
 from unittest.mock import patch
+import unittest
+import pytest
 
 from common import create_client
 from const import (
@@ -16,6 +17,7 @@ from const import (
     RESPONSE_UNKNOWN,
 )
 from zone import ZONE_STATUS_NORMAL
+from exceptions import TotalConnectError, BadResultCodeError, PartialResponseError
 
 
 class TestTotalConnectClient(unittest.TestCase):
@@ -39,11 +41,12 @@ class TestTotalConnectClient(unittest.TestCase):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
 
-            # first ask for status of zone 1, which exists
+            # ask for status of zone 1, which exists
             assert self.client.zone_status(self.location_id, "1") is ZONE_STATUS_NORMAL
 
-            # first ask for status of zone 99, which does not exist
-            assert self.client.zone_status(self.location_id, "99") is None
+            # ask for status of zone 99, which does not exist
+            with pytest.raises(TotalConnectError):
+                self.client.zone_status(self.location_id, "99")
 
     def tests_get_armed_status(self):
         """Test get_armed_status."""
@@ -90,11 +93,14 @@ class TestTotalConnectClient(unittest.TestCase):
             "TotalConnectClient.TotalConnectClient.request", side_effect=responses
         ):
             # first response is SUCCESS
-            assert self.client.get_zone_details(self.location_id) is True
+            self.client.get_zone_details(self.location_id)
             # second response is FEATURE_NOT_SUPPORTED
-            assert self.client.get_zone_details(self.location_id) is False
-            # third response is UNKOWN
-            assert self.client.get_zone_details(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.get_zone_details(self.location_id)
+            # third response is UNKNOWN
+            with pytest.raises(BadResultCodeError):
+                self.client.get_zone_details(self.location_id)
             # third response is SUCCESS but with empty ZoneStatus
             # ...which we've seen before in the wild
-            assert self.client.get_zone_details(self.location_id) is False
+            with pytest.raises(PartialResponseError):
+                self.client.get_zone_details(self.location_id)

@@ -1,8 +1,10 @@
 """Total Connect Partition."""
 
+from exceptions import PartialResponseError
 
 class TotalConnectPartition:
     """Partition class for Total Connect."""
+
 
     # ArmingState
     DISARMED = 10200
@@ -40,39 +42,35 @@ class TotalConnectPartition:
         return data
 
     def update(self, info):
-        """Update partition based on PartitionInfo. True on success."""
-        if info is None:
-            return False
-
-        if "ArmingState" not in info:
-            return False
-
-        self.arming_state = info["ArmingState"]
-        return True
+        """Update partition based on PartitionInfo."""
+        astate = (info or {}).get("ArmingState")
+        if astate is None:
+            raise PartialResponseError('no ArmingState')
+        self.arming_state = astate
 
     def arm_away(self):
-        """Arm the partition (Away). True on success."""
-        return self.parent.arm_away(self.id)
+        """Arm the partition (Away)."""
+        self.parent.arm_away(self.id)
 
     def arm_stay(self):
-        """Arm the partition (Stay). True on success."""
-        return self.parent.arm_stay(self.id)
+        """Arm the partition (Stay)."""
+        self.parent.arm_stay(self.id)
 
     def arm_stay_instant(self):
         """Arm the partition (Stay - Instant). True on success."""
-        return self.parent.arm_stay_instant(self.id)
+        self.parent.arm_stay_instant(self.id)
 
     def arm_away_instant(self):
-        """Arm the partition (Away - Instant). True on success."""
-        return self.parent.arm_away_instant(self.id)
+        """Arm the partition (Away - Instant)."""
+        self.parent.arm_away_instant(self.id)
 
     def arm_stay_night(self):
-        """Arm the partition (Stay - Night). True on success."""
-        return self.parent.arm_stay_night(self.id)
+        """Arm the partition (Stay - Night)."""
+        self.parent.arm_stay_night(self.id)
 
     def disarm(self):
-        """Disarm the partition. True on success."""
-        return self.parent.disarm(self.id)
+        """Disarm the partition."""
+        self.parent.disarm(self.id)
 
     def get_armed_status(self):
         """Get the status of the panel."""

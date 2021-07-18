@@ -1,11 +1,13 @@
 """Test client.validate_usercode()."""
 
-import unittest
 from unittest.mock import patch
+import unittest
+import pytest
 
 import TotalConnectClient
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
+from exceptions import BadResultCodeError
 
 RESPONSE_VALID = {
     "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
@@ -59,4 +61,5 @@ class TestTotalConnectClient(unittest.TestCase):
             # unavailable
             assert self.client.validate_usercode("1", "1234") is False
             # other random failure
-            assert self.client.validate_usercode("1", "1234") is False
+            with pytest.raises(BadResultCodeError):
+                self.client.validate_usercode("1", "1234")

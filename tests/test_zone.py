@@ -15,7 +15,11 @@ from const import (
     ZONE_LOW_BATTERY,
 )
 from zone import TotalConnectZone as tcz
-from zone import ZONE_TYPE_SECURITY, ZONE_STATUS_BYPASSED, ZONE_STATUS_FAULT, ZONE_STATUS_TROUBLE, ZONE_STATUS_TRIGGERED,ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_CARBON_MONOXIDE, ZONE_TYPE_PROA7_MEDICAL
+from zone import (
+    ZONE_TYPE_SECURITY, ZONE_STATUS_BYPASSED, ZONE_STATUS_FAULT,
+    ZONE_STATUS_TROUBLE, ZONE_STATUS_TRIGGERED, ZONE_TYPE_FIRE_SMOKE,
+    ZONE_TYPE_CARBON_MONOXIDE, ZONE_TYPE_PROA7_MEDICAL,
+)
 
 
 ZONE_BYPASSED = {
@@ -174,7 +178,7 @@ class TestTotalConnectZone(unittest.TestCase):
     def tests_bypass(self):
         """Bypass a zone."""
         self.assertFalse(self.zone_normal.is_bypassed())
-        self.zone_normal.bypass()
+        self.zone_normal._mark_as_bypassed()
         self.assertTrue(self.zone_normal.is_bypassed())
 
     def tests_faulted(self):
