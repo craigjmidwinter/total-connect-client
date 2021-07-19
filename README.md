@@ -129,7 +129,9 @@ similar methods on the values of self.locations.
 ## Likely Future Interface Changes
 
 * Previously if the usercodes dictionary was invalid, the DEFAULT_USERCODE
-was silently used. In a future release, we will crash on an invalid dictionary.
+was silently used. In a future release, we will raise an exception on an invalid dictionary.
 * Previously most methods returned True on success and False on failure, with no exceptions expected. In a future release, those methods will return no value and raise subclasses of TotalConnectError on failure.
 
 If there's something about the interface you don't understand, check out the (Home Assistant integration)[https://github.com/home-assistant/core/blob/dev/homeassistant/components/totalconnect/] that uses this package, or submit an issue here.
+
+During development, if you discover new status codes or other information not handled, please submit an issue to let us know, or even better submit a pull request.
