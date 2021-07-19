@@ -244,8 +244,7 @@ class TotalConnectLocation:
             raise
 
         partition_details = ((result or {}).get("PartitionsInfoList") or {}).get("PartitionDetails")
-        # TODO: this is very specific ("is None") -- why?
-        if partition_details is None:
+        if not partition_details:
             raise PartialResponseError('no PartitionDetails', result)
 
         new_partition_list = []
