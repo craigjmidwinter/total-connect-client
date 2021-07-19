@@ -135,7 +135,7 @@ class TotalConnectZone:
         """Return true if zone is a button."""
 
         # as seen so far, any security zone that cannot be bypassed is a button on a panel
-        if self.zone_type_id == ZONE_TYPE_SECURITY and self.can_be_bypassed == 0:
+        if self.is_type_security() and not self.can_be_bypassed:
             return True
 
         if self.zone_type_id in (ZONE_TYPE_PROA7_MEDICAL, ZONE_TYPE_PROA7_POLICE):
@@ -145,6 +145,8 @@ class TotalConnectZone:
 
     def is_type_security(self):
         """Return true if zone type is security."""
+
+        # LYRIC_POLICE is here but PROA7_POLICE is not. why?
         return self.zone_type_id in (
             ZONE_TYPE_SECURITY,
             ZONE_TYPE_LYRIC_CONTACT,
