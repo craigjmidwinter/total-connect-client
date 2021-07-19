@@ -32,6 +32,7 @@ def tests_str():
         f"PARTITION {PARTITION_DETAILS_1['PartitionID']} - "
         f"{PARTITION_DETAILS_1['PartitionName']}\n"
         f"  ArmingState: {PARTITION_DETAILS_1['ArmingState']}\n"
+        f"  ID: 1\n"
     )
 
     assert str(test_partition) == data
@@ -42,22 +43,17 @@ def tests_arm_disarm():
     location = Mock()
     partition = TotalConnectPartition(PARTITION_DETAILS_1, location)
 
-    location.arm_away.return_value = True
+    location._armer_disarmer.return_value = True
     assert partition.arm_away() is True
 
-    location.arm_stay.return_value = True
     assert partition.arm_stay() is True
 
-    location.arm_stay_instant.return_value = True
     assert partition.arm_stay_instant() is True
 
-    location.arm_away_instant.return_value = True
     assert partition.arm_away_instant() is True
 
-    location.arm_stay_night.return_value = True
     assert partition.arm_stay_night() is True
 
-    location.disarm.return_value = True
     assert partition.disarm() is True
 
 
