@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 from client import TotalConnectClient, DEFAULT_USERCODE
 from const import (
-    LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_AUTHENTICATE,
     RESPONSE_AUTHENTICATE_EMPTY,
     RESPONSE_DISARMED,
