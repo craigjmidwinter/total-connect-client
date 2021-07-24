@@ -1,7 +1,7 @@
 """Testing constants."""
 from location import TotalConnectLocation
 from partition import TotalConnectPartition
-from TotalConnectClient import TotalConnectClient
+from client import TotalConnectClient
 from zone import (ZONE_STATUS_LOW_BATTERY, ZONE_STATUS_NORMAL,
                   ZONE_TYPE_LYRIC_CONTACT, ZONE_TYPE_LYRIC_LOCAL_ALARM,
                   ZONE_TYPE_LYRIC_MOTION, ZONE_TYPE_LYRIC_POLICE,
