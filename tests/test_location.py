@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 from copy import deepcopy
 
-from location import TotalConnectLocation
+from location import TotalConnectLocation, DEFAULT_USERCODE
 from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED, METADATA_DISARMED_LOW_BATTERY, ZONE_DETAIL_STATUS
 
 
@@ -138,12 +138,12 @@ class TestTotalConnectLocation(unittest.TestCase):
         )
 
         # should start with default usercode
-        assert loc.usercode == TotalConnectLocation.DEFAULT_USERCODE
+        assert loc.usercode == DEFAULT_USERCODE
 
         # now set it with an invalid code
         mock_client.validate_usercode.return_value = False
         assert loc.set_usercode("0000") is False
-        assert loc.usercode == TotalConnectLocation.DEFAULT_USERCODE
+        assert loc.usercode == DEFAULT_USERCODE
         assert mock_client.validate_usercode.call_count == 1
 
         # now set it with a valid code
