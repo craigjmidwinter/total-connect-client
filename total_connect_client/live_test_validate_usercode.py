@@ -3,7 +3,7 @@
 import logging
 import sys
 
-import TotalConnectClient
+from client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
