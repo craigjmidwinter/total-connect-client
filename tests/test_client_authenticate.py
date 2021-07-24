@@ -48,7 +48,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_SUCCESS,
         ]
         with patch(
-            "TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             assert self.client.is_logged_in() is True
             assert self.client.log_out() is True
@@ -66,9 +66,9 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_AUTHENTICATION_FAILED,
         ]
         with patch(
-            "TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ), patch(
-            "TotalConnectClient._make_locations", return_value=['fakelocations']
+            "client.TotalConnectClient._make_locations", return_value=['fakelocations']
         ):
             # ensure we start logged out (first SUCCESS)
             self.client.log_out()

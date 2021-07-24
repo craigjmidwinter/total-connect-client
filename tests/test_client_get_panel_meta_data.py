@@ -30,7 +30,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test get_panel_meta_data() with a normal response."""
         responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARMED]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
@@ -47,7 +47,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
         responses = [RESPONSE_DISARMED_NONE]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
@@ -60,7 +60,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
         responses = [RESPONSE_FEATURE_NOT_SUPPORTED]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True

@@ -63,7 +63,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
             client = TotalConnectClient(
@@ -89,7 +89,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
             client = TotalConnectClient(
@@ -113,7 +113,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "time.sleep", autospec=True
         ), patch(
             "builtins.eval", side_effect=eval_responses
@@ -148,7 +148,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "time.sleep", autospec=True
         ), patch(
             "builtins.eval", side_effect=eval_responses
@@ -203,7 +203,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
             client = TotalConnectClient(
@@ -231,7 +231,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
             client = TotalConnectClient(
