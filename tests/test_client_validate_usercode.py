@@ -3,28 +3,28 @@
 import unittest
 from unittest.mock import patch
 
-import TotalConnectClient
+from client import TotalConnectClient
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
 RESPONSE_VALID = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultCode": TotalConnectClient.SUCCESS,
     "ResultData": "None",
 }
 
 RESPONSE_INVALID = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_INVALID,
+    "ResultCode": TotalConnectClient.USER_CODE_INVALID,
     "ResultData": "None",
 }
 
 RESPONSE_UNAVAILABLE = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_UNAVAILABLE,
+    "ResultCode": TotalConnectClient.USER_CODE_UNAVAILABLE,
     "ResultData": "None",
 }
 
 # random unknown response
 RESPONSE_FAILED = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": TotalConnectClient.COMMAND_FAILED,
     "ResultData": "None",
 }
 
@@ -50,7 +50,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_FAILED,
         ]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "TotalConnectClient.request", side_effect=responses
         ):
             # valid
             assert self.client.validate_usercode("1", "1234") is True
