@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from copy import deepcopy
 
 import TotalConnectClient
+from location import TotalConnectLocation
 from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED, METADATA_DISARMED_LOW_BATTERY, ZONE_DETAIL_STATUS
 
 
@@ -15,7 +16,7 @@ class TestTotalConnectLocation(unittest.TestCase):
     def setUp(self):
         """Set up for location testing."""
         self.auto_bypass_low_battery = False
-        self.location_normal = TotalConnectClient.TotalConnectLocation(
+        self.location_normal = TotalConnectLocation(
             LOCATION_INFO_BASIC_NORMAL, self
         )
         self.location_normal.set_status(deepcopy(METADATA_DISARMED))
@@ -60,13 +61,13 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.assertFalse(self.location_normal.is_triggered_gas())
         self.assertFalse(self.location_normal.is_triggered())
 
-        loc = TotalConnectClient.TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
+        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
         self.assertTrue(loc.set_status(deepcopy(METADATA_DISARMED_LOW_BATTERY)))
         assert loc.zones["1"].is_low_battery() is True
 
     def tests_set_status_none(self):
         """Test set_status with None passed in."""
-        loc = TotalConnectClient.TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
+        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
         loc.set_status(deepcopy(METADATA_DISARMED))
 
         self.assertTrue(loc.is_disarmed())
@@ -111,7 +112,7 @@ class TestTotalConnectLocation(unittest.TestCase):
 
         mock_client = Mock()
 
-        loc = TotalConnectClient.TotalConnectLocation(
+        loc = TotalConnectLocation(
             LOCATION_INFO_BASIC_NORMAL, mock_client
         )
 
@@ -133,7 +134,7 @@ class TestTotalConnectLocation(unittest.TestCase):
 
         mock_client = Mock()
 
-        loc = TotalConnectClient.TotalConnectLocation(
+        loc = TotalConnectLocation(
             LOCATION_INFO_BASIC_NORMAL, mock_client
         )
 
