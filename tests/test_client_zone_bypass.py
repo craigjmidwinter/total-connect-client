@@ -36,9 +36,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test Zone Bypass with a normal response."""
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_SUCCESS]
-        with patch(
-            "client.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # should start not bypassed
             assert zone.is_bypassed() is False
 
@@ -52,9 +50,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test Zone Bypass with a normal response."""
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_FAILURE]
-        with patch(
-            "client.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # should start not bypassed
             assert zone.is_bypassed() is False
 

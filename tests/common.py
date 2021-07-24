@@ -22,9 +22,7 @@ def create_client():
     with patch(
         "client.TotalConnectClient.request", side_effect=responses
     ) as mock_request:
-        mock_client = TotalConnectClient(
-            "username", "password", {"123456": "1234"}
-        )
+        mock_client = TotalConnectClient("username", "password", {"123456": "1234"})
         assert mock_request.call_count == 1
         if mock_client.locations:  # force client to fetch them
             pass

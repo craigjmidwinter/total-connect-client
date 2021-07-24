@@ -49,9 +49,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_UNAVAILABLE,
             RESPONSE_FAILED,
         ]
-        with patch(
-            "client.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # valid
             assert self.client.validate_usercode("1", "1234") is True
             # invalid

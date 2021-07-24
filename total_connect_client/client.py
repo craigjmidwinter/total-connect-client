@@ -5,7 +5,6 @@ import time
 import warnings
 
 import zeep
-
 from location import TotalConnectLocation
 from user import TotalConnectUser
 
@@ -165,16 +164,12 @@ class TotalConnectClient:
             ):
                 return zeep.helpers.serialize_object(response)
             if response.ResultCode == self.INVALID_SESSION:
-                LOGGER.debug(
-                    f"invalid session (attempt number {attempts})."
-                )
+                LOGGER.debug(f"invalid session (attempt number {attempts}).")
                 self.token = None
                 self.authenticate()
                 return self.request(request, attempts)
             if response.ResultCode == self.CONNECTION_ERROR:
-                LOGGER.debug(
-                    f"connection error (attempt number {attempts})."
-                )
+                LOGGER.debug(f"connection error (attempt number {attempts}).")
                 time.sleep(3)
                 return self.request(request, attempts)
             if response.ResultCode == self.FAILED_TO_CONNECT:
@@ -209,7 +204,9 @@ class TotalConnectClient:
         self.locations will not be refreshed if it was non-empty on entry.
         """
         if self._invalid_credentials:
-            LOGGER.error(f"not authenticating: password already failed for user {self.username}")
+            LOGGER.error(
+                f"not authenticating: password already failed for user {self.username}"
+            )
             return False
 
         start_time = time.time()
@@ -237,7 +234,9 @@ class TotalConnectClient:
                 self._locations = self._locations_unfetched.copy()
                 if not self._locations:
                     raise Exception("No locations found!")
-            LOGGER.info(f"{self.username} authenticated with {len(self._locations)} locations")
+            LOGGER.info(
+                f"{self.username} authenticated with {len(self._locations)} locations"
+            )
             self.times["authenticate()"] = time.time() - start_time
             return True
 
@@ -264,9 +263,7 @@ class TotalConnectClient:
             self.USER_CODE_INVALID,
             self.USER_CODE_UNAVAILABLE,
         ):
-            LOGGER.warning(
-                f"usercode '{usercode}' " f"invalid for device {device_id}."
-            )
+            LOGGER.warning(f"usercode '{usercode}' " f"invalid for device {device_id}.")
             return False
 
         LOGGER.error(
@@ -307,12 +304,16 @@ class TotalConnectClient:
             new_locations[location_id] = TotalConnectLocation(location, self)
 
             # set auto_bypass
-            new_locations[location_id].auto_bypass_low_battery = self.auto_bypass_low_battery
+            new_locations[
+                location_id
+            ].auto_bypass_low_battery = self.auto_bypass_low_battery
 
             # set the usercode for the location
-            usercode = (self.usercodes.get(location_id) or
-                        self.usercodes.get(str(location_id)) or
-                        self.usercodes.get('default'))
+            usercode = (
+                self.usercodes.get(location_id)
+                or self.usercodes.get(str(location_id))
+                or self.usercodes.get("default")
+            )
             if usercode:
                 new_locations[location_id].usercode = usercode
             else:

@@ -66,9 +66,7 @@ class TestTotalConnectClient(unittest.TestCase):
         ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
@@ -92,9 +90,7 @@ class TestTotalConnectClient(unittest.TestCase):
         ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
@@ -120,13 +116,8 @@ class TestTotalConnectClient(unittest.TestCase):
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
-            client = TotalConnectClient(
-                "username", "password", usercodes=None
-            )
-            assert (
-                mock_request.call_count
-                == TotalConnectClient.MAX_REQUEST_ATTEMPTS
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
+            assert mock_request.call_count == TotalConnectClient.MAX_REQUEST_ATTEMPTS
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
             assert (
@@ -155,13 +146,8 @@ class TestTotalConnectClient(unittest.TestCase):
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
-            client = TotalConnectClient(
-                "username", "password", usercodes=None
-            )
-            assert (
-                mock_request.call_count
-                == TotalConnectClient.MAX_REQUEST_ATTEMPTS
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
+            assert mock_request.call_count == TotalConnectClient.MAX_REQUEST_ATTEMPTS
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
             assert (
@@ -206,9 +192,7 @@ class TestTotalConnectClient(unittest.TestCase):
         ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
@@ -234,9 +218,7 @@ class TestTotalConnectClient(unittest.TestCase):
         ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
