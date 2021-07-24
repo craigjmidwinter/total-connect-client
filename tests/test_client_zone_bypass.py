@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-import TotalConnectClient
+from client import TotalConnectClient
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 from location import TotalConnectLocation
@@ -15,7 +15,7 @@ RESPONSE_ZONE_BYPASS_SUCCESS = {
 
 # guessing on the response...don't know for sure
 RESPONSE_ZONE_BYPASS_FAILURE = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": TotalConnectClient.COMMAND_FAILED,
     "ResultData": "None",
 }
 
@@ -37,7 +37,7 @@ class TestTotalConnectClient(unittest.TestCase):
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_SUCCESS]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "TotalConnectClient.request", side_effect=responses
         ):
             # should start not bypassed
             assert zone.is_bypassed() is False
@@ -53,7 +53,7 @@ class TestTotalConnectClient(unittest.TestCase):
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_FAILURE]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "TotalConnectClient.request", side_effect=responses
         ):
             # should start not bypassed
             assert zone.is_bypassed() is False
