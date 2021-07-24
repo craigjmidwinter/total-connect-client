@@ -1,12 +1,16 @@
 """Test total_connect_client location."""
 
 import unittest
+from copy import deepcopy
 from unittest.mock import Mock
 
-from copy import deepcopy
-
-from location import TotalConnectLocation, DEFAULT_USERCODE
-from const import LOCATION_INFO_BASIC_NORMAL, METADATA_DISARMED, METADATA_DISARMED_LOW_BATTERY, ZONE_DETAIL_STATUS
+from const import (
+    LOCATION_INFO_BASIC_NORMAL,
+    METADATA_DISARMED,
+    METADATA_DISARMED_LOW_BATTERY,
+    ZONE_DETAIL_STATUS,
+)
+from location import DEFAULT_USERCODE, TotalConnectLocation
 
 
 class TestTotalConnectLocation(unittest.TestCase):
@@ -15,9 +19,7 @@ class TestTotalConnectLocation(unittest.TestCase):
     def setUp(self):
         """Set up for location testing."""
         self.auto_bypass_low_battery = False
-        self.location_normal = TotalConnectLocation(
-            LOCATION_INFO_BASIC_NORMAL, self
-        )
+        self.location_normal = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
         self.location_normal.set_status(deepcopy(METADATA_DISARMED))
 
     def tearDown(self):
@@ -111,9 +113,7 @@ class TestTotalConnectLocation(unittest.TestCase):
 
         mock_client = Mock()
 
-        loc = TotalConnectLocation(
-            LOCATION_INFO_BASIC_NORMAL, mock_client
-        )
+        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, mock_client)
 
         # should not try to bypass by default
         assert loc.auto_bypass_low_battery is False
@@ -127,15 +127,13 @@ class TestTotalConnectLocation(unittest.TestCase):
         # now update status with a low battery and ensure it is bypassed
         loc.set_status(METADATA_DISARMED_LOW_BATTERY)
         assert mock_client.zone_bypass.call_count == 1
-        
+
     def tests_set_usercode(self):
         """Test set_usercode."""
 
         mock_client = Mock()
 
-        loc = TotalConnectLocation(
-            LOCATION_INFO_BASIC_NORMAL, mock_client
-        )
+        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, mock_client)
 
         # should start with default usercode
         assert loc.usercode == DEFAULT_USERCODE

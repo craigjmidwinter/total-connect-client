@@ -18,6 +18,7 @@ DEFAULT_USERCODE = "-1"
 
 LOGGER = logging.getLogger(__name__)
 
+
 class TotalConnectLocation:
     """TotalConnectLocation class."""
 

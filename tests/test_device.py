@@ -1,8 +1,8 @@
 """Test TotalConnectDevice."""
 
+from const import DEVICE_INFO_BASIC_1
 from device import TotalConnectDevice
 
-from const import DEVICE_INFO_BASIC_1
 
 def tests_init():
     """Test __init__()."""

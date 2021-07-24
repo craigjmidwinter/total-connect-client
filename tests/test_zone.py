@@ -4,17 +4,25 @@ import unittest
 
 import pytest
 from const import (
+    ZONE_LOW_BATTERY,
     ZONE_STATUS_LYRIC_CONTACT,
     ZONE_STATUS_LYRIC_LOCAL_ALARM,
     ZONE_STATUS_LYRIC_MOTION,
     ZONE_STATUS_LYRIC_POLICE,
     ZONE_STATUS_LYRIC_TEMP,
     ZONE_STATUS_NORMAL,
-    ZONE_LOW_BATTERY,
+)
+from zone import (
+    ZONE_STATUS_BYPASSED,
+    ZONE_STATUS_FAULT,
+    ZONE_STATUS_TRIGGERED,
+    ZONE_STATUS_TROUBLE,
+    ZONE_TYPE_CARBON_MONOXIDE,
+    ZONE_TYPE_FIRE_SMOKE,
+    ZONE_TYPE_PROA7_MEDICAL,
+    ZONE_TYPE_SECURITY,
 )
 from zone import TotalConnectZone as tcz
-from zone import ZONE_TYPE_SECURITY, ZONE_STATUS_BYPASSED, ZONE_STATUS_FAULT, ZONE_STATUS_TROUBLE, ZONE_STATUS_TRIGGERED,ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_CARBON_MONOXIDE, ZONE_TYPE_PROA7_MEDICAL
-
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
@@ -288,6 +296,7 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_lyric_motion.is_type_motion())
         self.assertFalse(self.zone_lyric_police.is_type_motion())
         self.assertFalse(self.zone_lyric_temp.is_type_motion())
+
 
 def test_proa7_zones():
     """Test ProA7."""
