@@ -34,7 +34,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test zone_status."""
         responses = [RESPONSE_DISARMED]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
@@ -54,7 +54,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_DISARMED,
         ]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
@@ -87,7 +87,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_GET_ZONE_DETAILS_NONE,
         ]
         with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # first response is SUCCESS
             assert self.client.get_zone_details(self.location_id) is True

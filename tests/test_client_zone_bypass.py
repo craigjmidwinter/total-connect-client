@@ -37,7 +37,7 @@ class TestTotalConnectClient(unittest.TestCase):
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_SUCCESS]
         with patch(
-            "TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # should start not bypassed
             assert zone.is_bypassed() is False
@@ -53,7 +53,7 @@ class TestTotalConnectClient(unittest.TestCase):
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_FAILURE]
         with patch(
-            "TotalConnectClient.request", side_effect=responses
+            "client.TotalConnectClient.request", side_effect=responses
         ):
             # should start not bypassed
             assert zone.is_bypassed() is False
