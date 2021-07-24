@@ -1,8 +1,6 @@
 """Total Connect Zone."""
 
 
-import logging
-
 ZONE_STATUS_NORMAL = 0
 ZONE_STATUS_BYPASSED = 1
 ZONE_STATUS_FAULT = 2
