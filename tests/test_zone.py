@@ -1,10 +1,8 @@
 """Test total_connect_client."""
 
 import unittest
-from unittest.runner import TextTestRunner
 
 import pytest
-import TotalConnectClient
 from const import (
     ZONE_STATUS_LYRIC_CONTACT,
     ZONE_STATUS_LYRIC_LOCAL_ALARM,
