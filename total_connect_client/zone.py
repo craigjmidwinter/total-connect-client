@@ -131,6 +131,8 @@ class TotalConnectZone:
 
     def is_type_security(self):
         """Return true if zone type is security."""
+
+        # LYRIC_POLICE is here but PROA7_POLICE is not. why?
         return self.zone_type_id in (
             ZONE_TYPE_SECURITY,
             ZONE_TYPE_LYRIC_CONTACT,

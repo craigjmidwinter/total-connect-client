@@ -358,31 +358,6 @@ class TotalConnectClient:
         )
         return self.locations[location_id].arm(arm_type)
 
-    def arm_custom(self, arm_type, location_id):
-        """Arm custom the system."""
-        ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": 0}
-
-        ZONES_LIST = {}
-        ZONES_LIST[0] = ZONE_INFO
-
-        CUSTOM_ARM_SETTINGS = {"ArmMode": "1", "ArmDelay": "5", "ZonesList": ZONES_LIST}
-
-        result = self.request(
-            f"CustomArmSecuritySystem(self.token, "
-            f"{location_id}, "
-            f"{self.locations[location_id].security_device_id}, "
-            f"{arm_type}, '{self.locations[location_id].usercode}', "
-            f"{CUSTOM_ARM_SETTINGS})"
-        )
-
-        self.raise_for_resultcode(result)
-
-        # remove after this is all working
-        print(
-            f"arm_custom ResultCode: {result['ResultCode']}. "
-            f"arm_custom ResultData: {result['ResultData']}"
-        )
-
     def get_custom_arm_settings(self, location_id):
         """Get custom arm settings.  Return true if successful."""
         warnings.warn(
