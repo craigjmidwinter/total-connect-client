@@ -1,12 +1,10 @@
 """Test total_connect_client."""
 
-import unittest
 from unittest.mock import patch
 
 import pytest
-import TotalConnectClient
+from client import DEFAULT_USERCODE, TotalConnectClient
 from const import (
-    LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_AUTHENTICATE,
     RESPONSE_AUTHENTICATE_EMPTY,
     RESPONSE_DISARMED,
@@ -15,74 +13,58 @@ from const import (
 )
 
 
-class TestTotalConnectClient(unittest.TestCase):
-    """Test TotalConnectClient."""
+def tests_init_usercodes_none():
+    """Test init with usercodes == None."""
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
+    ]
 
-    def setUp(self):
-        """Test setup."""
-        self.client = None
-        self.location_id = LOCATION_INFO_BASIC_NORMAL["LocationID"]
+    with patch(
+        "client.TotalConnectClient.request", side_effect=responses
+    ) as mock_request:
+        mock_client = TotalConnectClient("username", "password", usercodes=None)
+        assert mock_request.call_count == 1
+        if mock_client.locations:  # force client to fetch them
+            pass
+        assert mock_request.call_count == 4
 
-    def tearDown(self):
-        """Test cleanup."""
-        self.client = None
+    assert mock_client.usercodes == {"default": DEFAULT_USERCODE}
 
-    def tests_init_usercodes_none(self):
-        """Test init with usercodes == None."""
-        responses = [
-            RESPONSE_AUTHENTICATE,
-            RESPONSE_PARTITION_DETAILS,
-            RESPONSE_GET_ZONE_DETAILS_SUCCESS,
-            RESPONSE_DISARMED,
-        ]
 
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
-            assert mock_request.call_count == 1
-            if client.locations:  # force client to fetch them
-                pass
-            assert mock_request.call_count == 4
+def tests_init_locations_empty():
+    """Test init with no locations."""
+    responses = [
+        RESPONSE_AUTHENTICATE_EMPTY,
+    ]
 
-        assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
+    with patch(
+        "client.TotalConnectClient.request", side_effect=responses
+    ) as mock_request, pytest.raises(Exception):
 
-    def tests_init_locations_empty(self):
-        """Test init with no locations."""
-        responses = [
-            RESPONSE_AUTHENTICATE_EMPTY,
-        ]
+        mock_client = TotalConnectClient("username", "password", usercodes=None)
+        assert mock_client.locations == {}
+        assert mock_request.call_count == 1
 
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ) as mock_request, pytest.raises(Exception):
 
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
-            assert client.locations == {}
-            assert mock_request.call_count == 1
+def tests_init_usercodes_string():
+    """Test init with usercodes == a string."""
+    responses = [
+        RESPONSE_AUTHENTICATE,
+        RESPONSE_PARTITION_DETAILS,
+        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+        RESPONSE_DISARMED,
+    ]
 
-    def tests_init_usercodes_string(self):
-        """Test init with usercodes == a string."""
-        responses = [
-            RESPONSE_AUTHENTICATE,
-            RESPONSE_PARTITION_DETAILS,
-            RESPONSE_GET_ZONE_DETAILS_SUCCESS,
-            RESPONSE_DISARMED,
-        ]
+    with patch(
+        "client.TotalConnectClient.request", side_effect=responses
+    ) as mock_request:
+        mock_client = TotalConnectClient("username", "password", usercodes="123456")
+        assert mock_request.call_count == 1
+        if mock_client.locations:  # force client to fetch them
+            pass
+        assert mock_request.call_count == 4
 
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes="123456"
-            )
-            assert mock_request.call_count == 1
-            if client.locations:  # force client to fetch them
-                pass
-            assert mock_request.call_count == 4
-
-        assert client.usercodes == {"default": TotalConnectClient.DEFAULT_USERCODE}
+    assert mock_client.usercodes == {"default": DEFAULT_USERCODE}

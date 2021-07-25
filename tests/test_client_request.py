@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 import pytest
-import TotalConnectClient
+from client import TotalConnectClient
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
@@ -63,12 +63,10 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
@@ -89,12 +87,10 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
@@ -103,7 +99,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test init sequence when fails to connect."""
         eval_responses = []
         serialize_responses = []
-        for x in range(TotalConnectClient.TotalConnectClient.MAX_REQUEST_ATTEMPTS):
+        for x in range(TotalConnectClient.MAX_REQUEST_ATTEMPTS):
             eval_responses.append(
                 fakeResponse(
                     RESPONSE_FAILED_TO_CONNECT["ResultCode"], "Response Disarmed"
@@ -113,20 +109,15 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "time.sleep", autospec=True
         ), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
-            assert (
-                mock_request.call_count
-                == TotalConnectClient.TotalConnectClient.MAX_REQUEST_ATTEMPTS
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
+            assert mock_request.call_count == TotalConnectClient.MAX_REQUEST_ATTEMPTS
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
             assert (
@@ -138,7 +129,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test a connection error."""
         eval_responses = []
         serialize_responses = []
-        for x in range(TotalConnectClient.TotalConnectClient.MAX_REQUEST_ATTEMPTS):
+        for x in range(TotalConnectClient.MAX_REQUEST_ATTEMPTS):
             eval_responses.append(
                 fakeResponse(
                     RESPONSE_CONNECTION_ERROR["ResultCode"], "Response Disarmed"
@@ -148,20 +139,15 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "time.sleep", autospec=True
         ), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
-            assert (
-                mock_request.call_count
-                == TotalConnectClient.TotalConnectClient.MAX_REQUEST_ATTEMPTS
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
+            assert mock_request.call_count == TotalConnectClient.MAX_REQUEST_ATTEMPTS
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
             assert (
@@ -203,12 +189,10 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
@@ -231,12 +215,10 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch("TotalConnectClient.TotalConnectClient.setup_soap"), patch(
+        ), patch("client.TotalConnectClient.setup_soap"), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
