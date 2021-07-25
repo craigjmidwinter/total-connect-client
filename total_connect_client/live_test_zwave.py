@@ -4,7 +4,7 @@ import logging
 import sys
 from pprint import pprint
 
-import TotalConnectClient
+from client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
@@ -21,7 +21,7 @@ DEVICE_ID = sys.argv[4]
 TYPE = sys.argv[5]
 LOCATION = sys.argv[6]
 
-TC = TotalConnectClient.TotalConnectClient(USERNAME, PASSWORD)
+TC = TotalConnectClient(USERNAME, PASSWORD)
 
 print("\n\n\nGetAutomationDeviceStatus\n\n\n")
 result = TC.request(f"GetAutomationDeviceStatus(self.token, {AUTOMATION_DEVICE})")

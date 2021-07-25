@@ -16,6 +16,7 @@ class TotalConnectLocation(Armable):
     """Location class for Total Connect. To arm or disarm all the partitions at
     this location, call the methods from Armable.
     """
+
     # Location relevant ResultCode
     SUCCESS = 0
     ARM_SUCCESS = 4500

@@ -44,9 +44,10 @@ NOTE: Expect changes to the interface over the next few releases.
 
 from total_connect_client import TotalConnectClient as TCC
 
-# to arm or disarm the system you must provide the usercode.
-# the usercodes dictionary maps locationid to usercode; if
-# the locationid is not found it uses the default usercode.
+to arm or disarm the system you must provide the usercode.
+the usercodes dictionary maps locationid to usercode; if
+the locationid is not found it uses the default usercode.
+```python
 usercodes = { 'default': '1234' }
 client = TCC.TotalConnectClient(username, password, usercodes)
 
@@ -120,6 +121,7 @@ for location in client.locations:
     location.get_partition_details()
     location.get_zone_details()
     location.get_panel_meta_data()
+```
 
 ## Recent Interface Changes
 

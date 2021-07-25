@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-import TotalConnectClient
+from client import TotalConnectClient
 from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
@@ -15,38 +15,38 @@ from const import (
 )
 
 RESPONSE_ARM_SUCCESS = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.ARM_SUCCESS,
+    "ResultCode": TotalConnectClient.ARM_SUCCESS,
     "ResultData": "testing arm success",
 }
 RESPONSE_DISARM_SUCCESS = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.DISARM_SUCCESS,
+    "ResultCode": TotalConnectClient.DISARM_SUCCESS,
     "ResultData": "testing disarm success",
 }
 
 # returned when a zone is faulted
 RESPONSE_ARM_FAILED = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": TotalConnectClient.COMMAND_FAILED,
     "ResultData": "testing arm failed",
 }
 RESPONSE_DISARM_FAILED = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": TotalConnectClient.COMMAND_FAILED,
     "ResultData": "testing disarm failed",
 }
 
 # appears to be for a bad/wrong code
 RESPONSE_USER_CODE_INVALID = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_INVALID,
+    "ResultCode": TotalConnectClient.USER_CODE_INVALID,
     "ResultData": "testing user code invalid",
 }
 
 # appears to be for a code entered for a wrong device/location
 RESPONSE_USER_CODE_UNAVAILABLE = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.USER_CODE_UNAVAILABLE,
+    "ResultCode": TotalConnectClient.USER_CODE_UNAVAILABLE,
     "ResultData": "testing user code unavailable",
 }
 
 RESPONSE_SUCCESS = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultCode": TotalConnectClient.SUCCESS,
     "ResultData": "testing success",
 }
 
@@ -68,9 +68,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # first test with no issues
         self.client = create_client()
         responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should succeed
             assert self.client.arm_away(self.location_id) is True
 
@@ -81,9 +79,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # second test with a zone faulted
         self.client = create_client()
         responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_away(self.location_id) is False
 
@@ -95,9 +91,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # third test with bad usercode
         self.client = create_client()
         responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_away(self.location_id) is False
 
@@ -109,9 +103,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # fourth test with 'unavailable' usercode
         self.client = create_client()
         responses = [RESPONSE_USER_CODE_UNAVAILABLE, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_away(self.location_id) is False
 
@@ -123,9 +115,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # fifth test with 'other' usercode
         self.client = create_client()
         responses = [RESPONSE_FEATURE_NOT_SUPPORTED, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_away(self.location_id) is False
 
@@ -139,9 +129,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # first test with no issues
         self.client = create_client()
         responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should succeed
             assert self.client.arm_away_instant(self.location_id) is True
 
@@ -152,9 +140,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # second test with a zone faulted
         self.client = create_client()
         responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_away_instant(self.location_id) is False
 
@@ -166,9 +152,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # third test with bad usercode
         self.client = create_client()
         responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_away_instant(self.location_id) is False
 
@@ -182,9 +166,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # first test with no issues
         self.client = create_client()
         responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system
             assert self.client.arm_stay(self.location_id) is True
 
@@ -195,9 +177,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # second test with a zone faulted
         self.client = create_client()
         responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_stay(self.location_id) is False
 
@@ -209,9 +189,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # third test with bad usercode
         self.client = create_client()
         responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_stay(self.location_id) is False
 
@@ -225,9 +203,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # first test with no issues
         self.client = create_client()
         responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system
             assert self.client.arm_stay_instant(self.location_id) is True
 
@@ -238,9 +214,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # second test with a zone faulted
         self.client = create_client()
         responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_stay_instant(self.location_id) is False
 
@@ -252,9 +226,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # third test with bad usercode
         self.client = create_client()
         responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_stay_instant(self.location_id) is False
 
@@ -268,9 +240,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # first test with no issues
         self.client = create_client()
         responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY_NIGHT]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system
             assert self.client.arm_stay_night(self.location_id) is True
 
@@ -281,9 +251,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # second test with a zone faulted
         self.client = create_client()
         responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_stay_night(self.location_id) is False
 
@@ -295,9 +263,7 @@ class TestTotalConnectClient(unittest.TestCase):
         # third test with bad usercode
         self.client = create_client()
         responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system, should fail
             assert self.client.arm_stay_night(self.location_id) is False
 
@@ -316,9 +282,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_DISARM_SUCCESS,
             RESPONSE_DISARMED,
         ]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system and confirm armed_away
             assert self.client.arm_away(self.location_id) is True
             self.client.get_panel_meta_data(self.location_id)
@@ -339,9 +303,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_DISARM_FAILED,
             RESPONSE_ARMED_AWAY,
         ]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system and confirm armed_away
             assert self.client.arm_away(self.location_id) is True
             self.client.get_panel_meta_data(self.location_id)
@@ -364,9 +326,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_USER_CODE_INVALID,
             RESPONSE_ARMED_AWAY,
         ]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             # arm the system and confirm armed_away
             assert self.client.arm_away(self.location_id) is True
             self.client.get_panel_meta_data(self.location_id)
@@ -385,9 +345,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         self.client = create_client()
         responses = [RESPONSE_DISARMED, RESPONSE_SUCCESS, RESPONSE_DISARMED]
-        with patch(
-            "TotalConnectClient.TotalConnectClient.request", side_effect=responses
-        ):
+        with patch("client.TotalConnectClient.request", side_effect=responses):
             self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_disarmed() is True
 

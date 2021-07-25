@@ -4,7 +4,7 @@ import logging
 import sys
 from pprint import pprint
 
-import TotalConnectClient
+from client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
@@ -16,7 +16,7 @@ if len(sys.argv) != 3:
 USERNAME = sys.argv[1]
 PASSWORD = sys.argv[2]
 
-TC = TotalConnectClient.TotalConnectClient(USERNAME, PASSWORD)
+TC = TotalConnectClient(USERNAME, PASSWORD)
 
 location_id = next(iter(TC.locations))
 
