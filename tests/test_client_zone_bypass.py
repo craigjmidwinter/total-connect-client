@@ -10,7 +10,7 @@ from const import LOCATION_INFO_BASIC_NORMAL
 from exceptions import BadResultCodeError
 
 RESPONSE_ZONE_BYPASS_SUCCESS = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultCode": TotalConnectClient.SUCCESS,
     "ResultData": "None",
 }
 

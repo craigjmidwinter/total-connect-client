@@ -200,18 +200,18 @@ RESPONSE_ARMED_STAY = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_ARMED_STAY,
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY,
+    "ArmingState": TotalConnectLocation.ARMED_STAY,
 }
 RESPONSE_ARMED_STAY_NIGHT = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT,
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY_NIGHT,
+    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
 }
 RESPONSE_ARMED_AWAY = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_ARMED_AWAY,
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_AWAY,
+    "ArmingState": TotalConnectLocation.ARMED_AWAY,
 }
 
 RESPONSE_AUTHENTICATE = {

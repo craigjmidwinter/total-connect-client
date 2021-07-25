@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from client import DEFAULT_USERCODE, TotalConnectClient
+from client import TotalConnectClient
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_AUTHENTICATE_EMPTY,
@@ -32,7 +32,7 @@ def tests_init_usercodes_none():
             pass
         assert mock_request.call_count == 4
 
-    assert mock_client.usercodes == {"default": DEFAULT_USERCODE}
+    assert not mock_client.usercodes
 
 
 def tests_init_locations_empty():
