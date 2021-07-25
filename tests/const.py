@@ -1,18 +1,17 @@
 """Testing constants."""
-import TotalConnectClient
-
+from client import TotalConnectClient
+from location import TotalConnectLocation
+from partition import TotalConnectPartition
 from zone import (
-    ZONE_STATUS_NORMAL,
-    ZONE_TYPE_SECURITY,
     ZONE_STATUS_LOW_BATTERY,
+    ZONE_STATUS_NORMAL,
     ZONE_TYPE_LYRIC_CONTACT,
+    ZONE_TYPE_LYRIC_LOCAL_ALARM,
     ZONE_TYPE_LYRIC_MOTION,
     ZONE_TYPE_LYRIC_POLICE,
     ZONE_TYPE_LYRIC_TEMP,
-    ZONE_TYPE_LYRIC_LOCAL_ALARM,
+    ZONE_TYPE_SECURITY,
 )
-from partition import TotalConnectPartition
-
 
 PASSWORD_BAD = "none"
 USERNAME_BAD = "none"
@@ -119,27 +118,27 @@ RESPONSE_GET_ZONE_DETAILS_NONE["ZoneStatus"] = None
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+    "ArmingState": TotalConnectLocation.DISARMED,
 }
 
 PARTITION_DISARMED2 = {
     "PartitionID": "2",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+    "ArmingState": TotalConnectLocation.DISARMED,
 }
 
 PARTITION_ARMED_STAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY,
+    "ArmingState": TotalConnectLocation.ARMED_STAY,
 }
 
 PARTITION_ARMED_STAY_NIGHT = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_STAY_NIGHT,
+    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
 }
 
 PARTITION_ARMED_AWAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectClient.TotalConnectLocation.ARMED_AWAY,
+    "ArmingState": TotalConnectLocation.ARMED_AWAY,
 }
 
 PARTITION_INFO_DISARMED = {}
@@ -195,7 +194,7 @@ RESPONSE_DISARMED = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_DISARMED,
-    "ArmingState": TotalConnectClient.TotalConnectLocation.DISARMED,
+    "ArmingState": TotalConnectLocation.DISARMED,
 }
 RESPONSE_ARMED_STAY = {
     "ResultCode": 0,
@@ -225,33 +224,33 @@ RESPONSE_AUTHENTICATE_EMPTY = RESPONSE_AUTHENTICATE.copy()
 RESPONSE_AUTHENTICATE_EMPTY["Locations"] = None
 
 RESPONSE_BAD_USER_OR_PASSWORD = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultCode": TotalConnectClient.BAD_USER_OR_PASSWORD,
     "ResultData": "testing bad user or password",
 }
 
 RESPONSE_INVALID_SESSION = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.INVALID_SESSION,
+    "ResultCode": TotalConnectClient.INVALID_SESSION,
     "ResultData": "testing invalid session",
 }
 
 RESPONSE_FAILED_TO_CONNECT = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.FAILED_TO_CONNECT,
+    "ResultCode": TotalConnectClient.FAILED_TO_CONNECT,
     "ResultData": "testing failed to connect",
 }
 
 RESPONSE_CONNECTION_ERROR = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.CONNECTION_ERROR,
+    "ResultCode": TotalConnectClient.CONNECTION_ERROR,
     "ResultData": "testing connection error",
 }
 
 
 RESPONSE_SESSION_INITIATED = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.SESSION_INITIATED,
+    "ResultCode": TotalConnectClient.SESSION_INITIATED,
     "ResultData": "testing session initiated",
 }
 
 RESPONSE_FEATURE_NOT_SUPPORTED = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.FEATURE_NOT_SUPPORTED,
+    "ResultCode": TotalConnectClient.FEATURE_NOT_SUPPORTED,
     "ResultData": "testing user code feature not supported",
 }
 
@@ -276,7 +275,7 @@ PARTITION_DETAILS = []
 PARTITION_DETAILS.append(PARTITION_DETAILS_1)
 
 RESPONSE_PARTITION_DETAILS = {
-    "ResultCode": TotalConnectClient.TotalConnectClient.SUCCESS,
+    "ResultCode": TotalConnectClient.SUCCESS,
     "ResultData": "testing partition details",
     "PartitionsInfoList": PARTITION_DETAILS,
 }

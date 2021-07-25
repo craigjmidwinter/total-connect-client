@@ -4,7 +4,7 @@ import getpass
 import logging
 import sys
 
-import TotalConnectClient
+from client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
@@ -19,6 +19,6 @@ if len(sys.argv) == 2:
 else:
     PASSWORD = sys.argv[2]
 
-TC = TotalConnectClient.TotalConnectClient(USERNAME, PASSWORD)
+TC = TotalConnectClient(USERNAME, PASSWORD)
 
 print(TC)
