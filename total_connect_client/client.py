@@ -13,7 +13,6 @@ import time
 import warnings
 
 import zeep
-
 from location import TotalConnectLocation
 from user import TotalConnectUser
 from exceptions import (
@@ -283,12 +282,16 @@ class TotalConnectClient:
             new_locations[location_id] = TotalConnectLocation(location, self)
 
             # set auto_bypass
-            new_locations[location_id].auto_bypass_low_battery = self.auto_bypass_low_battery
+            new_locations[
+                location_id
+            ].auto_bypass_low_battery = self.auto_bypass_low_battery
 
             # set the usercode for the location
-            usercode = (self.usercodes.get(location_id) or
-                        self.usercodes.get(str(location_id)) or
-                        self.usercodes.get('default'))
+            usercode = (
+                self.usercodes.get(location_id)
+                or self.usercodes.get(str(location_id))
+                or self.usercodes.get("default")
+            )
             if usercode:
                 new_locations[location_id].usercode = usercode
             else:

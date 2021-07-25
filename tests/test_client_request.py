@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 import pytest
-import TotalConnectClient
+from client import TotalConnectClient
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
@@ -67,9 +67,7 @@ class TestTotalConnectClient(unittest.TestCase):
         ), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
@@ -94,14 +92,14 @@ class TestTotalConnectClient(unittest.TestCase):
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
             with pytest.raises(AuthenticationError):
-                TotalConnectClient.TotalConnectClient("username", "password", usercodes=None)
+                TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
 
     def tests_request_init_failed_to_connect(self):
         """Test init sequence when fails to connect."""
         eval_responses = []
         serialize_responses = []
-        for x in range(TotalConnectClient.TotalConnectClient.MAX_RETRY_ATTEMPTS):
+        for x in range(TotalConnectClient.MAX_RETRY_ATTEMPTS):
             eval_responses.append(
                 FakeResponse(
                     RESPONSE_FAILED_TO_CONNECT["ResultCode"], "Response Disarmed"
@@ -118,13 +116,10 @@ class TestTotalConnectClient(unittest.TestCase):
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
-            client = TotalConnectClient.TotalConnectClient(
+            client = TotalConnectClient(
                 "username", "password", usercodes=None, retry_delay=0
             )
-            assert (
-                mock_request.call_count
-                == TotalConnectClient.TotalConnectClient.MAX_RETRY_ATTEMPTS
-            )
+            assert mock_request.call_count == TotalConnectClient.MAX_RETRY_ATTEMPTS
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
             assert (
@@ -136,7 +131,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test a connection error."""
         eval_responses = []
         serialize_responses = []
-        for x in range(TotalConnectClient.TotalConnectClient.MAX_RETRY_ATTEMPTS):
+        for x in range(TotalConnectClient.MAX_RETRY_ATTEMPTS):
             eval_responses.append(
                 FakeResponse(
                     RESPONSE_CONNECTION_ERROR["ResultCode"], "Response Disarmed"
@@ -153,13 +148,8 @@ class TestTotalConnectClient(unittest.TestCase):
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None, retry_delay=0
-            )
-            assert (
-                mock_request.call_count
-                == TotalConnectClient.TotalConnectClient.MAX_RETRY_ATTEMPTS
-            )
+            client = TotalConnectClient("username", "password", usercodes=None, retry_delay=0)
+            assert mock_request.call_count == TotalConnectClient.MAX_RETRY_ATTEMPTS
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
             assert (
@@ -204,9 +194,7 @@ class TestTotalConnectClient(unittest.TestCase):
         ), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
-            client = TotalConnectClient.TotalConnectClient(
-                "username", "password", usercodes=None
-            )
+            client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
@@ -232,5 +220,5 @@ class TestTotalConnectClient(unittest.TestCase):
             "builtins.eval", side_effect=eval_responses
         ) as mock_request:
             with pytest.raises(TotalConnectError):
-                TotalConnectClient.TotalConnectClient("username", "password", usercodes=None)
+                TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1

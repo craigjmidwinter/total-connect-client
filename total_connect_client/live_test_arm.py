@@ -3,7 +3,7 @@
 import logging
 import sys
 
-import TotalConnectClient
+from client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
@@ -19,7 +19,7 @@ USERNAME = sys.argv[1]
 PASSWORD = sys.argv[2]
 USERCODES = dict(x.split("=") for x in sys.argv[3].split(","))
 
-TC = TotalConnectClient.TotalConnectClient(USERNAME, PASSWORD, USERCODES)
+TC = TotalConnectClient(USERNAME, PASSWORD, USERCODES)
 
 for location_id in TC.locations:
     if TC.arm_stay(location_id):
