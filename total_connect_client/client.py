@@ -5,8 +5,8 @@ import time
 import warnings
 
 import zeep
-from location import TotalConnectLocation
-from user import TotalConnectUser
+from .location import TotalConnectLocation
+from .user import TotalConnectUser
 
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
 

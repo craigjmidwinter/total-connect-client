@@ -1,7 +1,7 @@
 """Common test code."""
 from unittest.mock import patch
 
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_DISARMED,
@@ -20,7 +20,7 @@ def create_client():
     ]
 
     with patch(
-        "client.TotalConnectClient.request", side_effect=responses
+        "total_connect_client.client.TotalConnectClient.request", side_effect=responses
     ) as mock_request:
         mock_client = TotalConnectClient("username", "password", {"123456": "1234"})
         assert mock_request.call_count == 1

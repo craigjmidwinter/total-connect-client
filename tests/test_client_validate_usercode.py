@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
@@ -49,7 +49,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_UNAVAILABLE,
             RESPONSE_FAILED,
         ]
-        with patch("client.TotalConnectClient.request", side_effect=responses):
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             # valid
             assert self.client.validate_usercode("1", "1234") is True
             # invalid
