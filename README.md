@@ -16,7 +16,10 @@ The code currently supports:
 If you're having trouble with your system, or find an error message, we may ask you to submit information about your alarm system.  To do that from the command line do the following steps (assuming you are running from within Home Assistant):
  
 First download the latest files:
- - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/TotalConnectClient.py`
+ - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/client.py`
+ - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/location.py`
+ - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/partition.py`
+ - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/user.py`
  - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/info.py`
  
 The run the script:
@@ -42,14 +45,14 @@ pip install total-connect-client
 
 NOTE: Expect changes to the interface over the next few releases.
 
-from total_connect_client import TotalConnectClient as TCC
+from total_connect_client.client import TotalConnectClient
 
 to arm or disarm the system you must provide the usercode.
 the usercodes dictionary maps locationid to usercode; if
 the locationid is not found it uses the default usercode.
 ```python
 usercodes = { 'default': '1234' }
-client = TCC.TotalConnectClient(username, password, usercodes)
+client = TotalConnectClient(username, password, usercodes)
 
 for location in client.locations:
     # location.arming_state can be matched against specific constants
@@ -121,10 +124,16 @@ for location in client.locations:
     location.get_partition_details()
     location.get_zone_details()
     location.get_panel_meta_data()
+
+    # to arm or disarm a single partition
+    for partition_id in location.partitions:
+        location.arm_away(partition_id)
+        etc.
 ```
 
 ## Recent Interface Changes
 
+* Partition support has been added. The TotalConnectLocation.arm and disarm family of methods now accept an optional partition_id parameter.
 * The arming control methods in TotalConnectClient have been deprecated; instead use the
 similar methods on the values of self.locations.
 

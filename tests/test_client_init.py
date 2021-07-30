@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from client import DEFAULT_USERCODE, TotalConnectClient
+from total_connect_client.client import DEFAULT_USERCODE, TotalConnectClient
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_AUTHENTICATE_EMPTY,
@@ -23,7 +23,7 @@ def tests_init_usercodes_none():
     ]
 
     with patch(
-        "client.TotalConnectClient.request", side_effect=responses
+        "total_connect_client.client.TotalConnectClient.request", side_effect=responses
     ) as mock_request:
         mock_client = TotalConnectClient("username", "password", usercodes=None)
         assert mock_request.call_count == 1
@@ -41,7 +41,7 @@ def tests_init_locations_empty():
     ]
 
     with patch(
-        "client.TotalConnectClient.request", side_effect=responses
+        "total_connect_client.client.TotalConnectClient.request", side_effect=responses
     ) as mock_request, pytest.raises(Exception):
 
         mock_client = TotalConnectClient("username", "password", usercodes=None)
@@ -59,7 +59,7 @@ def tests_init_usercodes_string():
     ]
 
     with patch(
-        "client.TotalConnectClient.request", side_effect=responses
+        "total_connect_client.client.TotalConnectClient.request", side_effect=responses
     ) as mock_request:
         mock_client = TotalConnectClient("username", "password", usercodes="123456")
         assert mock_request.call_count == 1

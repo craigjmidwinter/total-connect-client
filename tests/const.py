@@ -1,8 +1,8 @@
 """Testing constants."""
-from client import TotalConnectClient
-from location import TotalConnectLocation
-from partition import TotalConnectPartition
-from zone import (
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.location import TotalConnectLocation
+from total_connect_client.partition import TotalConnectPartition
+from total_connect_client.zone import (
     ZONE_STATUS_LOW_BATTERY,
     ZONE_STATUS_NORMAL,
     ZONE_TYPE_LYRIC_CONTACT,
