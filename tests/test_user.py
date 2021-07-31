@@ -2,7 +2,7 @@
 
 import unittest
 
-from user import TotalConnectUser
+from total_connect_client.user import TotalConnectUser
 
 USER_GOOD = {
     "UserID": "1234567",

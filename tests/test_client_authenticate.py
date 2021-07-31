@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
@@ -47,7 +47,7 @@ class TestTotalConnectClient(unittest.TestCase):
         responses = [
             RESPONSE_SUCCESS,
         ]
-        with patch("client.TotalConnectClient.request", side_effect=responses):
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             assert self.client.is_logged_in() is True
             assert self.client.log_out() is True
             assert self.client.is_logged_in() is False
@@ -63,8 +63,8 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_BAD_USER_OR_PASSWORD,
             RESPONSE_AUTHENTICATION_FAILED,
         ]
-        with patch("client.TotalConnectClient.request", side_effect=responses), patch(
-            "client.TotalConnectClient._make_locations", return_value=["fakelocations"]
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses), patch(
+            "total_connect_client.client.TotalConnectClient._make_locations", return_value=["fakelocations"]
         ):
             # ensure we start logged out (first SUCCESS)
             self.client.log_out()

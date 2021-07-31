@@ -2,9 +2,9 @@
 
 import logging
 
-from device import TotalConnectDevice
-from partition import Armable, TotalConnectPartition
-from zone import TotalConnectZone
+from .device import TotalConnectDevice
+from .partition import Armable, TotalConnectPartition
+from .zone import TotalConnectZone
 
 RESULT_SUCCESS = 0
 

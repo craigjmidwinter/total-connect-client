@@ -10,7 +10,7 @@ from const import (
     METADATA_DISARMED_LOW_BATTERY,
     ZONE_DETAIL_STATUS,
 )
-from location import DEFAULT_USERCODE, TotalConnectLocation
+from total_connect_client.location import DEFAULT_USERCODE, TotalConnectLocation
 
 
 class TestTotalConnectLocation(unittest.TestCase):
