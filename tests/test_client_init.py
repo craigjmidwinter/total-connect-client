@@ -3,7 +3,8 @@
 from unittest.mock import patch
 
 import pytest
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import TotalConnectError
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_AUTHENTICATE_EMPTY,
@@ -11,7 +12,6 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_PARTITION_DETAILS,
 )
-from exceptions import TotalConnectError
 
 
 def tests_init_usercodes_none():
@@ -24,7 +24,7 @@ def tests_init_usercodes_none():
     ]
 
     with patch(
-        "client.TotalConnectClient.request", side_effect=responses
+        "total_connect_client.client.TotalConnectClient.request", side_effect=responses
     ) as mock_request:
         mock_client = TotalConnectClient("username", "password", usercodes=None)
         assert mock_request.call_count == 1
@@ -42,7 +42,7 @@ def tests_init_locations_empty():
     ]
 
     with patch(
-        "client.TotalConnectClient.request", side_effect=responses
+        "total_connect_client.client.TotalConnectClient.request", side_effect=responses
     ) as mock_request, pytest.raises(TotalConnectError):
 
         mock_client = TotalConnectClient("username", "password", usercodes=None)
@@ -60,7 +60,7 @@ def tests_init_usercodes_string():
     ]
 
     with patch(
-        "client.TotalConnectClient.request", side_effect=responses
+        "total_connect_client.client.TotalConnectClient.request", side_effect=responses
     ) as mock_request:
         with pytest.raises(AttributeError):
             # string is not a valid type for usercodes (only dict)

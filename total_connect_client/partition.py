@@ -1,6 +1,6 @@
 """Total Connect Partition."""
 
-from exceptions import PartialResponseError
+from .exceptions import PartialResponseError
 
 class TotalConnectPartition:
     """Partition class for Total Connect."""

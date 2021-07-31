@@ -4,8 +4,8 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 from const import PARTITION_DETAILS_1, PARTITION_DISARMED
-from partition import TotalConnectPartition
-from exceptions import PartialResponseError
+from total_connect_client.partition import TotalConnectPartition
+from total_connect_client.exceptions import PartialResponseError
 
 import pytest
 

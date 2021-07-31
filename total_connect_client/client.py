@@ -13,9 +13,10 @@ import time
 import warnings
 
 import zeep
-from location import TotalConnectLocation
-from user import TotalConnectUser
-from exceptions import (
+
+from .location import TotalConnectLocation
+from .user import TotalConnectUser
+from .exceptions import (
     TotalConnectError, AuthenticationError, InvalidSessionError,
     BadResultCodeError, RetryableTotalConnectError,
 )

@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import patch
 
 import pytest
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import TotalConnectError, AuthenticationError
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
@@ -19,7 +20,6 @@ from const import (
     RESPONSE_SESSION_INITIATED,
     RESPONSE_UNKNOWN,
 )
-from exceptions import TotalConnectError, AuthenticationError
 
 
 class FakeResponse:

@@ -12,12 +12,17 @@ from const import (
     ZONE_STATUS_LYRIC_TEMP,
     ZONE_STATUS_NORMAL,
 )
-from zone import TotalConnectZone as tcz
-from zone import (
-    ZONE_TYPE_SECURITY, ZONE_STATUS_BYPASSED, ZONE_STATUS_FAULT,
-    ZONE_STATUS_TROUBLE, ZONE_STATUS_TRIGGERED, ZONE_TYPE_FIRE_SMOKE,
-    ZONE_TYPE_CARBON_MONOXIDE, ZONE_TYPE_PROA7_MEDICAL,
+from total_connect_client.zone import (
+    ZONE_STATUS_BYPASSED,
+    ZONE_STATUS_FAULT,
+    ZONE_STATUS_TRIGGERED,
+    ZONE_STATUS_TROUBLE,
+    ZONE_TYPE_CARBON_MONOXIDE,
+    ZONE_TYPE_FIRE_SMOKE,
+    ZONE_TYPE_PROA7_MEDICAL,
+    ZONE_TYPE_SECURITY,
 )
+from total_connect_client.zone import TotalConnectZone as tcz
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",

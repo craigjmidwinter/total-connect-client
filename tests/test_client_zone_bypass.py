@@ -4,10 +4,11 @@ from unittest.mock import patch
 import unittest
 import pytest
 
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.location import TotalConnectLocation
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
-from exceptions import BadResultCodeError
+from total_connect_client.exceptions import BadResultCodeError
 
 RESPONSE_ZONE_BYPASS_SUCCESS = {
     "ResultCode": TotalConnectClient.SUCCESS,
@@ -37,7 +38,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test Zone Bypass with a normal response."""
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_SUCCESS]
-        with patch("client.TotalConnectClient.request", side_effect=responses):
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             # should start not bypassed
             assert zone.is_bypassed() is False
 
@@ -51,7 +52,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test Zone Bypass with a normal response."""
         zone = self.client.locations[self.location_id].zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_FAILURE]
-        with patch("client.TotalConnectClient.request", side_effect=responses):
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             # should start not bypassed
             assert zone.is_bypassed() is False
 

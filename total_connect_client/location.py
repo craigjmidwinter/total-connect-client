@@ -2,10 +2,10 @@
 
 import logging
 
-from device import TotalConnectDevice
-from partition import TotalConnectPartition
-from zone import TotalConnectZone
-from exceptions import PartialResponseError, TotalConnectError
+from .device import TotalConnectDevice
+from .partition import TotalConnectPartition
+from .zone import TotalConnectZone
+from .exceptions import PartialResponseError, TotalConnectError
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1

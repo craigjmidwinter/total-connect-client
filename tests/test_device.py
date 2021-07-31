@@ -1,7 +1,7 @@
 """Test TotalConnectDevice."""
 
 from const import DEVICE_INFO_BASIC_1
-from device import TotalConnectDevice
+from total_connect_client.device import TotalConnectDevice
 
 
 def tests_init():

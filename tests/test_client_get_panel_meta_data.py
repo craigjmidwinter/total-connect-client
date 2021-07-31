@@ -11,7 +11,7 @@ from const import (
     RESPONSE_DISARMED,
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
-from exceptions import PartialResponseError, BadResultCodeError
+from total_connect_client.exceptions import PartialResponseError, BadResultCodeError
 
 RESPONSE_DISARMED_NONE = {"ResultCode": 0}
 
@@ -31,7 +31,7 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_get_panel_meta_data_normal(self):
         """Test get_panel_meta_data() with a normal response."""
         responses = [RESPONSE_ARMED_AWAY, RESPONSE_DISARMED]
-        with patch("client.TotalConnectClient.request", side_effect=responses):
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
 
@@ -46,7 +46,7 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_get_panel_meta_data_none(self):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
         responses = [RESPONSE_DISARMED_NONE]
-        with patch("client.TotalConnectClient.request", side_effect=responses):
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
 
@@ -58,7 +58,7 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_get_panel_meta_data_failed(self):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
         responses = [RESPONSE_FEATURE_NOT_SUPPORTED]
-        with patch("client.TotalConnectClient.request", side_effect=responses):
+        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
 
