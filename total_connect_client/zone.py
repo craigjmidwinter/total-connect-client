@@ -121,7 +121,7 @@ class TotalConnectZone:
 
         # as seen so far, any security zone that cannot be bypassed is a button on a panel
         # FIXME: should this be self.is_type_security() instead?
-        if self.zone_type_id == ZONE_TYPE_SECURITY and not self.can_be_bypassed:
+        if self.is_type_security() and not self.can_be_bypassed:
             return True
 
         if self.zone_type_id in (ZONE_TYPE_PROA7_MEDICAL, ZONE_TYPE_PROA7_POLICE):
