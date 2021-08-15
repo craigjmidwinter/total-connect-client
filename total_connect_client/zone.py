@@ -120,7 +120,6 @@ class TotalConnectZone:
         """Return true if zone is a button."""
 
         # as seen so far, any security zone that cannot be bypassed is a button on a panel
-        # FIXME: should this be self.is_type_security() instead?
         if self.is_type_security() and not self.can_be_bypassed:
             return True
 
