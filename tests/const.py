@@ -52,13 +52,13 @@ ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
     "ZoneStatus": ZONE_STATUS_NORMAL,
-    "PartitionId": "1",
+    "PartitionID": "1",
 }
 
 ZONE_LOW_BATTERY = {
     "ZoneID": "1",
     "ZoneDescription": "Low Battery",
-    "PartitionId": "1",
+    "PartitionID": "1",
     "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZONE_STATUS_LOW_BATTERY,

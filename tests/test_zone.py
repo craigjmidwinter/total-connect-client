@@ -142,7 +142,7 @@ class TestTotalConnectZone(unittest.TestCase):
     def tests_normal(self):
         """Normal zone."""
         zone = tcz(ZS_NORMAL)
-        assert zone.partition == 1
+        assert zone.partition == "1"
         assert zone.is_bypassed() is False
         assert zone.is_faulted() is False
         assert zone.is_tampered() is False
