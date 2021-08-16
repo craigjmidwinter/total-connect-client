@@ -10,9 +10,10 @@ from const import (
     ZONE_STATUS_LYRIC_MOTION,
     ZONE_STATUS_LYRIC_POLICE,
     ZONE_STATUS_LYRIC_TEMP,
-    ZONE_STATUS_NORMAL,
+    ZS_NORMAL,
 )
 from total_connect_client.zone import (
+    ZONE_STATUS_NORMAL,
     ZONE_STATUS_BYPASSED,
     ZONE_STATUS_FAULT,
     ZONE_STATUS_TRIGGERED,
@@ -103,7 +104,7 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def setUp(self):
         """Test setup."""
-        self.zone_normal = tcz(ZONE_STATUS_NORMAL)
+        self.zone_normal = tcz(ZS_NORMAL)
         self.zone_bypassed = tcz(ZONE_BYPASSED)
         self.zone_faulted = tcz(ZONE_FAULTED)
         self.zone_tampered = tcz(ZONE_TAMPERED)
@@ -140,30 +141,32 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def tests_normal(self):
         """Normal zone."""
-        self.assertFalse(self.zone_normal.is_bypassed())
-        self.assertFalse(self.zone_normal.is_faulted())
-        self.assertFalse(self.zone_normal.is_tampered())
-        self.assertFalse(self.zone_normal.is_low_battery())
-        self.assertFalse(self.zone_normal.is_troubled())
-        self.assertFalse(self.zone_normal.is_triggered())
+        zone = tcz(ZS_NORMAL)
+        assert zone.partition == 1
+        assert zone.is_bypassed() is False
+        assert zone.is_faulted() is False
+        assert zone.is_tampered() is False
+        assert zone.is_low_battery() is False
+        assert zone.is_troubled() is False
+        assert zone.is_triggered() is False
 
     def tests_update(self):
         """Test updates to a zone."""
         self.assertFalse(self.zone_normal.is_faulted())
         self.zone_normal.update(ZONE_FAULTED)
         self.assertTrue(self.zone_normal.is_faulted())
-        self.zone_normal.update(ZONE_STATUS_NORMAL)
+        self.zone_normal.update(ZS_NORMAL)
         self.assertFalse(self.zone_normal.is_faulted())
 
         self.assertFalse(self.zone_normal.is_low_battery())
         self.zone_normal.update(ZONE_LOW_BATTERY)
         self.assertTrue(self.zone_normal.is_low_battery())
-        self.zone_normal.update(ZONE_STATUS_NORMAL)
+        self.zone_normal.update(ZS_NORMAL)
         self.assertFalse(self.zone_normal.is_low_battery())
 
     def tests_update_wrong_zone(self):
         """Test updates to the wrong zone."""
-        zone_temp = ZONE_STATUS_NORMAL.copy()
+        zone_temp = ZS_NORMAL.copy()
         zone_temp["ZoneID"] = "99"
         with pytest.raises(Exception):
             assert self.zone_normal.update(zone_temp)
