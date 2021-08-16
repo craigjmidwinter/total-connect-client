@@ -1,5 +1,6 @@
 """Total Connect Partition."""
 
+from .exceptions import PartialResponseError
 
 ARM_TYPE_AWAY = 0
 ARM_TYPE_STAY = 1
@@ -16,8 +17,7 @@ class Armable:
     #    _armer_disarmer(self, arm_type, partition_id)
     # that actually performs the requested arming/disarming.
 
-    # values for ArmingState
-
+    # ArmingState
     DISARMED = 10200
     DISARMED_BYPASS = 10211
     ARMED_AWAY = 10201
@@ -64,12 +64,41 @@ class Armable:
         ident = f"  ID: {self.id}\n" if self.id else ""
         return f"  ArmingState: {self.arming_state}\n{ident}"
 
-    def set_arming_state(self, new_state):
-        """Set arming state.  True on success."""
-        if new_state is None:
-            return False
-        self.arming_state = new_state
-        return True
+    def set_arming_state(self, info):
+        """Update partition based on PartitionInfo."""
+        astate = (info or {}).get("ArmingState")
+        if astate is None:
+            raise PartialResponseError('no ArmingState')
+        self.arming_state = astate
+
+    def arm_away(self):
+        """Arm the partition (Away)."""
+        self.parent.arm_away(self.id)
+
+    def arm_stay(self):
+        """Arm the partition (Stay)."""
+        self.parent.arm_stay(self.id)
+
+    def arm_stay_instant(self):
+        """Arm the partition (Stay - Instant). True on success."""
+        self.parent.arm_stay_instant(self.id)
+
+    def arm_away_instant(self):
+        """Arm the partition (Away - Instant)."""
+        self.parent.arm_away_instant(self.id)
+
+    def arm_stay_night(self):
+        """Arm the partition (Stay - Night)."""
+        self.parent.arm_stay_night(self.id)
+
+    def disarm(self):
+        """Disarm the partition."""
+        self.parent.disarm(self.id)
+
+    def get_armed_status(self):
+        """Get the status of the panel."""
+        # TODO:  ask parent to update status first?
+        return self.arming_state
 
     def is_arming(self):
         """Return true if the system is in the process of arming."""

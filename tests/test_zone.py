@@ -180,7 +180,7 @@ class TestTotalConnectZone(unittest.TestCase):
     def tests_bypass(self):
         """Bypass a zone."""
         self.assertFalse(self.zone_normal.is_bypassed())
-        self.zone_normal.bypass()
+        self.zone_normal._mark_as_bypassed()
         self.assertTrue(self.zone_normal.is_bypassed())
 
     def tests_faulted(self):

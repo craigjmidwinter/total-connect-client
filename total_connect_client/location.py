@@ -5,8 +5,7 @@ import logging
 from .device import TotalConnectDevice
 from .partition import Armable, TotalConnectPartition
 from .zone import TotalConnectZone
-
-RESULT_SUCCESS = 0
+from .exceptions import PartialResponseError, TotalConnectError
 
 DEFAULT_USERCODE = "-1"
 
@@ -16,7 +15,6 @@ class TotalConnectLocation(Armable):
     """Location class for Total Connect. To arm or disarm all the partitions at
     this location, call the methods from Armable.
     """
-
     # Location relevant ResultCode
     SUCCESS = 0
     ARM_SUCCESS = 4500
@@ -48,17 +46,9 @@ class TotalConnectLocation(Armable):
         self.usercode = DEFAULT_USERCODE
         self._auto_bypass_low_battery = False
 
-        self.devices = {}
-        if "DeviceList" in location_info_basic:
-            if location_info_basic["DeviceList"] is not None:
-                if "DeviceInfoBasic" in location_info_basic["DeviceList"]:
-                    device_info_basic = location_info_basic["DeviceList"][
-                        "DeviceInfoBasic"
-                    ]
-                    if device_info_basic is not None:
-                        for single_device in device_info_basic:
-                            device = TotalConnectDevice(single_device)
-                            self.devices[device.id] = device
+        dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
+        tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
+        self.devices = {tcdev.id: tcdev for tcdev in tcdevs}
 
     def __str__(self):
         """Return a text string that is printable."""
@@ -101,29 +91,19 @@ class TotalConnectLocation(Armable):
         """Set to automatically bypass a low battery."""
         self._auto_bypass_low_battery = value
 
-    def set_zone_details(self, zone_status):
-        """Update from GetZonesListInStateEx_V1. Return true if successful."""
-        if zone_status is None:
-            return False
-
-        if "Zones" not in zone_status:
-            return False
-        if zone_status["Zones"] is None:
-            return False
-
-        zones = zone_status["Zones"]
-
-        zone_info = zones.get("ZoneStatusInfoWithPartitionId")
-        if zone_info is None:
-            return False
+    def set_zone_details(self, result):
+        """Update from GetZonesListInStateEx_V1."""
+        # TODO: why do we not use TotalConnectZone.update() ?
+        zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get("ZoneStatusInfoWithPartitionId")
+        if not zone_info:
+            raise PartialResponseError('no ZoneStatusInfoWithPartitionId', result)
 
         # probabaly shouldn't clear zones
+        # TODO: explain why not
         # self.locations[location_id].zones.clear()
 
-        for zone in zone_info:
-            self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
-
-        return True
+        for zonedata in zone_info:
+            self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
 
     def get_panel_meta_data(self):
         """Get all meta data about the alarm panel."""
@@ -131,33 +111,22 @@ class TotalConnectLocation(Armable):
         result = self.parent.request(
             f"GetPanelMetaDataAndFullStatusEx_V2(self.token, {self.location_id}, 0, 0, {self._partition_list})"
         )
+        self.parent.raise_for_resultcode(result)
 
-        if result["ResultCode"] != RESULT_SUCCESS:
-            LOGGER.error(
-                f"Could not retrieve panel meta data. "
-                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}"
-            )
-            return False
+        self.set_status(result)
+        self.update_partitions(result)
+        self.update_zones(result)
 
-        if "PanelMetadataAndStatus" not in result:
-            LOGGER.warning("Panel_meta_data is empty.")
-            return False
+        astate = result.get("ArmingState")
+        if not astate:
+            raise PartialResponseError('no ArmingState', result)
+        self.arming_state = astate
 
-        if not self.set_status(result["PanelMetadataAndStatus"]):
-            return False
-
-        if "ArmingState" not in result:
-            LOGGER.warning(
-                "GetPanelMetaDataAndFullStatus result does not contain ArmingState."
-            )
-            return False
-
-        return self.set_arming_state(result["ArmingState"])
-
-    def set_status(self, data):
-        """Update from 'PanelMetadataAndStatus'. Return true on success."""
-        if data is None:
-            return False
+    def set_status(self, result):
+        """Update from result."""
+        data = (result or {}).get("PanelMetadataAndStatus")
+        if not data:
+            raise PartialResponseError('no PanelMetadataAndStatus', result)
 
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
@@ -165,99 +134,59 @@ class TotalConnectLocation(Armable):
         self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
         self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
 
-        if "Partitions" not in data:
-            return False
-
-        if not self.update_partitions(data["Partitions"]):
-            return False
-
-        if "Zones" not in data:
-            LOGGER.warning("Zones not found in PanelMetaDataAndStatus in set_status()")
-            return False
-
-        if not self.update_zones(data["Zones"]):
-            return False
-
-        return True
-
     def get_zone_details(self):
-        """Get Zone details. Return True if successful."""
+        """Get Zone details."""
         result = self.parent.request(
             f"GetZonesListInStateEx_V1(self.token, {self.location_id}, {self._partition_list}, 0)"
         )
 
         if result["ResultCode"] == self.parent.FEATURE_NOT_SUPPORTED:
             LOGGER.warning(
-                "Getting Zone Details is a feature not supported by "
-                "your Total Connect account or hardware."
+                "getting Zone Details is a feature not supported by "
+                "your Total Connect account or hardware"
             )
-            return False
+        self.parent.raise_for_resultcode(result)
+        self.set_zone_details(result)
 
-        if result["ResultCode"] != RESULT_SUCCESS:
-            LOGGER.error(
-                f"Could not get zone details. "
-                f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
-            )
-            return False
-
-        if "ZoneStatus" in result:
-            return self.set_zone_details(result["ZoneStatus"])
-
-        LOGGER.error(
-            f"Could not get zone details. "
-            f"ResultCode: {result['ResultCode']}. ResultData: {result['ResultData']}."
-        )
-        return False
-
-    def update_partitions(self, data):
+    def update_partitions(self, result):
         """Update partition info from Partitions."""
-        if "PartitionInfo" not in data:
-            return False
+        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get("PartitionInfo")
+        if not pi:
+            raise PartialResponseError('no PartitionInfo', result)
 
-        partition_info = data["PartitionInfo"]
+        # FIXME: next line is WRONG, need to update partion.arming_state, NOT location.arming_state
+        self.arming_state = pi[0]["ArmingState"]
 
-        if partition_info is None:
-            return False
+        # FIXME: loop through partitions and update
 
-        # TODO:  next line is WRONG, need to update partion.arming_state, NOT location.arming_state
-        self.arming_state = partition_info[0]["ArmingState"]
-
-        # TODO:  loop through partitions and update
-
-        return True
-
-    def update_zones(self, data):
+    def update_zones(self, result):
         """Update zone info from ZoneInfo or ZoneInfoEx."""
 
+        data = (result.get("PanelMetadataAndStatus") or {}).get("Zones")
         if not data:
-            LOGGER.info(
-                f"no zones found -- sync your panel using TotalConnect app or website"
+            LOGGER.error(
+                f"no zones found: sync your panel using TotalConnect app or website"
             )
-            return False
+            # PartialResponseError would mean this is retryable without fixing
+            # anything, and this needs fixing
+            raise TotalConnectError('no zones found: panel sync required')
 
-        zone_info = None
-
-        if "ZoneInfoEx" in data:
-            zone_info = data["ZoneInfoEx"]
-        elif "ZoneInfo" in data:
-            zone_info = data["ZoneInfo"]
-
-        if zone_info is None:
-            return False
-
-        for zone in zone_info:
-            if zone["ZoneID"] in self.zones:
-                self.zones[zone["ZoneID"]].update(zone)
+        zone_info = data.get("ZoneInfoEx") or data.get("ZoneInfo")
+        if not zone_info:
+            raise PartialResponseError('no ZoneInfoEx or ZoneInfo', result)
+        for zonedata in zone_info:
+            zid = (zonedata or {}).get("ZoneID")
+            if not zid:
+                raise PartialResponseError('no ZoneID', result)
+            zone = self.zones.get(zid)
+            if zone:
+                zone.update(zonedata)
             else:
-                self.zones[zone["ZoneID"]] = TotalConnectZone(zone)
+                zone = TotalConnectZone(zonedata)
+                self.zones[zid] = zone
 
-            if (
-                self.zones[zone["ZoneID"]].is_low_battery()
-                and self._auto_bypass_low_battery
-            ):
-                self.parent.zone_bypass(zone["ZoneID"], self.location_id)
-
-        return True
+            if zone.is_low_battery() and self.auto_bypass_low_battery:
+                self.parent.zone_bypass(zone, self.location_id)
 
     def get_partition_details(self):
         """Get partition details for this location."""
@@ -266,8 +195,9 @@ class TotalConnectLocation(Armable):
         result = self.parent.request(
             f"GetPartitionsDetails(self.token, {self.location_id}, {self.security_device_id})"
         )
-
-        if result["ResultCode"] != RESULT_SUCCESS:
+        try:
+            self.parent.raise_for_resultcode(result)
+        except TotalConnectError:
             LOGGER.error(
                 f"Could not get partition details for "
                 f"device {self.security_device_id} at "
@@ -275,28 +205,20 @@ class TotalConnectLocation(Armable):
                 f"ResultCode: {result['ResultCode']}. "
                 f"ResultData: {result['ResultData']}"
             )
-            return False
+            raise
 
-        if "PartitionsInfoList" not in result:
-            return False
+        partition_details = ((result or {}).get("PartitionsInfoList") or {}).get("PartitionDetails")
+        if not partition_details:
+            raise PartialResponseError('no PartitionDetails', result)
 
-        partition_info_list = result["PartitionsInfoList"]
-
-        if "PartitionDetails" not in partition_info_list:
-            return False
-
-        partition_details = partition_info_list["PartitionDetails"]
-
-        # loop through list and add partitions
         new_partition_list = []
         for partition in partition_details:
             new_partition = TotalConnectPartition(partition, self)
             self.partitions[new_partition.id] = new_partition
             new_partition_list.append(new_partition.id)
 
+        # TODO: why not self._partition_list = new_partition_list ?
         self._partition_list = {"int": new_partition_list}
-
-        return True
 
     def is_low_battery(self):
         """Return true if low battery."""
@@ -315,11 +237,10 @@ class TotalConnectLocation(Armable):
         if self.parent.validate_usercode(self.security_device_id, usercode):
             self.usercode = usercode
             return True
-
         return False
 
     def zone_bypass(self, zone_id):
-        """Bypass a zone.  Return true if successful."""
+        """Bypass a zone."""
         result = self.parent.request(
             f"Bypass(self.token, "
             f"{self.location_id}, "
@@ -327,29 +248,20 @@ class TotalConnectLocation(Armable):
             f"{zone_id}, "
             f"'{self.usercode}')"
         )
-
-        if result["ResultCode"] is self.ZONE_BYPASS_SUCCESS:
-            self.zones[zone_id].bypass()
-            return True
-
-        LOGGER.error(
-            f"Could not bypass zone {zone_id} at location {self.location_id}."
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
+        self.parent.raise_for_resultcode(result)
+        LOGGER.info(f"BYPASSED {zone_id} at {self.location_id}")
+        self.zones[zone_id]._mark_as_bypassed()
 
     def zone_status(self, zone_id):
         """Get status of a zone."""
         z = self.zones.get(zone_id)
-        if z is None:
-            LOGGER.error(f"Zone {zone_id} does not exist.")
-            return None
-
+        if not z:
+            raise TotalConnectError(f'zone {zone_id} does not exist')
         return z.status
 
     def get_armed_status(self):
         """Get the status of the panel."""
+        # FIXME: why does this getter, but no others, fetch new state?
         self.get_panel_meta_data()
         # TODO:  return state for the partition ???
         return self.arming_state
@@ -392,20 +304,24 @@ class TotalConnectLocation(Armable):
         """NOT OPERATIONAL YET.
         Get custom arm settings.
         """
-        result = self.request(
+        result = self.parent.request(
             f"GetCustomArmSettings(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id})"
         )
-
-        if result["ResultCode"] != self.SUCCESS:
-            LOGGER.error(
-                f"Could not arm custom. ResultCode: {result['ResultCode']}. "
-                f"ResultData: {result['ResultData']}"
-            )
-            return False
-
+        self.parent.raise_for_resultcode(result)
+        # FIXME: returning the raw result is not right
         return result
+
+        result = self.parent.request(
+            f"DisarmSecuritySystemPartitionsV1(self.token, "
+            f"{self.location_id}, "
+            f"{self.security_device_id}, "
+            f"'{self.usercode}', "
+            f"{partition_list})"
+        )
+        self.parent.raise_for_resultcode(result)
+        LOGGER.info(f"DISARMED partitions {partition_list} at {self.location_id}")
 
     def _armer_disarmer(self, arm_type, partition_id):
         """Don't call this at home! It's for internal use only.
@@ -419,11 +335,12 @@ class TotalConnectLocation(Armable):
         if partition_id is None:
             partition_list = self._partition_list
         else:
-            assert partition_id in self.partitions
-            partition_list = [partition_id]
+            if partition_id not in self.partitions:
+                raise TotalConnectError(f"Partition {partition_id} does not exist "
+                                        f"at location {self.location_id}")
+            partition_list.append(partition_id)
 
         if arm_type is None:
-            verb = "disarm"
             result = self.parent.request(
                 f"DisarmSecuritySystemPartitionsV1(self.token, "
                 f"{self.location_id}, "
@@ -431,11 +348,9 @@ class TotalConnectLocation(Armable):
                 f"'{self.usercode}', "
                 f"{partition_list})"
             )
-            if result["ResultCode"] in (self.DISARM_SUCCESS, self.SUCCESS):
-                LOGGER.info("System Disarmed")
-                return True
+            self.parent.raise_for_resultcode(result)
+            LOGGER.info(f"DISARMED partitions {partition_list} at {self.location_id}")
         else:
-            verb = "arm"
             result = self.parent.request(
                 f"ArmSecuritySystemPartitionsV1(self.token, "
                 f"{self.location_id}, "
@@ -444,21 +359,7 @@ class TotalConnectLocation(Armable):
                 f"'{self.usercode}', "
                 f"{partition_list})"
             )
-            if result["ResultCode"] in (self.ARM_SUCCESS, self.SUCCESS):
-                return True
-            if result["ResultCode"] == self.COMMAND_FAILED:
-                LOGGER.warning("Could not arm system. Check if a zone is faulted.")
-                return False
-
-        if result["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
-            LOGGER.warning(
-                f"User code {self.usercode} is invalid for location {self.location_id}."
-            )
-            return False
-
-        LOGGER.error(
-            f"Could not {verb} system. "
-            f"ResultCode: {result['ResultCode']}. "
-            f"ResultData: {result['ResultData']}"
-        )
-        return False
+            if result["ResultCode"] == self.parent.COMMAND_FAILED:
+                LOGGER.warning("could not arm system; is a zone faulted?")
+            self.parent.raise_for_resultcode(result)
+            LOGGER.info(f"ARMED(type {arm_type}) partitions {partition_list} at {self.location_id}")

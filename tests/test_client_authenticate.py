@@ -1,9 +1,11 @@
 """Test client authentication."""
 
-import unittest
 from unittest.mock import patch
+import unittest
+import pytest
 
 from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import AuthenticationError
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
@@ -49,11 +51,11 @@ class TestTotalConnectClient(unittest.TestCase):
         ]
         with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             assert self.client.is_logged_in() is True
-            assert self.client.log_out() is True
+            self.client.log_out()
             assert self.client.is_logged_in() is False
 
-            # should fail now
-            assert self.client.log_out() is False
+            # succeeds because we are logged out
+            self.client.log_out()
 
     def tests_authenticate(self):
         """Test authenticate()."""
@@ -71,16 +73,18 @@ class TestTotalConnectClient(unittest.TestCase):
             assert self.client.is_logged_in() is False
 
             # success (second SUCCESS)
-            assert self.client.authenticate() is True
+            self.client.authenticate()
             assert self.client.is_logged_in() is True
             assert self.client.is_valid_credentials() is True
 
             # bad user or pass
-            assert self.client.authenticate() is False
+            with pytest.raises(AuthenticationError):
+                self.client.authenticate()
             assert self.client.is_logged_in() is False
             assert self.client.is_valid_credentials() is False
 
             # authentication failed
-            assert self.client.authenticate() is False
+            with pytest.raises(AuthenticationError):
+                self.client.authenticate()
             assert self.client.is_logged_in() is False
             assert self.client.is_valid_credentials() is False

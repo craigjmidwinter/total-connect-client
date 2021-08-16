@@ -1,7 +1,8 @@
 """Test total_connect_client."""
 
-import unittest
 from unittest.mock import patch
+import unittest
+import pytest
 
 from common import create_client
 from const import (
@@ -10,6 +11,7 @@ from const import (
     RESPONSE_DISARMED,
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
+from total_connect_client.exceptions import PartialResponseError, BadResultCodeError
 
 RESPONSE_DISARMED_NONE = {"ResultCode": 0}
 
@@ -49,7 +51,8 @@ class TestTotalConnectClient(unittest.TestCase):
             assert self.client.locations[self.location_id].is_disarmed() is True
 
             # first response gives empty status...should remain the same
-            self.client.get_panel_meta_data(self.location_id)
+            with pytest.raises(PartialResponseError):
+                self.client.get_panel_meta_data(self.location_id)
             assert self.client.locations[self.location_id].is_disarmed() is True
 
     def tests_get_panel_meta_data_failed(self):
@@ -59,5 +62,5 @@ class TestTotalConnectClient(unittest.TestCase):
             # should start disarmed
             assert self.client.locations[self.location_id].is_disarmed() is True
 
-            # should error out and return false
-            assert self.client.get_panel_meta_data(self.location_id) is False
+            with pytest.raises(BadResultCodeError):
+                self.client.get_panel_meta_data(self.location_id)
