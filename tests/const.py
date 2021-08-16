@@ -34,7 +34,7 @@ LOCATION_INFO_BASIC_NORMAL = {
     "SecurityDeviceID": "987654",
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
     "LocationModuleFlags": "Security=1,Video=0,Automation=0,GPS=0,VideoPIR=0",
-    "DeviceList": DEVICE_LIST,
+    "DeviceList": { "DeviceInfoBasic": DEVICE_LIST },
 }
 
 LOCATIONS = {"LocationInfoBasic": [LOCATION_INFO_BASIC_NORMAL]}
@@ -200,15 +200,18 @@ RESPONSE_ARMED_STAY = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_ARMED_STAY,
+    "ArmingState": TotalConnectLocation.ARMED_STAY,
 }
 RESPONSE_ARMED_STAY_NIGHT = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT,
+    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
 }
 RESPONSE_ARMED_AWAY = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_ARMED_AWAY,
+    "ArmingState": TotalConnectLocation.ARMED_AWAY,
 }
 
 RESPONSE_AUTHENTICATE = {
@@ -271,8 +274,7 @@ PARTITION_DETAILS_2 = {
     "PartitionName": "Test2",
 }
 
-PARTITION_DETAILS = []
-PARTITION_DETAILS.append(PARTITION_DETAILS_1)
+PARTITION_DETAILS = { "PartitionDetails": [PARTITION_DETAILS_1] }
 
 RESPONSE_PARTITION_DETAILS = {
     "ResultCode": TotalConnectClient.SUCCESS,

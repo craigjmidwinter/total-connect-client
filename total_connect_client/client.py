@@ -1,12 +1,25 @@
-"""Total Connect Client."""
+"""TotalConnectClient() in this file is the primary class of this package.
+Instantiate it like this:
+
+usercodes = { 'default': '1234' }
+client = TCC.TotalConnectClient(username, password, usercodes)
+
+for location in client.locations:
+    ### do stuff with this location
+"""
 
 import logging
 import time
 import warnings
 
 import zeep
+
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
+from .exceptions import (
+    TotalConnectError, AuthenticationError, InvalidSessionError,
+    BadResultCodeError, RetryableTotalConnectError,
+)
 
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
 
@@ -23,14 +36,6 @@ GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 DEFAULT_USERCODE = "-1"
 
 LOGGER = logging.getLogger(__name__)
-
-
-class AuthenticationError(Exception):
-    """Authentication Error class."""
-
-    def __init__(self, *args, **kwargs):
-        """Initialize."""
-        Exception.__init__(self, *args, **kwargs)
 
 
 class TotalConnectClient:
@@ -50,41 +55,38 @@ class TotalConnectClient:
     AUTHENTICATION_FAILED = -100
     FEATURE_NOT_SUPPORTED = -120
 
-    MAX_REQUEST_ATTEMPTS = 10
+    MAX_RETRY_ATTEMPTS = 10
 
     def __init__(
         self,
         username,
         password,
-        usercodes={"default": DEFAULT_USERCODE},
+        usercodes=None,
         auto_bypass_battery=False,
+        retry_delay=3,  # seconds between retries
     ):
         """Initialize."""
         self.times = {}
         self.time_start = time.time()
-        self.soapClient = None
-        self.soap_base = "self.soapClient.service."
-        self.soap_ready = False
+        self.soap_client = None
+        self.application_id = "14588"
+        self.application_version = "1.0.34"
 
-        self.applicationId = "14588"
-        self.applicationVersion = "1.0.34"
         self.username = username
         self.password = password
-
-        if not isinstance(usercodes, dict):
-            self.usercodes = {"default": DEFAULT_USERCODE}
-        else:
-            self.usercodes = usercodes
-
+        self.usercodes = usercodes or {}
         self.auto_bypass_low_battery = auto_bypass_battery
+        self.retry_delay = retry_delay
+
         self.token = None
         self._invalid_credentials = False
-
         self._module_flags = None
         self._user = None
         self._locations = {}
         self._locations_unfetched = {}
+
         self.authenticate()
+
         self.times["__init__"] = time.time() - self.time_start
 
     @property
@@ -94,7 +96,7 @@ class TotalConnectClient:
         if/when the panel becomes reachable.
         """
         # to_fetch is needed because items() is invalidated by del
-        to_fetch = [i for i in self._locations_unfetched.items()]
+        to_fetch = list(self._locations_unfetched.items())
         for (locationid, location) in to_fetch:
             try:
                 location.get_partition_details()
@@ -113,7 +115,7 @@ class TotalConnectClient:
         data = (
             f"CLIENT\n\n"
             f"Username: {self.username}\n"
-            f"Password: {self.password}\n"
+            f"Password: {'[hidden]' if self.password else '[unset]'}\n"
             f"Usercode: {self.usercodes}\n"
             f"Auto Bypass Low Battery: {self.auto_bypass_low_battery}\n"
             f"Invalid Credentials: {self._invalid_credentials}\n"
@@ -140,155 +142,132 @@ class TotalConnectClient:
 
         return msg
 
-    def setup_soap(self):
-        """Set up soap for use."""
-        self.soapClient = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
-        self.soap_ready = True
+    def _raise_for_retry(self, response):
+        """Used internally to determine which responses should be retried in
+        request().
+        """
+        rc = response["ResultCode"]
+        if rc == self.INVALID_SESSION:
+            raise InvalidSessionError('invalid session', response)
+        if rc == self.CONNECTION_ERROR:
+            raise RetryableTotalConnectError('connection error', response)
+        if rc == self.FAILED_TO_CONNECT:
+            raise RetryableTotalConnectError('failed to connect with panel', response)
 
-    def request(self, request, attempts=0):
-        """Send a SOAP request."""
-        if self.soap_ready is False:
-            self.setup_soap()
-
-        if attempts < self.MAX_REQUEST_ATTEMPTS:
-            attempts += 1
-            response = eval(self.soap_base + request)
-
-            if response.ResultCode in (
+    def raise_for_resultcode(self, response):
+        """If response.ResultCode indicates success, return and do nothing.
+        If it indicates an authentication error, raise AuthenticationError.
+        """
+        rc = response["ResultCode"]
+        if rc in (
                 self.SUCCESS,
-                self.FEATURE_NOT_SUPPORTED,
                 self.ARM_SUCCESS,
                 self.DISARM_SUCCESS,
                 self.SESSION_INITIATED,
-                self.USER_CODE_INVALID,
-            ):
-                return zeep.helpers.serialize_object(response)
-            if response.ResultCode == self.INVALID_SESSION:
-                LOGGER.debug(f"invalid session (attempt number {attempts}).")
-                self.token = None
-                self.authenticate()
-                return self.request(request, attempts)
-            if response.ResultCode == self.CONNECTION_ERROR:
-                LOGGER.debug(f"connection error (attempt number {attempts}).")
-                time.sleep(3)
-                return self.request(request, attempts)
-            if response.ResultCode == self.FAILED_TO_CONNECT:
-                LOGGER.debug(
-                    f"failed to connect with security system "
-                    f"(attempt number {attempts})."
-                )
-                time.sleep(3)
-                return self.request(request, attempts)
-            if response.ResultCode in (
-                self.BAD_USER_OR_PASSWORD,
-                self.AUTHENTICATION_FAILED,
-                self.USER_CODE_UNAVAILABLE,
-            ):
-                LOGGER.debug("authentication failed.")
-                return zeep.helpers.serialize_object(response)
+        ):
+            return
+        self._raise_for_retry(response)
+        if rc == self.COMMAND_FAILED:
+            raise BadResultCodeError('command failed', response)
+        if rc == self.FEATURE_NOT_SUPPORTED:
+            raise BadResultCodeError('feature not supported', response)
+        if rc == self.USER_CODE_INVALID:
+            raise BadResultCodeError('user code invalid', response)
+        if rc == self.BAD_USER_OR_PASSWORD:
+            raise AuthenticationError('bad user or password', response)
+        if rc == self.AUTHENTICATION_FAILED:
+            raise AuthenticationError('authentication failed', response)
+        if rc == self.USER_CODE_UNAVAILABLE:
+            # FIXME: why is this an AuthError but USER_CODE_INVALID isn't?
+            raise AuthenticationError('user code unavailable', response)
+        raise BadResultCodeError(f'unknown result code {rc}', response)
 
-            LOGGER.warning(
-                f"unknown result code "
-                f"{response.ResultCode} with message: {response.ResultData}."
-            )
-            return zeep.helpers.serialize_object(response)
+    def request(self, request, attempts=0):
+        """Send a SOAP request."""
 
-        raise Exception(
-            "total-connect-client could not execute request.  Maximum attempts tried."
-        )
+        if not self.soap_client:
+            self.soap_client = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
+        try:
+            LOGGER.debug(f"sending API request {request}")
+            r = eval("self.soap_client.service." + request)
+            response = zeep.helpers.serialize_object(r)
+            self._raise_for_retry(response)
+            return response
+        except RetryableTotalConnectError as err:
+            if attempts > self.MAX_RETRY_ATTEMPTS:
+                raise
+            LOGGER.info(f"retrying {err.args[0]}, attempt # {attempts}")
+            time.sleep(self.retry_delay)
+            return self.request(request, attempts + 1)
+        except InvalidSessionError:
+            if attempts > self.MAX_RETRY_ATTEMPTS:
+                raise
+            LOGGER.info(f"reauthenticating session, attempt # {attempts}")
+            self.token = None
+            self.authenticate()
+            return self.request(request, attempts + 1)
 
     def authenticate(self):
-        """Login to the system.  Return True if successful.
-        Upon success, self.token is a valid credential for further
-        API calls, and self._user and self.locations are valid.
+        """Login to the system. Upon success, self.token is a valid credential
+        for further API calls, and self._user and self.locations are valid.
         self.locations will not be refreshed if it was non-empty on entry.
         """
-        if self._invalid_credentials:
-            LOGGER.error(
-                f"not authenticating: password already failed for user {self.username}"
-            )
-            return False
-
         start_time = time.time()
+        if self._invalid_credentials:
+            raise AuthenticationError(
+                f"not authenticating: password already failed for user {self.username}")
 
-        if self._locations:
-            response = self.request(
-                "AuthenticateUserLogin(self.username, self.password, "
-                "self.applicationId, self.applicationVersion)"
-            )
-        else:
-            # this request is very slow, so only use it when necessary
-            response = self.request(
-                "LoginAndGetSessionDetails(self.username, self.password, "
-                "self.applicationId, self.applicationVersion)"
-            )
-
-        if response["ResultCode"] == self.SUCCESS:
-            self.token = response["SessionID"]
-            if not self._locations:
-                self._module_flags = dict(
-                    x.split("=") for x in response["ModuleFlags"].split(",")
-                )
-                self._user = TotalConnectUser(response["UserInfo"])
-                self._locations_unfetched = self._make_locations(response)
-                self._locations = self._locations_unfetched.copy()
-                if not self._locations:
-                    raise Exception("No locations found!")
-            LOGGER.info(
-                f"{self.username} authenticated with {len(self._locations)} locations"
-            )
-            self.times["authenticate()"] = time.time() - start_time
-            return True
-
-        self._invalid_credentials = True
-        self.token = None
-        LOGGER.error(
-            f"Unable to authenticate with Total Connect. ResultCode: "
-            f"{response['ResultCode']}. ResultData: {response['ResultData']}"
+        # LoginAndGetSessionDetails is very slow, so only use it when necessary
+        verb = "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
+        response = self.request(
+            verb + "(self.username, self.password, "
+            "self.application_id, self.application_version)"
         )
+        try:
+            self.raise_for_resultcode(response)
+        except AuthenticationError:
+            self._invalid_credentials = True
+            self.token = None
+            raise
 
+        self.token = response["SessionID"]
+        if not self._locations:
+            self._module_flags = dict(
+                x.split("=") for x in response["ModuleFlags"].split(",")
+            )
+            self._user = TotalConnectUser(response["UserInfo"])
+            self._locations_unfetched = self._make_locations(response)
+            self._locations = self._locations_unfetched.copy()
+            if not self._locations:
+                raise TotalConnectError("no locations found", response)
+        LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
         self.times["authenticate()"] = time.time() - start_time
-        return False
 
     def validate_usercode(self, device_id, usercode):
-        """Return true if the usercode is valid for the device."""
+        """Return True if the usercode is valid for the device."""
         response = self.request(
-            f"ValidateUserCode(self.token, " f"{device_id}, '{usercode}')"
+            f"ValidateUserCode(self.token, {device_id}, '{usercode}')"
         )
 
-        if response["ResultCode"] == self.SUCCESS:
-            return True
-
-        if response["ResultCode"] in (
-            self.USER_CODE_INVALID,
-            self.USER_CODE_UNAVAILABLE,
-        ):
-            LOGGER.warning(f"usercode '{usercode}' " f"invalid for device {device_id}.")
+        if response["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
+            LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
             return False
-
-        LOGGER.error(
-            f"Unknown response for validate_usercode. "
-            f"ResultCode: {response['ResultCode']}. "
-            f"ResultData: {response['ResultData']}"
-        )
-
-        return False
+        self.raise_for_resultcode(response)
+        return True
 
     def is_logged_in(self):
         """Return true if the client is logged into Total Connect service."""
         return self.token is not None
 
     def log_out(self):
-        """Return true on logout of Total Connect service, or if not logged in."""
+        """Upon return, we are logged out. Raises TotalConnectError if we
+        still might be logged in.
+        """
         if self.is_logged_in():
             response = self.request("Logout(self.token)")
-
-            if response["ResultCode"] == self.SUCCESS:
-                LOGGER.info("Logout Successful")
-                self.token = None
-                return True
-
-        return False
+            self.raise_for_resultcode(response)
+            LOGGER.info("Logout Successful")
+            self.token = None
 
     def is_valid_credentials(self):
         """Return True if the credentials are known to be valid."""
@@ -299,7 +278,7 @@ class TotalConnectClient:
         start_time = time.time()
         new_locations = {}
 
-        for location in response["Locations"]["LocationInfoBasic"]:
+        for location in (response["Locations"] or {}).get("LocationInfoBasic", {}):
             location_id = location["LocationID"]
             new_locations[location_id] = TotalConnectLocation(location, self)
 
@@ -325,14 +304,13 @@ class TotalConnectClient:
 
     def keep_alive(self):
         """Keep the token alive to avoid server timeouts."""
-        LOGGER.info("total-connect-client initiating Keep Alive")
+        # TODO: why, if we're making a server round trip, are we doing nothing
+        # instead of updating some status?
+        LOGGER.debug("keep_alive()")
 
-        response = self.soapClient.service.KeepAlive(self.token)
-
+        response = self.soap_client.service.KeepAlive(self.token)
         if response.ResultCode != self.SUCCESS:
             self.authenticate()
-
-        return response.ResultCode
 
     def arm_away(self, location_id):
         """Arm the system (Away)."""
