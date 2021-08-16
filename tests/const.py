@@ -281,3 +281,10 @@ RESPONSE_PARTITION_DETAILS = {
     "ResultData": "testing partition details",
     "PartitionsInfoList": PARTITION_DETAILS,
 }
+
+PARTITION_DETAILS_TWO = { "PartitionDetails": [PARTITION_DETAILS_1, PARTITION_DETAILS_2] }
+RESPONSE_PARTITION_DETAILS_TWO = {
+    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultData": "testing partition details",
+    "PartitionsInfoList": PARTITION_DETAILS_TWO,
+}
