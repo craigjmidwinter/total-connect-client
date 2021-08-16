@@ -1,5 +1,6 @@
 """Total Connect Zone."""
 
+from enum import Enum
 
 ZONE_STATUS_NORMAL = 0
 ZONE_STATUS_BYPASSED = 1
@@ -8,19 +9,21 @@ ZONE_STATUS_TROUBLE = 8  # is also Tampered
 ZONE_STATUS_LOW_BATTERY = 64
 ZONE_STATUS_TRIGGERED = 256
 
-ZONE_TYPE_SECURITY = 0
-ZONE_TYPE_LYRIC_CONTACT = 1
-ZONE_TYPE_PROA7_SECURITY = 3
-ZONE_TYPE_LYRIC_MOTION = 4
-ZONE_TYPE_LYRIC_POLICE = 6
-ZONE_TYPE_PROA7_POLICE = 7
-ZONE_TYPE_FIRE_SMOKE = 9
-ZONE_TYPE_PROA7_INTERIOR_DELAY = 10
-ZONE_TYPE_LYRIC_TEMP = 12
-ZONE_TYPE_PROA7_FLOOD = 12
-ZONE_TYPE_CARBON_MONOXIDE = 14
-ZONE_TYPE_PROA7_MEDICAL = 15
-ZONE_TYPE_LYRIC_LOCAL_ALARM = 89
+
+class ZoneType(Enum):
+    SECURITY = 0
+    LYRIC_CONTACT = 1
+    PROA7_SECURITY = 3
+    LYRIC_MOTION = 4
+    LYRIC_POLICE = 6
+    PROA7_POLICE = 7
+    FIRE_SMOKE = 9
+    PROA7_INTERIOR_DELAY = 10
+    LYRIC_TEMP = 12
+    PROA7_FLOOD = 12
+    CARBON_MONOXIDE = 14
+    PROA7_MEDICAL = 15
+    LYRIC_LOCAL_ALARM = 89
 
 
 class TotalConnectZone:
@@ -123,7 +126,7 @@ class TotalConnectZone:
         if self.is_type_security() and not self.can_be_bypassed:
             return True
 
-        if self.zone_type_id in (ZONE_TYPE_PROA7_MEDICAL, ZONE_TYPE_PROA7_POLICE):
+        if self.zone_type_id in (ZoneType.PROA7_MEDICAL, ZoneType.PROA7_POLICE):
             return True
 
         return False
@@ -133,27 +136,27 @@ class TotalConnectZone:
 
         # LYRIC_POLICE is here but PROA7_POLICE is not. why?
         return self.zone_type_id in (
-            ZONE_TYPE_SECURITY,
-            ZONE_TYPE_LYRIC_CONTACT,
-            ZONE_TYPE_PROA7_SECURITY,
-            ZONE_TYPE_LYRIC_MOTION,
-            ZONE_TYPE_LYRIC_POLICE,
-            ZONE_TYPE_PROA7_INTERIOR_DELAY,
-            ZONE_TYPE_LYRIC_LOCAL_ALARM,
+            ZoneType.SECURITY,
+            ZoneType.LYRIC_CONTACT,
+            ZoneType.PROA7_SECURITY,
+            ZoneType.LYRIC_MOTION,
+            ZoneType.LYRIC_POLICE,
+            ZoneType.PROA7_INTERIOR_DELAY,
+            ZoneType.LYRIC_LOCAL_ALARM,
         )
 
     def is_type_motion(self):
         """Return true if zone type is motion."""
-        return self.zone_type_id == ZONE_TYPE_LYRIC_MOTION
+        return self.zone_type_id == ZoneType.LYRIC_MOTION
 
     def is_type_fire(self):
         """Return true if zone type is fire or smoke."""
-        return self.zone_type_id in (ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_LYRIC_TEMP)
+        return self.zone_type_id in (ZoneType.FIRE_SMOKE, ZoneType.LYRIC_TEMP)
 
     def is_type_carbon_monoxide(self):
         """Return true if zone type is carbon monoxide."""
-        return self.zone_type_id == ZONE_TYPE_CARBON_MONOXIDE
+        return self.zone_type_id == ZoneType.CARBON_MONOXIDE
 
     def is_type_medical(self):
         """Return true if zone type is medical."""
-        return self.zone_type_id == ZONE_TYPE_PROA7_MEDICAL
+        return self.zone_type_id == ZoneType.PROA7_MEDICAL

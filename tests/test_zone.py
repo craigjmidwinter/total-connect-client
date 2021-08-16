@@ -17,17 +17,14 @@ from total_connect_client.zone import (
     ZONE_STATUS_FAULT,
     ZONE_STATUS_TRIGGERED,
     ZONE_STATUS_TROUBLE,
-    ZONE_TYPE_CARBON_MONOXIDE,
-    ZONE_TYPE_FIRE_SMOKE,
-    ZONE_TYPE_PROA7_MEDICAL,
-    ZONE_TYPE_SECURITY,
+    ZoneType
 )
 from total_connect_client.zone import TotalConnectZone as tcz
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZONE_STATUS_BYPASSED,
 }
@@ -36,7 +33,7 @@ ZONE_FAULTED = {
     "ZoneDescription": "Faulted",
     "ZoneID": "1",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZONE_STATUS_FAULT,
 }
@@ -44,7 +41,7 @@ ZONE_FAULTED = {
 ZONE_TAMPERED = {
     "ZoneDescription": "Tampered",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZONE_STATUS_TROUBLE,
 }
@@ -52,7 +49,7 @@ ZONE_TAMPERED = {
 ZONE_BYPASSED_LOW_BATTERY = {
     "ZoneDescription": "Bypassed Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 65,
 }
@@ -60,7 +57,7 @@ ZONE_BYPASSED_LOW_BATTERY = {
 ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneDescription": "Trouble Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 72,
 }
@@ -68,7 +65,7 @@ ZONE_TROUBLE_LOW_BATTERY = {
 ZONE_TRIGGERED = {
     "ZoneDescription": "Triggered",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZONE_STATUS_TRIGGERED,
 }
@@ -76,7 +73,7 @@ ZONE_TRIGGERED = {
 ZONE_BUTTON = {
     "ZoneDescription": "Button",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 0,
     "ZoneStatus": ZONE_STATUS_NORMAL,
 }
@@ -84,7 +81,7 @@ ZONE_BUTTON = {
 ZONE_SMOKE = {
     "ZoneDescription": "Smoke",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_FIRE_SMOKE,
+    "ZoneTypeId": ZoneType.FIRE_SMOKE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZONE_STATUS_NORMAL,
 }
@@ -92,7 +89,7 @@ ZONE_SMOKE = {
 ZONE_GAS = {
     "ZoneDescription": "Gas",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_CARBON_MONOXIDE,
+    "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZONE_STATUS_NORMAL,
 }
@@ -304,7 +301,7 @@ def test_proa7_zones():
     ZONE_MEDICAL = {
         "ZoneDescription": "Gas",
         "PartitionId": "1",
-        "ZoneTypeId": ZONE_TYPE_PROA7_MEDICAL,
+        "ZoneTypeId": ZoneType.PROA7_MEDICAL,
         "CanBeBypassed": 0,
         "ZoneStatus": ZONE_STATUS_NORMAL,
     }
