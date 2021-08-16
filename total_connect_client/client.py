@@ -41,7 +41,6 @@ LOGGER = logging.getLogger(__name__)
 class TotalConnectClient:
     """Client for Total Connect."""
 
-    INVALID_SESSION = -102
     SUCCESS = 0
     ARM_SUCCESS = 4500
     DISARM_SUCCESS = 4500
@@ -51,6 +50,8 @@ class TotalConnectClient:
     USER_CODE_INVALID = -4106
     USER_CODE_UNAVAILABLE = -4114
     COMMAND_FAILED = -4502
+    INVALID_SESSION = -102
+    INVALID_SESSIONID = -30002
     BAD_USER_OR_PASSWORD = -50004
     AUTHENTICATION_FAILED = -100
     FEATURE_NOT_SUPPORTED = -120
@@ -149,6 +150,8 @@ class TotalConnectClient:
         rc = response["ResultCode"]
         if rc == self.INVALID_SESSION:
             raise InvalidSessionError('invalid session', response)
+        if rc == self.INVALID_SESSIONID:
+            raise InvalidSessionError('invalid session ID', response)
         if rc == self.CONNECTION_ERROR:
             raise RetryableTotalConnectError('connection error', response)
         if rc == self.FAILED_TO_CONNECT:
