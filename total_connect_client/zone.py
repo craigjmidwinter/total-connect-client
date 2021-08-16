@@ -51,7 +51,7 @@ class TotalConnectZone:
         assert self.id == zid, (self.id, zid)
 
         self.description = zone.get("ZoneDescription")
-        self.partition = zone.get("PartitionID")
+        self.partition = zone.get("PartitionId")
         self.status = zone.get("ZoneStatus")
         self.can_be_bypassed = zone.get("CanBeBypassed")
 
