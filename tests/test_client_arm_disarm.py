@@ -78,7 +78,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is True
 
         # second test with a zone faulted
         self.client = create_client()
@@ -89,8 +89,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
         # third test with bad usercode
         self.client = create_client()
@@ -101,8 +101,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
         # fourth test with 'unavailable' usercode
         self.client = create_client()
@@ -113,8 +113,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
         # fifth test with 'other' usercode
         self.client = create_client()
@@ -125,8 +125,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
     def tests_arm_away_instant(self):
         """Test arm away instant."""
@@ -138,7 +138,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is True
 
         # second test with a zone faulted
         self.client = create_client()
@@ -149,8 +149,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
         # third test with bad usercode
         self.client = create_client()
@@ -161,8 +161,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
     def tests_arm_stay(self):
         """Test arm stay."""
@@ -174,7 +174,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_home() is True
 
         # second test with a zone faulted
         self.client = create_client()
@@ -185,8 +185,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_home() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
         # third test with bad usercode
         self.client = create_client()
@@ -197,8 +197,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_home() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
     def tests_arm_stay_instant(self):
         """Test arm stay instant."""
@@ -210,7 +210,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_home() is True
 
         # second test with a zone faulted
         self.client = create_client()
@@ -221,8 +221,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_home() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
         # third test with bad usercode
         self.client = create_client()
@@ -233,8 +233,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_home() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
     def tests_arm_stay_night(self):
         """Test arm stay night."""
@@ -246,7 +246,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # confirm armed_away
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_night() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_night() is True
 
         # second test with a zone faulted
         self.client = create_client()
@@ -257,8 +257,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_night() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_night() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
         # third test with bad usercode
         self.client = create_client()
@@ -269,8 +269,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be disarmed
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_night() is False
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_night() is False
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
     def tests_disarm(self):
         """Test disarm."""
@@ -286,12 +286,12 @@ class TestTotalConnectClient(unittest.TestCase):
             # arm the system and confirm armed_away
             self.client.arm_away(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is True
 
             # now disarm
             self.client.disarm(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
     def tests_disarm_command_failed(self):
         """Test disarm with command failed."""
@@ -307,7 +307,7 @@ class TestTotalConnectClient(unittest.TestCase):
             # arm the system and confirm armed_away
             self.client.arm_away(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is True
 
             # now disarm, should fail
             with pytest.raises(BadResultCodeError):
@@ -315,7 +315,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should still be armed_away
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is True
 
     def tests_disarm_user_code_invalid(self):
         """Test disarm with invalid user code."""
@@ -331,14 +331,14 @@ class TestTotalConnectClient(unittest.TestCase):
             # arm the system and confirm armed_away
             self.client.arm_away(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is True
 
             with pytest.raises(BadResultCodeError):
                 self.client.disarm(self.location_id)
 
             # should still be armed_away when disarming fails
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
+            assert self.client.locations[self.location_id].arming_state.is_armed_away() is True
 
     def tests_disarm_disarmed(self):
         """Test attempt to disarm an already disarmed system."""
@@ -348,9 +348,9 @@ class TestTotalConnectClient(unittest.TestCase):
         responses = [RESPONSE_DISARMED, RESPONSE_SUCCESS, RESPONSE_DISARMED]
         with patch(TCC_REQUEST_METHOD, side_effect=responses):
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
             # now disarm
             self.client.disarm(self.location_id)
             self.client.get_panel_meta_data(self.location_id)
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True

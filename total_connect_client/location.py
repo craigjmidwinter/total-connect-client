@@ -2,16 +2,12 @@
 
 import logging
 
+from .const import ArmType, ArmingState
 from .device import TotalConnectDevice
 from .partition import TotalConnectPartition
 from .zone import TotalConnectZone
 from .exceptions import PartialResponseError, TotalConnectError
 
-ARM_TYPE_AWAY = 0
-ARM_TYPE_STAY = 1
-ARM_TYPE_STAY_INSTANT = 2
-ARM_TYPE_AWAY_INSTANT = 3
-ARM_TYPE_STAY_NIGHT = 4
 
 DEFAULT_USERCODE = "-1"
 
@@ -20,45 +16,6 @@ LOGGER = logging.getLogger(__name__)
 
 class TotalConnectLocation:
     """TotalConnectLocation class."""
-
-    # ArmingState
-    DISARMED = 10200
-    DISARMED_BYPASS = 10211
-    ARMED_AWAY = 10201
-    ARMED_AWAY_BYPASS = 10202
-    ARMED_AWAY_INSTANT = 10205
-    ARMED_AWAY_INSTANT_BYPASS = 10206
-    ARMED_CUSTOM_BYPASS = 10223
-    ARMED_STAY = 10203
-    ARMED_STAY_BYPASS = 10204
-    ARMED_STAY_INSTANT = 10209
-    ARMED_STAY_INSTANT_BYPASS = 10210
-    ARMED_STAY_NIGHT = 10218
-    ARMING = 10307
-    DISARMING = 10308
-    ALARMING = 10207
-    ALARMING_FIRE_SMOKE = 10212
-    ALARMING_CARBON_MONOXIDE = 10213
-
-    KNOWN_PANEL_STATES = [
-        DISARMED,
-        DISARMED_BYPASS,
-        ARMED_AWAY,
-        ARMED_AWAY_BYPASS,
-        ARMED_AWAY_INSTANT,
-        ARMED_AWAY_INSTANT_BYPASS,
-        ARMED_CUSTOM_BYPASS,
-        ARMED_STAY,
-        ARMED_STAY_BYPASS,
-        ARMED_STAY_INSTANT,
-        ARMED_STAY_INSTANT_BYPASS,
-        ARMED_STAY_NIGHT,
-        ARMING,
-        DISARMING,
-        ALARMING,
-        ALARMING_FIRE_SMOKE,
-        ALARMING_CARBON_MONOXIDE,
-    ]
 
     def __init__(self, location_info_basic, parent):
         """Initialize based on a 'LocationInfoBasic'."""
@@ -95,7 +52,7 @@ class TotalConnectLocation:
             f"AcLoss: {self.ac_loss}\n"
             f"LowBattery: {self.low_battery}\n"
             f"IsCoverTampered: {self.cover_tampered}\n"
-            f"Arming State: {self.arming_state}\n"
+            f"{self.arming_state}\n"
             f"LocationModuleFlags:\n"
         )
 
@@ -170,7 +127,7 @@ class TotalConnectLocation:
         astate = result.get("ArmingState")
         if not astate:
             raise PartialResponseError('no ArmingState', result)
-        self.arming_state = astate
+        self.arming_state = ArmingState(astate)
 
 
     def get_zone_details(self):
@@ -202,7 +159,7 @@ class TotalConnectLocation:
             if partition_id in self.partitions:
                 self.partitions[partition_id].update(partition)
             else:
-                logging.warning(f"Update provided for unknown partion {partition_id} ")
+                LOGGER.warning(f"Update provided for unknown partion {partition_id} ")
 
     def update_zones(self, result):
         """Update zone info from ZoneInfo or ZoneInfoEx."""
@@ -276,110 +233,17 @@ class TotalConnectLocation:
         """Return true if cover is tampered."""
         return self.cover_tampered is True
 
-    def is_arming(self):
-        """Return true if the system is in the process of arming."""
-        return self.arming_state == self.ARMING
-
-    def is_disarming(self):
-        """Return true if the system is in the process of disarming."""
-        return self.arming_state == self.DISARMING
-
-    def is_pending(self):
-        """Return true if the system is pending an action."""
-        return self.is_disarming() or self.is_arming()
-
-    def is_disarmed(self):
-        """Return True if the system is disarmed."""
-        return self.arming_state in (self.DISARMED, self.DISARMED_BYPASS)
-
-    def is_armed_away(self):
-        """Return True if the system is armed away in any way."""
-        return self.arming_state in (
-            self.ARMED_AWAY,
-            self.ARMED_AWAY_BYPASS,
-            self.ARMED_AWAY_INSTANT,
-            self.ARMED_AWAY_INSTANT_BYPASS,
-        )
-
-    def is_armed_custom_bypass(self):
-        """Return True if the system is armed custom bypass in any way."""
-        return self.arming_state == self.ARMED_CUSTOM_BYPASS
-
-    def is_armed_home(self):
-        """Return True if the system is armed home/stay in any way."""
-        return self.arming_state in (
-            self.ARMED_STAY,
-            self.ARMED_STAY_BYPASS,
-            self.ARMED_STAY_INSTANT,
-            self.ARMED_STAY_INSTANT_BYPASS,
-            self.ARMED_STAY_NIGHT,
-        )
-
-    def is_armed_night(self):
-        """Return True if the system is armed night in any way."""
-        return self.arming_state == self.ARMED_STAY_NIGHT
-
-    def is_armed(self):
-        """Return True if the system is armed in any way."""
-        return (
-            self.is_armed_away()
-            or self.is_armed_custom_bypass()
-            or self.is_armed_home()
-            or self.is_armed_night()
-        )
-
-    def is_triggered_police(self):
-        """Return True if the system is triggered for police or medical."""
-        return self.arming_state == self.ALARMING
-
-    def is_triggered_fire(self):
-        """Return True if the system is triggered for fire or smoke."""
-        return self.arming_state == self.ALARMING_FIRE_SMOKE
-
-    def is_triggered_gas(self):
-        """Return True if the system is triggered for carbon monoxide."""
-        return self.arming_state == self.ALARMING_CARBON_MONOXIDE
-
-    def is_triggered(self):
-        """Return True if the system is triggered in any way."""
-        return (
-            self.is_triggered_fire()
-            or self.is_triggered_gas()
-            or self.is_triggered_police()
-        )
-
     def set_usercode(self, usercode):
         """Set the usercode. Return true if successful."""
         if self.parent.validate_usercode(self.security_device_id, usercode):
             self.usercode = usercode
             return True
-
         return False
 
-    def arm_away(self, partition_id=None):
-        """Arm the system (Away)."""
-        self.arm(ARM_TYPE_AWAY, partition_id)
-
-    def arm_stay(self, partition_id=None):
-        """Arm the system (Stay)."""
-        self.arm(ARM_TYPE_STAY, partition_id)
-
-    def arm_stay_instant(self, partition_id=None):
-        """Arm the system (Stay - Instant)."""
-        self.arm(ARM_TYPE_STAY_INSTANT, partition_id)
-
-    def arm_away_instant(self, partition_id=None):
-        """Arm the system (Away - Instant)."""
-        self.arm(ARM_TYPE_AWAY_INSTANT, partition_id)
-
-    def arm_stay_night(self, partition_id=None):
-        """Arm the system (Stay - Night)."""
-        self.arm(ARM_TYPE_STAY_NIGHT, partition_id)
-
     def arm(self, arm_type, partition_id=None):
-        """Arm the given partition."""
-        # if no partition is given, arm all partitions
+        """Arm the given partition. If no partition is given, arm all partitions."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
+        assert isinstance(arm_type, ArmType)
         partition_list = []
         if partition_id is None:
             partition_list = self._partition_list
@@ -393,17 +257,17 @@ class TotalConnectLocation:
             f"ArmSecuritySystemPartitionsV1(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id}, "
-            f"{arm_type}, "
+            f"{arm_type.value}, "
             f"'{self.usercode}', "
             f"{partition_list})"
         )
         if result["ResultCode"] == self.parent.COMMAND_FAILED:
             LOGGER.warning("could not arm system; is a zone faulted?")
         self.parent.raise_for_resultcode(result)
-        LOGGER.info(f"ARMED(type {arm_type}) partitions {partition_list} at {self.location_id}")
+        LOGGER.info(f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}")
 
     def disarm(self, partition_id=None):
-        """Disarm the system. Return True if successful."""
+        """Disarm the system."""
         # if no partition is given, disarm all partitions
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         partition_list = []
@@ -460,7 +324,7 @@ class TotalConnectLocation:
             f"CustomArmSecuritySystem(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id}, "
-            f"{arm_type}, '{self.usercode}', "
+            f"{arm_type.value}, '{self.usercode}', "
             f"{CUSTOM_ARM_SETTINGS})"
         )
 

@@ -4,7 +4,7 @@ from unittest.mock import patch
 import unittest
 import pytest
 
-from total_connect_client.client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient, ArmingHelper
 from total_connect_client.exceptions import BadResultCodeError, AuthenticationError
 
 from common import create_client
@@ -64,10 +64,10 @@ def tests_arm_away():
 
     responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
     with patch(TCC_REQUEST_METHOD, side_effect=responses):
-        location.arm_away()
+        ArmingHelper(location).arm_away()
 
         # confirm armed_away
         location.get_panel_meta_data()
-        assert location.is_armed_away() is True
-        assert location.partitions[1].is_armed_away() is True
+        assert location.arming_state.is_armed_away()
+        assert location.partitions[1].arming_state.is_armed_away()
 
