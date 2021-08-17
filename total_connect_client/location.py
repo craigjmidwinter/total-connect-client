@@ -152,7 +152,7 @@ class TotalConnectLocation:
 
         # loop through partitions and update
         # NOTE: do not use keys because they don't line up with PartitionID
-        for partition in pi.values():
+        for partition in pi:
             if "PartitionID" not in partition:
                 raise PartialResponseError('no PartitionID', result)
             partition_id = int(partition["PartitionID"])            

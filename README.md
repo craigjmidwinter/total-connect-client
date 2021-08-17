@@ -15,21 +15,13 @@ The code currently supports:
 
 If you're having trouble with your system, or find an error message, we may ask you to submit information about your alarm system.  To do that from the command line do the following steps (assuming you are running from within Home Assistant):
  
-First download the latest files:
- - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/client.py`
- - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/location.py`
- - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/partition.py`
- - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/user.py`
- - `wget https://raw.githubusercontent.com/craigjmidwinter/total-connect-client/master/total_connect_client/info.py`
- 
-The run the script:
-`python3 info.py username password`  
+`python3 -m total_connect_client.info username password`
  
 If you want to easily put the info into a file for sharing: 
- - `python3 info.py username password > my_info.txt`
+ - `python3 -m total_connect_client.info username password > my_info.txt`
  - Now the file my_info.txt in the same directory will hold all of that information
 
-**WARNING**:  the output of info.py includes private information including your username and password.  Carefully remove it before sharing with the developers or posting on Github.
+**WARNING**:  the output of this command includes private information including your username and password.  Carefully remove it before sharing with the developers or posting on Github.
 
 Create an Issue on Github and post both your problem and your system information.
 
