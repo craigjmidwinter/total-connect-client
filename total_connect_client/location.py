@@ -446,13 +446,6 @@ class TotalConnectLocation:
             raise TotalConnectError(f'zone {zone_id} does not exist')
         return z.status
 
-    def get_armed_status(self):
-        """Get the status of the panel."""
-        # FIXME: why does this getter, but no others, fetch new state?
-        self.get_panel_meta_data()
-        # TODO:  return state for the partition ???
-        return self.arming_state
-
     def arm_custom(self, arm_type):
         """NOT OPERATIONAL YET.
         Arm custom the system.  Return true if successful.
