@@ -14,6 +14,7 @@ import warnings
 
 import zeep
 
+from .const import ArmType
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
 from .exceptions import (
@@ -22,16 +23,6 @@ from .exceptions import (
 )
 
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
-
-ARM_TYPE_AWAY = 0
-ARM_TYPE_STAY = 1
-ARM_TYPE_STAY_INSTANT = 2
-ARM_TYPE_AWAY_INSTANT = 3
-ARM_TYPE_STAY_NIGHT = 4
-
-RESULT_SUCCESS = 0
-
-GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
 
@@ -307,7 +298,7 @@ class TotalConnectClient:
             "Using deprecated client.arm_away(). " "Use location.arm_away().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_AWAY, location_id)
+        return self.arm(ArmType.AWAY, location_id)
 
     def arm_stay(self, location_id):
         """Arm the system (Stay)."""
@@ -315,7 +306,7 @@ class TotalConnectClient:
             "Using deprecated client.arm_stay(). " "Use location.arm_stay().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_STAY, location_id)
+        return self.arm(ArmType.STAY, location_id)
 
     def arm_stay_instant(self, location_id):
         """Arm the system (Stay - Instant)."""
@@ -324,7 +315,7 @@ class TotalConnectClient:
             "Use location.arm_stay_instant().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_STAY_INSTANT, location_id)
+        return self.arm(ArmType.STAY_INSTANT, location_id)
 
     def arm_away_instant(self, location_id):
         """Arm the system (Away - Instant)."""
@@ -333,7 +324,7 @@ class TotalConnectClient:
             "Use location.arm_away_instant().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
+        return self.arm(ArmType.AWAY_INSTANT, location_id)
 
     def arm_stay_night(self, location_id):
         """Arm the system (Stay - Night)."""
@@ -342,7 +333,7 @@ class TotalConnectClient:
             "Use location.arm_stay_night().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_STAY_NIGHT, location_id)
+        return self.arm(ArmType.STAY_NIGHT, location_id)
 
     def arm(self, arm_type, location_id):
         """Arm the system. Return True if successful."""
@@ -401,3 +392,38 @@ class TotalConnectClient:
             DeprecationWarning,
         )
         return self.locations[location_id].get_zone_details()
+
+
+class ArmingHelper:
+    """
+    For a partition or location, you can call its arm() or disarm() method directly.
+       Example: partition.arm(ArmType.AWAY)
+
+    Alternatively, you can use ArmingHelper.
+       Example: ArmingHelper(partition).arm_away()
+    """
+    def __init__(self, partition_or_location):
+        self.armable = partition_or_location
+
+    def arm_away(self):
+        """Arm the system (Away)."""
+        self.armable.arm(ArmType.AWAY)
+
+    def arm_stay(self):
+        """Arm the system (Stay)."""
+        self.armable.arm(ArmType.STAY)
+
+    def arm_stay_instant(self):
+        """Arm the system (Stay - Instant)."""
+        self.armable.arm(ArmType.STAY_INSTANT)
+
+    def arm_away_instant(self):
+        """Arm the system (Away - Instant)."""
+        self.armable.arm(ArmType.AWAY_INSTANT)
+
+    def arm_stay_night(self):
+        """Arm the system (Stay - Night)."""
+        self.armable.arm(ArmType.STAY_NIGHT)
+
+    def disarm(self):
+        self.armable.disarm()

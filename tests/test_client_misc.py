@@ -39,7 +39,7 @@ class TestTotalConnectClient(unittest.TestCase):
         responses = [RESPONSE_DISARMED]
         with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
             # should start disarmed
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
 
             # ask for status of zone 1, which exists
             assert self.client.zone_status(self.location_id, "1") is ZONE_STATUS_NORMAL

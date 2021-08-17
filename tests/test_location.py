@@ -54,19 +54,19 @@ class TestTotalConnectLocation(unittest.TestCase):
 
     def tests_status(self):
         """Normal zone."""
-        self.assertFalse(self.location_normal.is_arming())
-        self.assertFalse(self.location_normal.is_disarming())
-        self.assertTrue(self.location_normal.is_disarmed())
-        self.assertFalse(self.location_normal.is_armed_away())
-        self.assertFalse(self.location_normal.is_armed_custom_bypass())
-        self.assertFalse(self.location_normal.is_armed_home())
-        self.assertFalse(self.location_normal.is_armed_night())
-        self.assertFalse(self.location_normal.is_armed())
-        self.assertFalse(self.location_normal.is_pending())
-        self.assertFalse(self.location_normal.is_triggered_police())
-        self.assertFalse(self.location_normal.is_triggered_fire())
-        self.assertFalse(self.location_normal.is_triggered_gas())
-        self.assertFalse(self.location_normal.is_triggered())
+        self.assertFalse(self.location_normal.arming_state.is_arming())
+        self.assertFalse(self.location_normal.arming_state.is_disarming())
+        self.assertTrue(self.location_normal.arming_state.is_disarmed())
+        self.assertFalse(self.location_normal.arming_state.is_armed_away())
+        self.assertFalse(self.location_normal.arming_state.is_armed_custom_bypass())
+        self.assertFalse(self.location_normal.arming_state.is_armed_home())
+        self.assertFalse(self.location_normal.arming_state.is_armed_night())
+        self.assertFalse(self.location_normal.arming_state.is_armed())
+        self.assertFalse(self.location_normal.arming_state.is_pending())
+        self.assertFalse(self.location_normal.arming_state.is_triggered_police())
+        self.assertFalse(self.location_normal.arming_state.is_triggered_fire())
+        self.assertFalse(self.location_normal.arming_state.is_triggered_gas())
+        self.assertFalse(self.location_normal.arming_state.is_triggered())
 
         loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
         r = deepcopy(RESPONSE_DISARMED)
@@ -81,7 +81,7 @@ class TestTotalConnectLocation(unittest.TestCase):
         loc.update_partitions(deepcopy(RESPONSE_DISARMED))
         loc.update_zones(deepcopy(RESPONSE_DISARMED))
 
-        self.assertTrue(loc.is_disarmed())
+        self.assertTrue(loc.arming_state.is_disarmed())
         with pytest.raises(PartialResponseError):
             loc.set_status(None)
 
@@ -107,7 +107,7 @@ class TestTotalConnectLocation(unittest.TestCase):
         del data["PanelMetadataAndStatus"]["Zones"]
         with pytest.raises(TotalConnectError):
             loc.update_zones(data)
-        self.assertTrue(loc.is_disarmed())
+        self.assertTrue(loc.arming_state.is_disarmed())
 
     def tests_set_zone_details(self):
         """Test set_zone_details with normal data passed in."""

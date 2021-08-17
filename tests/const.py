@@ -1,7 +1,7 @@
 """Testing constants."""
+
+from total_connect_client.const import ArmingState
 from total_connect_client.client import TotalConnectClient
-from total_connect_client.location import TotalConnectLocation
-from total_connect_client.partition import TotalConnectPartition
 from total_connect_client.zone import (
     ZONE_STATUS_LOW_BATTERY,
     ZONE_STATUS_NORMAL,
@@ -118,27 +118,27 @@ RESPONSE_GET_ZONE_DETAILS_NONE["ZoneStatus"] = None
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.DISARMED,
+    "ArmingState": ArmingState.DISARMED.value,
 }
 
 PARTITION_DISARMED2 = {
     "PartitionID": "2",
-    "ArmingState": TotalConnectLocation.DISARMED,
+    "ArmingState": ArmingState.DISARMED.value,
 }
 
 PARTITION_ARMED_STAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMED_STAY,
+    "ArmingState": ArmingState.ARMED_STAY.value,
 }
 
 PARTITION_ARMED_STAY_NIGHT = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
+    "ArmingState": ArmingState.ARMED_STAY_NIGHT.value,
 }
 
 PARTITION_ARMED_AWAY = {
     "PartitionID": "1",
-    "ArmingState": TotalConnectLocation.ARMED_AWAY,
+    "ArmingState": ArmingState.ARMED_AWAY.value,
 }
 
 PARTITION_INFO_DISARMED = {}
@@ -194,24 +194,24 @@ RESPONSE_DISARMED = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_DISARMED,
-    "ArmingState": TotalConnectLocation.DISARMED,
+    "ArmingState": ArmingState.DISARMED.value,
 }
 RESPONSE_ARMED_STAY = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_ARMED_STAY,
-    "ArmingState": TotalConnectLocation.ARMED_STAY,
+    "ArmingState": ArmingState.ARMED_STAY.value,
 }
 RESPONSE_ARMED_STAY_NIGHT = {
     "ResultCode": 0,
     "PanelMetadataAndStatus": METADATA_ARMED_STAY_NIGHT,
-    "ArmingState": TotalConnectLocation.ARMED_STAY_NIGHT,
+    "ArmingState": ArmingState.ARMED_STAY_NIGHT.value,
 }
 RESPONSE_ARMED_AWAY = {
     "ResultCode": 0,
     "ResultData": "Success",
     "PanelMetadataAndStatus": METADATA_ARMED_AWAY,
-    "ArmingState": TotalConnectLocation.ARMED_AWAY,
+    "ArmingState": ArmingState.ARMED_AWAY.value,
 }
 
 RESPONSE_AUTHENTICATE = {
@@ -264,13 +264,13 @@ RESPONSE_UNKNOWN = {
 
 PARTITION_DETAILS_1 = {
     "PartitionID": 1,
-    "ArmingState": TotalConnectPartition.DISARMED,
+    "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test1",
 }
 
 PARTITION_DETAILS_2 = {
     "PartitionID": 2,
-    "ArmingState": TotalConnectPartition.DISARMED,
+    "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test2",
 }
 
