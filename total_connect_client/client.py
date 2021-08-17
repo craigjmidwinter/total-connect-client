@@ -178,7 +178,6 @@ class TotalConnectClient:
         if rc == self.AUTHENTICATION_FAILED:
             raise AuthenticationError('authentication failed', response)
         if rc == self.USER_CODE_UNAVAILABLE:
-            # FIXME: why is this an AuthError but USER_CODE_INVALID isn't?
             raise AuthenticationError('user code unavailable', response)
         raise BadResultCodeError(f'unknown result code {rc}', response)
 
@@ -302,16 +301,6 @@ class TotalConnectClient:
         self.times["_make_locations()"] = time.time() - start_time
         return new_locations
 
-    def keep_alive(self):
-        """Keep the token alive to avoid server timeouts."""
-        # TODO: why, if we're making a server round trip, are we doing nothing
-        # instead of updating some status?
-        LOGGER.debug("keep_alive()")
-
-        response = self.soap_client.service.KeepAlive(self.token)
-        if response.ResultCode != self.SUCCESS:
-            self.authenticate()
-
     def arm_away(self, location_id):
         """Arm the system (Away)."""
         warnings.warn(
@@ -387,14 +376,6 @@ class TotalConnectClient:
             DeprecationWarning,
         )
         return self.locations[location_id].zone_status(zone_id)
-
-    def get_armed_status(self, location_id):
-        """Get the status of the panel."""
-        warnings.warn(
-            "Using deprecated client.zone_status(). " "Use location.zone_status().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].get_armed_status()
 
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""

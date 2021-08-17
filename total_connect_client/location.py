@@ -129,15 +129,15 @@ class TotalConnectLocation:
         self._auto_bypass_low_battery = value
 
     def set_zone_details(self, result):
-        """Update from GetZonesListInStateEx_V1."""
-        # TODO: why do we not use TotalConnectZone.update() ?
+        """
+        Update from GetZonesListInStateEx_V1.
+        
+        ZoneStatusInfoWithPartitionId provides additional info for setting up zones.
+        If we used TotalConnectZone.update() it would overwrite missing data with None.
+        """
         zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get("ZoneStatusInfoWithPartitionId")
         if not zone_info:
             raise PartialResponseError('no ZoneStatusInfoWithPartitionId', result)
-
-        # probabaly shouldn't clear zones
-        # TODO: explain why not
-        # self.locations[location_id].zones.clear()
 
         for zonedata in zone_info:
             self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
@@ -154,10 +154,6 @@ class TotalConnectLocation:
         self.update_partitions(result)
         self.update_zones(result)
 
-        astate = result.get("ArmingState")
-        if not astate:
-            raise PartialResponseError('no ArmingState', result)
-        self.arming_state = astate
 
     def set_status(self, result):
         """Update from result."""
@@ -170,6 +166,12 @@ class TotalConnectLocation:
         self.cover_tampered = data.get("IsCoverTampered")
         self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
         self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
+
+        astate = result.get("ArmingState")
+        if not astate:
+            raise PartialResponseError('no ArmingState', result)
+        self.arming_state = astate
+
 
     def get_zone_details(self):
         """Get Zone details."""
@@ -191,10 +193,16 @@ class TotalConnectLocation:
         if not pi:
             raise PartialResponseError('no PartitionInfo', result)
 
-        # FIXME: next line is WRONG, need to update partion.arming_state, NOT location.arming_state
-        self.arming_state = pi[0]["ArmingState"]
-
-        # FIXME: loop through partitions and update
+        # loop through partitions and update
+        # NOTE: do not use keys because they don't line up with PartitionID
+        for partition in pi.values():
+            if "PartitionID" not in partition:
+                raise PartialResponseError('no PartitionID', result)
+            partition_id = int(partition["PartitionID"])            
+            if partition_id in self.partitions:
+                self.partitions[partition_id].update(partition)
+            else:
+                logging.warning(f"Update provided for unknown partion {partition_id} ")
 
     def update_zones(self, result):
         """Update zone info from ZoneInfo or ZoneInfoEx."""
@@ -254,7 +262,6 @@ class TotalConnectLocation:
             self.partitions[new_partition.id] = new_partition
             new_partition_list.append(new_partition.id)
 
-        # TODO: why not self._partition_list = new_partition_list ?
         self._partition_list = {"int": new_partition_list}
 
     def is_low_battery(self):
@@ -437,13 +444,6 @@ class TotalConnectLocation:
         if not z:
             raise TotalConnectError(f'zone {zone_id} does not exist')
         return z.status
-
-    def get_armed_status(self):
-        """Get the status of the panel."""
-        # FIXME: why does this getter, but no others, fetch new state?
-        self.get_panel_meta_data()
-        # TODO:  return state for the partition ???
-        return self.arming_state
 
     def arm_custom(self, arm_type):
         """NOT OPERATIONAL YET.

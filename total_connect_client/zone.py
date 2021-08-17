@@ -51,7 +51,12 @@ class TotalConnectZone:
         assert self.id == zid, (self.id, zid)
 
         self.description = zone.get("ZoneDescription")
-        self.partition = zone.get("PartitionID")
+        # ZoneInfo gives 'ParitionID' but ZoneStatusInfoWithPartitionId gives 'PartitionId'
+        if "PartitionId" in zone:
+            # ...and PartitionId gives an int instead of a string
+            self.partition = str(zone["PartitionId"])
+        else:
+            self.partition = zone.get("PartitionID")
         self.status = zone.get("ZoneStatus")
         self.can_be_bypassed = zone.get("CanBeBypassed")
 

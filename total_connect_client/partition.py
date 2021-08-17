@@ -72,11 +72,6 @@ class TotalConnectPartition:
         """Disarm the partition."""
         self.parent.disarm(self.id)
 
-    def get_armed_status(self):
-        """Get the status of the panel."""
-        # TODO:  ask parent to update status first?
-        return self.arming_state
-
     def is_arming(self):
         """Return true if the system is in the process of arming."""
         return self.arming_state == self.ARMING

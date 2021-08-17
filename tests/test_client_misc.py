@@ -48,36 +48,6 @@ class TestTotalConnectClient(unittest.TestCase):
             with pytest.raises(TotalConnectError):
                 self.client.zone_status(self.location_id, "99")
 
-    def tests_get_armed_status(self):
-        """Test get_armed_status."""
-        responses = [
-            RESPONSE_ARMED_STAY,
-            RESPONSE_ARMED_STAY_NIGHT,
-            RESPONSE_ARMED_AWAY,
-            RESPONSE_DISARMED,
-        ]
-        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
-            # should start disarmed
-            assert self.client.locations[self.location_id].is_disarmed() is True
-
-            # armed_stay
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is True
-
-            # armed_stay_night
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is True
-            assert self.client.locations[self.location_id].is_armed_night() is True
-
-            # armed_away
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
-
-            # TODO: test alarming states
-
-            # disarmed
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_disarmed() is True
 
     def tests_get_zone_details(self):
         """Test get_zone_details."""

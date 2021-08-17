@@ -52,13 +52,13 @@ ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
     "ZoneStatus": ZONE_STATUS_NORMAL,
-    "PartitionId": "1",
+    "PartitionID": "1",
 }
 
 ZONE_LOW_BATTERY = {
     "ZoneID": "1",
     "ZoneDescription": "Low Battery",
-    "PartitionId": "1",
+    "PartitionID": "1",
     "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZONE_STATUS_LOW_BATTERY,
@@ -72,7 +72,7 @@ ZONE_INFO_LOW_BATTERY.append(ZONE_LOW_BATTERY)
 
 ZONES = {"ZoneInfo": ZONE_INFO}
 ZONES_LOW_BATTERY = {"ZoneInfo": ZONE_INFO_LOW_BATTERY}
-ZONE_STATUS_NORMAL = {
+ZS_NORMAL = {
     "PartitionId": "1",
     "Batterylevel": "-1",
     "Signalstrength": "-1",
@@ -84,24 +84,24 @@ ZONE_STATUS_NORMAL = {
     "ZoneFlags": None,
 }
 
-ZONE_STATUS_LYRIC_CONTACT = ZONE_STATUS_NORMAL.copy()
+ZONE_STATUS_LYRIC_CONTACT = ZS_NORMAL.copy()
 ZONE_STATUS_LYRIC_CONTACT["ZoneTypeId"] = ZONE_TYPE_LYRIC_CONTACT
 
-ZONE_STATUS_LYRIC_MOTION = ZONE_STATUS_NORMAL.copy()
+ZONE_STATUS_LYRIC_MOTION = ZS_NORMAL.copy()
 ZONE_STATUS_LYRIC_MOTION["ZoneTypeId"] = ZONE_TYPE_LYRIC_MOTION
 
-ZONE_STATUS_LYRIC_POLICE = ZONE_STATUS_NORMAL.copy()
+ZONE_STATUS_LYRIC_POLICE = ZS_NORMAL.copy()
 ZONE_STATUS_LYRIC_POLICE["ZoneTypeId"] = ZONE_TYPE_LYRIC_POLICE
 
-ZONE_STATUS_LYRIC_TEMP = ZONE_STATUS_NORMAL.copy()
+ZONE_STATUS_LYRIC_TEMP = ZS_NORMAL.copy()
 ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = ZONE_TYPE_LYRIC_TEMP
 
-ZONE_STATUS_LYRIC_LOCAL_ALARM = ZONE_STATUS_NORMAL.copy()
+ZONE_STATUS_LYRIC_LOCAL_ALARM = ZS_NORMAL.copy()
 ZONE_STATUS_LYRIC_LOCAL_ALARM["ZoneTypeId"] = ZONE_TYPE_LYRIC_LOCAL_ALARM
 
 
 ZONE_STATUS_INFO = []
-ZONE_STATUS_INFO.append(ZONE_STATUS_NORMAL)
+ZONE_STATUS_INFO.append(ZS_NORMAL)
 
 ZONE_DETAILS = {"ZoneStatusInfoWithPartitionId": ZONE_STATUS_INFO}
 
@@ -280,4 +280,11 @@ RESPONSE_PARTITION_DETAILS = {
     "ResultCode": TotalConnectClient.SUCCESS,
     "ResultData": "testing partition details",
     "PartitionsInfoList": PARTITION_DETAILS,
+}
+
+PARTITION_DETAILS_TWO = { "PartitionDetails": [PARTITION_DETAILS_1, PARTITION_DETAILS_2] }
+RESPONSE_PARTITION_DETAILS_TWO = {
+    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultData": "testing partition details",
+    "PartitionsInfoList": PARTITION_DETAILS_TWO,
 }
