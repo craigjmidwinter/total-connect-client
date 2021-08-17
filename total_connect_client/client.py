@@ -178,7 +178,6 @@ class TotalConnectClient:
         if rc == self.AUTHENTICATION_FAILED:
             raise AuthenticationError('authentication failed', response)
         if rc == self.USER_CODE_UNAVAILABLE:
-            # FIXME: why is this an AuthError but USER_CODE_INVALID isn't?
             raise AuthenticationError('user code unavailable', response)
         raise BadResultCodeError(f'unknown result code {rc}', response)
 
