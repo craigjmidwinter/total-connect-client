@@ -154,10 +154,6 @@ class TotalConnectLocation:
         self.update_partitions(result)
         self.update_zones(result)
 
-        astate = result.get("ArmingState")
-        if not astate:
-            raise PartialResponseError('no ArmingState', result)
-        self.arming_state = astate
 
     def set_status(self, result):
         """Update from result."""
@@ -170,6 +166,12 @@ class TotalConnectLocation:
         self.cover_tampered = data.get("IsCoverTampered")
         self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
         self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
+
+        astate = result.get("ArmingState")
+        if not astate:
+            raise PartialResponseError('no ArmingState', result)
+        self.arming_state = astate
+
 
     def get_zone_details(self):
         """Get Zone details."""
@@ -191,10 +193,16 @@ class TotalConnectLocation:
         if not pi:
             raise PartialResponseError('no PartitionInfo', result)
 
-        # FIXME: next line is WRONG, need to update partion.arming_state, NOT location.arming_state
-        self.arming_state = pi[0]["ArmingState"]
-
-        # FIXME: loop through partitions and update
+        # loop through partitions and update
+        # NOTE: do not use keys because they don't line up with PartitionID
+        for partition in pi.values():
+            if "PartitionID" not in partition:
+                raise PartialResponseError('no PartitionID', result)
+            partition_id = int(partition["PartitionID"])            
+            if partition_id in self.partitions:
+                self.partitions[partition_id].update(partition)
+            else:
+                logging.warning(f"Update provided for unknown partion {partition_id} ")
 
     def update_zones(self, result):
         """Update zone info from ZoneInfo or ZoneInfoEx."""
