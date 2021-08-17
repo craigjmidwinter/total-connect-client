@@ -84,5 +84,3 @@ def tests_arming_state():
     assert partition.is_triggered_fire() is False
     assert partition.is_triggered_gas() is False
     assert partition.is_triggered() is False
-
-    assert partition.get_armed_status() == TotalConnectPartition.DISARMED
