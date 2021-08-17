@@ -129,15 +129,15 @@ class TotalConnectLocation:
         self._auto_bypass_low_battery = value
 
     def set_zone_details(self, result):
-        """Update from GetZonesListInStateEx_V1."""
-        # TODO: why do we not use TotalConnectZone.update() ?
+        """
+        Update from GetZonesListInStateEx_V1.
+        
+        ZoneStatusInfoWithPartitionId provides additional info for setting up zones.
+        If we used TotalConnectZone.update() it would overwrite missing data with None.
+        """
         zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get("ZoneStatusInfoWithPartitionId")
         if not zone_info:
             raise PartialResponseError('no ZoneStatusInfoWithPartitionId', result)
-
-        # probabaly shouldn't clear zones
-        # TODO: explain why not
-        # self.locations[location_id].zones.clear()
 
         for zonedata in zone_info:
             self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
