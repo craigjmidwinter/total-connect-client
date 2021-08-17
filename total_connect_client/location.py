@@ -262,7 +262,6 @@ class TotalConnectLocation:
             self.partitions[new_partition.id] = new_partition
             new_partition_list.append(new_partition.id)
 
-        # TODO: why not self._partition_list = new_partition_list ?
         self._partition_list = {"int": new_partition_list}
 
     def is_low_battery(self):
