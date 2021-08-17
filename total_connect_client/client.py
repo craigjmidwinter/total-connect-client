@@ -378,14 +378,6 @@ class TotalConnectClient:
         )
         return self.locations[location_id].zone_status(zone_id)
 
-    def get_armed_status(self, location_id):
-        """Get the status of the panel."""
-        warnings.warn(
-            "Using deprecated client.zone_status(). " "Use location.zone_status().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].get_armed_status()
-
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""
         warnings.warn(
