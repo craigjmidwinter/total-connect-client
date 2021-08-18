@@ -14,24 +14,18 @@ import warnings
 
 import zeep
 
+from .const import ArmType
+from .exceptions import (
+    AuthenticationError,
+    BadResultCodeError,
+    InvalidSessionError,
+    RetryableTotalConnectError,
+    TotalConnectError,
+)
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
-from .exceptions import (
-    TotalConnectError, AuthenticationError, InvalidSessionError,
-    BadResultCodeError, RetryableTotalConnectError,
-)
 
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
-
-ARM_TYPE_AWAY = 0
-ARM_TYPE_STAY = 1
-ARM_TYPE_STAY_INSTANT = 2
-ARM_TYPE_AWAY_INSTANT = 3
-ARM_TYPE_STAY_NIGHT = 4
-
-RESULT_SUCCESS = 0
-
-GET_ALL_SENSORS_MASK_STATUS_SUCCESS = 0
 
 DEFAULT_USERCODE = "-1"
 
@@ -149,13 +143,13 @@ class TotalConnectClient:
         """
         rc = response["ResultCode"]
         if rc == self.INVALID_SESSION:
-            raise InvalidSessionError('invalid session', response)
+            raise InvalidSessionError("invalid session", response)
         if rc == self.INVALID_SESSIONID:
-            raise InvalidSessionError('invalid session ID', response)
+            raise InvalidSessionError("invalid session ID", response)
         if rc == self.CONNECTION_ERROR:
-            raise RetryableTotalConnectError('connection error', response)
+            raise RetryableTotalConnectError("connection error", response)
         if rc == self.FAILED_TO_CONNECT:
-            raise RetryableTotalConnectError('failed to connect with panel', response)
+            raise RetryableTotalConnectError("failed to connect with panel", response)
 
     def raise_for_resultcode(self, response):
         """If response.ResultCode indicates success, return and do nothing.
@@ -163,33 +157,34 @@ class TotalConnectClient:
         """
         rc = response["ResultCode"]
         if rc in (
-                self.SUCCESS,
-                self.ARM_SUCCESS,
-                self.DISARM_SUCCESS,
-                self.SESSION_INITIATED,
+            self.SUCCESS,
+            self.ARM_SUCCESS,
+            self.DISARM_SUCCESS,
+            self.SESSION_INITIATED,
         ):
             return
         self._raise_for_retry(response)
         if rc == self.COMMAND_FAILED:
-            raise BadResultCodeError('command failed', response)
+            raise BadResultCodeError("command failed", response)
         if rc == self.FEATURE_NOT_SUPPORTED:
-            raise BadResultCodeError('feature not supported', response)
+            raise BadResultCodeError("feature not supported", response)
         if rc == self.USER_CODE_INVALID:
-            raise BadResultCodeError('user code invalid', response)
+            raise BadResultCodeError("user code invalid", response)
         if rc == self.BAD_USER_OR_PASSWORD:
-            raise AuthenticationError('bad user or password', response)
+            raise AuthenticationError("bad user or password", response)
         if rc == self.AUTHENTICATION_FAILED:
-            raise AuthenticationError('authentication failed', response)
+            raise AuthenticationError("authentication failed", response)
         if rc == self.USER_CODE_UNAVAILABLE:
-            # FIXME: why is this an AuthError but USER_CODE_INVALID isn't?
-            raise AuthenticationError('user code unavailable', response)
-        raise BadResultCodeError(f'unknown result code {rc}', response)
+            raise AuthenticationError("user code unavailable", response)
+        raise BadResultCodeError(f"unknown result code {rc}", response)
 
     def request(self, request, attempts=0):
         """Send a SOAP request."""
 
         if not self.soap_client:
-            self.soap_client = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
+            self.soap_client = zeep.Client(
+                "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
+            )
         try:
             LOGGER.debug(f"sending API request {request}")
             r = eval("self.soap_client.service." + request)
@@ -218,10 +213,13 @@ class TotalConnectClient:
         start_time = time.time()
         if self._invalid_credentials:
             raise AuthenticationError(
-                f"not authenticating: password already failed for user {self.username}")
+                f"not authenticating: password already failed for user {self.username}"
+            )
 
         # LoginAndGetSessionDetails is very slow, so only use it when necessary
-        verb = "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
+        verb = (
+            "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
+        )
         response = self.request(
             verb + "(self.username, self.password, "
             "self.application_id, self.application_version)"
@@ -252,7 +250,10 @@ class TotalConnectClient:
             f"ValidateUserCode(self.token, {device_id}, '{usercode}')"
         )
 
-        if response["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
+        if response["ResultCode"] in (
+            self.USER_CODE_INVALID,
+            self.USER_CODE_UNAVAILABLE,
+        ):
             LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
             return False
         self.raise_for_resultcode(response)
@@ -305,23 +306,13 @@ class TotalConnectClient:
         self.times["_make_locations()"] = time.time() - start_time
         return new_locations
 
-    def keep_alive(self):
-        """Keep the token alive to avoid server timeouts."""
-        # TODO: why, if we're making a server round trip, are we doing nothing
-        # instead of updating some status?
-        LOGGER.debug("keep_alive()")
-
-        response = self.soap_client.service.KeepAlive(self.token)
-        if response.ResultCode != self.SUCCESS:
-            self.authenticate()
-
     def arm_away(self, location_id):
         """Arm the system (Away)."""
         warnings.warn(
             "Using deprecated client.arm_away(). " "Use location.arm_away().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_AWAY, location_id)
+        return self.arm(ArmType.AWAY, location_id)
 
     def arm_stay(self, location_id):
         """Arm the system (Stay)."""
@@ -329,7 +320,7 @@ class TotalConnectClient:
             "Using deprecated client.arm_stay(). " "Use location.arm_stay().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_STAY, location_id)
+        return self.arm(ArmType.STAY, location_id)
 
     def arm_stay_instant(self, location_id):
         """Arm the system (Stay - Instant)."""
@@ -338,7 +329,7 @@ class TotalConnectClient:
             "Use location.arm_stay_instant().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_STAY_INSTANT, location_id)
+        return self.arm(ArmType.STAY_INSTANT, location_id)
 
     def arm_away_instant(self, location_id):
         """Arm the system (Away - Instant)."""
@@ -347,7 +338,7 @@ class TotalConnectClient:
             "Use location.arm_away_instant().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_AWAY_INSTANT, location_id)
+        return self.arm(ArmType.AWAY_INSTANT, location_id)
 
     def arm_stay_night(self, location_id):
         """Arm the system (Stay - Night)."""
@@ -356,7 +347,7 @@ class TotalConnectClient:
             "Use location.arm_stay_night().",
             DeprecationWarning,
         )
-        return self.arm(ARM_TYPE_STAY_NIGHT, location_id)
+        return self.arm(ArmType.STAY_NIGHT, location_id)
 
     def arm(self, arm_type, location_id):
         """Arm the system. Return True if successful."""
@@ -391,14 +382,6 @@ class TotalConnectClient:
         )
         return self.locations[location_id].zone_status(zone_id)
 
-    def get_armed_status(self, location_id):
-        """Get the status of the panel."""
-        warnings.warn(
-            "Using deprecated client.zone_status(). " "Use location.zone_status().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].get_armed_status()
-
     def disarm(self, location_id):
         """Disarm the system. Return True if successful."""
         warnings.warn(
@@ -423,3 +406,39 @@ class TotalConnectClient:
             DeprecationWarning,
         )
         return self.locations[location_id].get_zone_details()
+
+
+class ArmingHelper:
+    """
+    For a partition or location, you can call its arm() or disarm() method directly.
+       Example: partition.arm(ArmType.AWAY)
+
+    Alternatively, you can use ArmingHelper.
+       Example: ArmingHelper(partition).arm_away()
+    """
+
+    def __init__(self, partition_or_location):
+        self.armable = partition_or_location
+
+    def arm_away(self):
+        """Arm the system (Away)."""
+        self.armable.arm(ArmType.AWAY)
+
+    def arm_stay(self):
+        """Arm the system (Stay)."""
+        self.armable.arm(ArmType.STAY)
+
+    def arm_stay_instant(self):
+        """Arm the system (Stay - Instant)."""
+        self.armable.arm(ArmType.STAY_INSTANT)
+
+    def arm_away_instant(self):
+        """Arm the system (Away - Instant)."""
+        self.armable.arm(ArmType.AWAY_INSTANT)
+
+    def arm_stay_night(self):
+        """Arm the system (Stay - Night)."""
+        self.armable.arm(ArmType.STAY_NIGHT)
+
+    def disarm(self):
+        self.armable.disarm()

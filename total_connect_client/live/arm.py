@@ -3,15 +3,12 @@
 import logging
 import sys
 
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
 if len(sys.argv) != 4:
-    print(
-        "usage:  python3 test.py username password "
-        "location1=usercode1,location2=usercode2 \n"
-    )
+    print("usage:  username password " "location1=usercode1,location2=usercode2 \n")
     sys.exit()
 
 

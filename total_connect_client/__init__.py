@@ -11,13 +11,18 @@ users of this interface never create those themselves.
 from . import client, location, partition, zone, const
 
 TotalConnectClient = client.TotalConnectClient
+ArmingHelper = client.ArmingHelper
 TotalConnectLocation = location.TotalConnectLocation
 TotalConnectPartition = partition.TotalConnectPartition
 TotalConnectZone = zone.TotalConnectZone
+
 ZoneStatus = zone.ZoneStatus
 ZoneType = zone.ZoneType
+ArmingState = const.ArmingState
+ArmType = const.ArmType
 
 __all__ = [
     'TotalConnectClient', 'TotalConnectLocation', 'TotalConnectPartition',
-    'TotalConnectZone', 'ZoneType', 'ZoneStatus'
+    'TotalConnectZone', 'ArmingHelper', 'ZoneType', 'ZoneStatus',
+    'ArmingState', 'ArmType'
 ]

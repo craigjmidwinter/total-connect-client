@@ -4,13 +4,13 @@ import logging
 import sys
 from pprint import pprint
 
-from client import TotalConnectClient
+from total_connect_client.client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
 if len(sys.argv) != 7:
     print(
-        "usage:  python3 test.py username password AutomationDeviceID DeviceID DeviceTypeID LocationID\n"
+        "usage:  username password AutomationDeviceID DeviceID DeviceTypeID LocationID\n"
     )
     sys.exit()
 

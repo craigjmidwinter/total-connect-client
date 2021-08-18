@@ -1,9 +1,9 @@
 """Test total_connect_client."""
 
-from unittest.mock import patch
 import unittest
-import pytest
+from unittest.mock import patch
 
+import pytest
 from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
@@ -16,9 +16,13 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_UNKNOWN,
 )
+
 from total_connect_client.zone import ZoneStatus
+
 from total_connect_client.exceptions import (
-    TotalConnectError, BadResultCodeError, PartialResponseError
+    BadResultCodeError,
+    PartialResponseError,
+    TotalConnectError,
 )
 
 
@@ -37,9 +41,15 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_zone_status(self):
         """Test zone_status."""
         responses = [RESPONSE_DISARMED]
-        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
+        with patch(
+            "total_connect_client.client.TotalConnectClient.request",
+            side_effect=responses,
+        ):
             # should start disarmed
-            assert self.client.locations[self.location_id].is_disarmed() is True
+            assert (
+                self.client.locations[self.location_id].arming_state.is_disarmed()
+                is True
+            )
 
             # ask for status of zone 1, which exists
             assert self.client.zone_status(self.location_id, "1") == ZoneStatus.NORMAL
@@ -47,37 +57,6 @@ class TestTotalConnectClient(unittest.TestCase):
             # ask for status of zone 99, which does not exist
             with pytest.raises(TotalConnectError):
                 self.client.zone_status(self.location_id, "99")
-
-    def tests_get_armed_status(self):
-        """Test get_armed_status."""
-        responses = [
-            RESPONSE_ARMED_STAY,
-            RESPONSE_ARMED_STAY_NIGHT,
-            RESPONSE_ARMED_AWAY,
-            RESPONSE_DISARMED,
-        ]
-        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
-            # should start disarmed
-            assert self.client.locations[self.location_id].is_disarmed() is True
-
-            # armed_stay
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is True
-
-            # armed_stay_night
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_home() is True
-            assert self.client.locations[self.location_id].is_armed_night() is True
-
-            # armed_away
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_armed_away() is True
-
-            # TODO: test alarming states
-
-            # disarmed
-            assert self.client.get_armed_status(self.location_id)
-            assert self.client.locations[self.location_id].is_disarmed() is True
 
     def tests_get_zone_details(self):
         """Test get_zone_details."""
@@ -87,7 +66,10 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_UNKNOWN,
             RESPONSE_GET_ZONE_DETAILS_NONE,
         ]
-        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
+        with patch(
+            "total_connect_client.client.TotalConnectClient.request",
+            side_effect=responses,
+        ):
             # first response is SUCCESS
             self.client.get_zone_details(self.location_id)
             # second response is FEATURE_NOT_SUPPORTED

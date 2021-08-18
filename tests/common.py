@@ -1,13 +1,14 @@
 """Common test code."""
 from unittest.mock import patch
 
-from total_connect_client.client import TotalConnectClient
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_PARTITION_DETAILS,
 )
+
+from total_connect_client.client import TotalConnectClient
 
 
 def create_client():

@@ -2,16 +2,11 @@
 
 import logging
 
+from .const import ArmingState, ArmType
 from .device import TotalConnectDevice
+from .exceptions import PartialResponseError, TotalConnectError
 from .partition import TotalConnectPartition
 from .zone import TotalConnectZone
-from .exceptions import PartialResponseError, TotalConnectError
-
-ARM_TYPE_AWAY = 0
-ARM_TYPE_STAY = 1
-ARM_TYPE_STAY_INSTANT = 2
-ARM_TYPE_AWAY_INSTANT = 3
-ARM_TYPE_STAY_NIGHT = 4
 
 DEFAULT_USERCODE = "-1"
 
@@ -20,45 +15,6 @@ LOGGER = logging.getLogger(__name__)
 
 class TotalConnectLocation:
     """TotalConnectLocation class."""
-
-    # ArmingState
-    DISARMED = 10200
-    DISARMED_BYPASS = 10211
-    ARMED_AWAY = 10201
-    ARMED_AWAY_BYPASS = 10202
-    ARMED_AWAY_INSTANT = 10205
-    ARMED_AWAY_INSTANT_BYPASS = 10206
-    ARMED_CUSTOM_BYPASS = 10223
-    ARMED_STAY = 10203
-    ARMED_STAY_BYPASS = 10204
-    ARMED_STAY_INSTANT = 10209
-    ARMED_STAY_INSTANT_BYPASS = 10210
-    ARMED_STAY_NIGHT = 10218
-    ARMING = 10307
-    DISARMING = 10308
-    ALARMING = 10207
-    ALARMING_FIRE_SMOKE = 10212
-    ALARMING_CARBON_MONOXIDE = 10213
-
-    KNOWN_PANEL_STATES = [
-        DISARMED,
-        DISARMED_BYPASS,
-        ARMED_AWAY,
-        ARMED_AWAY_BYPASS,
-        ARMED_AWAY_INSTANT,
-        ARMED_AWAY_INSTANT_BYPASS,
-        ARMED_CUSTOM_BYPASS,
-        ARMED_STAY,
-        ARMED_STAY_BYPASS,
-        ARMED_STAY_INSTANT,
-        ARMED_STAY_INSTANT_BYPASS,
-        ARMED_STAY_NIGHT,
-        ARMING,
-        DISARMING,
-        ALARMING,
-        ALARMING_FIRE_SMOKE,
-        ALARMING_CARBON_MONOXIDE,
-    ]
 
     def __init__(self, location_info_basic, parent):
         """Initialize based on a 'LocationInfoBasic'."""
@@ -95,7 +51,7 @@ class TotalConnectLocation:
             f"AcLoss: {self.ac_loss}\n"
             f"LowBattery: {self.low_battery}\n"
             f"IsCoverTampered: {self.cover_tampered}\n"
-            f"Arming State: {self.arming_state}\n"
+            f"{self.arming_state}\n"
             f"LocationModuleFlags:\n"
         )
 
@@ -129,15 +85,17 @@ class TotalConnectLocation:
         self._auto_bypass_low_battery = value
 
     def set_zone_details(self, result):
-        """Update from GetZonesListInStateEx_V1."""
-        # TODO: why do we not use TotalConnectZone.update() ?
-        zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get("ZoneStatusInfoWithPartitionId")
-        if not zone_info:
-            raise PartialResponseError('no ZoneStatusInfoWithPartitionId', result)
+        """
+        Update from GetZonesListInStateEx_V1.
 
-        # probabaly shouldn't clear zones
-        # TODO: explain why not
-        # self.locations[location_id].zones.clear()
+        ZoneStatusInfoWithPartitionId provides additional info for setting up zones.
+        If we used TotalConnectZone.update() it would overwrite missing data with None.
+        """
+        zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get(
+            "ZoneStatusInfoWithPartitionId"
+        )
+        if not zone_info:
+            raise PartialResponseError("no ZoneStatusInfoWithPartitionId", result)
 
         for zonedata in zone_info:
             self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
@@ -154,22 +112,22 @@ class TotalConnectLocation:
         self.update_partitions(result)
         self.update_zones(result)
 
-        astate = result.get("ArmingState")
-        if not astate:
-            raise PartialResponseError('no ArmingState', result)
-        self.arming_state = astate
-
     def set_status(self, result):
         """Update from result."""
         data = (result or {}).get("PanelMetadataAndStatus")
         if not data:
-            raise PartialResponseError('no PanelMetadataAndStatus', result)
+            raise PartialResponseError("no PanelMetadataAndStatus", result)
 
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
         self.cover_tampered = data.get("IsCoverTampered")
         self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
         self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
+
+        astate = result.get("ArmingState")
+        if not astate:
+            raise PartialResponseError("no ArmingState", result)
+        self.arming_state = ArmingState(astate)
 
     def get_zone_details(self):
         """Get Zone details."""
@@ -187,14 +145,22 @@ class TotalConnectLocation:
 
     def update_partitions(self, result):
         """Update partition info from Partitions."""
-        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get("PartitionInfo")
+        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get(
+            "PartitionInfo"
+        )
         if not pi:
-            raise PartialResponseError('no PartitionInfo', result)
+            raise PartialResponseError("no PartitionInfo", result)
 
-        # FIXME: next line is WRONG, need to update partion.arming_state, NOT location.arming_state
-        self.arming_state = pi[0]["ArmingState"]
-
-        # FIXME: loop through partitions and update
+        # loop through partitions and update
+        # NOTE: do not use keys because they don't line up with PartitionID
+        for partition in pi:
+            if "PartitionID" not in partition:
+                raise PartialResponseError("no PartitionID", result)
+            partition_id = int(partition["PartitionID"])
+            if partition_id in self.partitions:
+                self.partitions[partition_id].update(partition)
+            else:
+                LOGGER.warning(f"Update provided for unknown partion {partition_id} ")
 
     def update_zones(self, result):
         """Update zone info from ZoneInfo or ZoneInfoEx."""
@@ -206,15 +172,15 @@ class TotalConnectLocation:
             )
             # PartialResponseError would mean this is retryable without fixing
             # anything, and this needs fixing
-            raise TotalConnectError('no zones found: panel sync required')
+            raise TotalConnectError("no zones found: panel sync required")
 
         zone_info = data.get("ZoneInfoEx") or data.get("ZoneInfo")
         if not zone_info:
-            raise PartialResponseError('no ZoneInfoEx or ZoneInfo', result)
+            raise PartialResponseError("no ZoneInfoEx or ZoneInfo", result)
         for zonedata in zone_info:
             zid = (zonedata or {}).get("ZoneID")
             if not zid:
-                raise PartialResponseError('no ZoneID', result)
+                raise PartialResponseError("no ZoneID", result)
             zone = self.zones.get(zid)
             if zone:
                 zone.update(zonedata)
@@ -244,9 +210,11 @@ class TotalConnectLocation:
             )
             raise
 
-        partition_details = ((result or {}).get("PartitionsInfoList") or {}).get("PartitionDetails")
+        partition_details = ((result or {}).get("PartitionsInfoList") or {}).get(
+            "PartitionDetails"
+        )
         if not partition_details:
-            raise PartialResponseError('no PartitionDetails', result)
+            raise PartialResponseError("no PartitionDetails", result)
 
         new_partition_list = []
         for partition in partition_details:
@@ -254,7 +222,6 @@ class TotalConnectLocation:
             self.partitions[new_partition.id] = new_partition
             new_partition_list.append(new_partition.id)
 
-        # TODO: why not self._partition_list = new_partition_list ?
         self._partition_list = {"int": new_partition_list}
 
     def is_low_battery(self):
@@ -269,134 +236,45 @@ class TotalConnectLocation:
         """Return true if cover is tampered."""
         return self.cover_tampered is True
 
-    def is_arming(self):
-        """Return true if the system is in the process of arming."""
-        return self.arming_state == self.ARMING
-
-    def is_disarming(self):
-        """Return true if the system is in the process of disarming."""
-        return self.arming_state == self.DISARMING
-
-    def is_pending(self):
-        """Return true if the system is pending an action."""
-        return self.is_disarming() or self.is_arming()
-
-    def is_disarmed(self):
-        """Return True if the system is disarmed."""
-        return self.arming_state in (self.DISARMED, self.DISARMED_BYPASS)
-
-    def is_armed_away(self):
-        """Return True if the system is armed away in any way."""
-        return self.arming_state in (
-            self.ARMED_AWAY,
-            self.ARMED_AWAY_BYPASS,
-            self.ARMED_AWAY_INSTANT,
-            self.ARMED_AWAY_INSTANT_BYPASS,
-        )
-
-    def is_armed_custom_bypass(self):
-        """Return True if the system is armed custom bypass in any way."""
-        return self.arming_state == self.ARMED_CUSTOM_BYPASS
-
-    def is_armed_home(self):
-        """Return True if the system is armed home/stay in any way."""
-        return self.arming_state in (
-            self.ARMED_STAY,
-            self.ARMED_STAY_BYPASS,
-            self.ARMED_STAY_INSTANT,
-            self.ARMED_STAY_INSTANT_BYPASS,
-            self.ARMED_STAY_NIGHT,
-        )
-
-    def is_armed_night(self):
-        """Return True if the system is armed night in any way."""
-        return self.arming_state == self.ARMED_STAY_NIGHT
-
-    def is_armed(self):
-        """Return True if the system is armed in any way."""
-        return (
-            self.is_armed_away()
-            or self.is_armed_custom_bypass()
-            or self.is_armed_home()
-            or self.is_armed_night()
-        )
-
-    def is_triggered_police(self):
-        """Return True if the system is triggered for police or medical."""
-        return self.arming_state == self.ALARMING
-
-    def is_triggered_fire(self):
-        """Return True if the system is triggered for fire or smoke."""
-        return self.arming_state == self.ALARMING_FIRE_SMOKE
-
-    def is_triggered_gas(self):
-        """Return True if the system is triggered for carbon monoxide."""
-        return self.arming_state == self.ALARMING_CARBON_MONOXIDE
-
-    def is_triggered(self):
-        """Return True if the system is triggered in any way."""
-        return (
-            self.is_triggered_fire()
-            or self.is_triggered_gas()
-            or self.is_triggered_police()
-        )
-
     def set_usercode(self, usercode):
         """Set the usercode. Return true if successful."""
         if self.parent.validate_usercode(self.security_device_id, usercode):
             self.usercode = usercode
             return True
-
         return False
 
-    def arm_away(self, partition_id=None):
-        """Arm the system (Away)."""
-        self.arm(ARM_TYPE_AWAY, partition_id)
-
-    def arm_stay(self, partition_id=None):
-        """Arm the system (Stay)."""
-        self.arm(ARM_TYPE_STAY, partition_id)
-
-    def arm_stay_instant(self, partition_id=None):
-        """Arm the system (Stay - Instant)."""
-        self.arm(ARM_TYPE_STAY_INSTANT, partition_id)
-
-    def arm_away_instant(self, partition_id=None):
-        """Arm the system (Away - Instant)."""
-        self.arm(ARM_TYPE_AWAY_INSTANT, partition_id)
-
-    def arm_stay_night(self, partition_id=None):
-        """Arm the system (Stay - Night)."""
-        self.arm(ARM_TYPE_STAY_NIGHT, partition_id)
-
     def arm(self, arm_type, partition_id=None):
-        """Arm the given partition."""
-        # if no partition is given, arm all partitions
+        """Arm the given partition. If no partition is given, arm all partitions."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
+        assert isinstance(arm_type, ArmType)
         partition_list = []
         if partition_id is None:
             partition_list = self._partition_list
         else:
             if partition_id not in self.partitions:
-                raise TotalConnectError(f"Partition {partition_id} does not exist "
-                                        f"at location {self.location_id}")
+                raise TotalConnectError(
+                    f"Partition {partition_id} does not exist "
+                    f"at location {self.location_id}"
+                )
             partition_list.append(partition_id)
 
         result = self.parent.request(
             f"ArmSecuritySystemPartitionsV1(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id}, "
-            f"{arm_type}, "
+            f"{arm_type.value}, "
             f"'{self.usercode}', "
             f"{partition_list})"
         )
         if result["ResultCode"] == self.parent.COMMAND_FAILED:
             LOGGER.warning("could not arm system; is a zone faulted?")
         self.parent.raise_for_resultcode(result)
-        LOGGER.info(f"ARMED(type {arm_type}) partitions {partition_list} at {self.location_id}")
+        LOGGER.info(
+            f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}"
+        )
 
     def disarm(self, partition_id=None):
-        """Disarm the system. Return True if successful."""
+        """Disarm the system."""
         # if no partition is given, disarm all partitions
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         partition_list = []
@@ -404,8 +282,10 @@ class TotalConnectLocation:
             partition_list = self._partition_list
         else:
             if partition_id not in self.partitions:
-                raise TotalConnectError(f"Partition {partition_id} does not exist "
-                                        f"at location {self.location_id}")
+                raise TotalConnectError(
+                    f"Partition {partition_id} does not exist "
+                    f"at location {self.location_id}"
+                )
             partition_list.append(partition_id)
 
         result = self.parent.request(
@@ -435,15 +315,8 @@ class TotalConnectLocation:
         """Get status of a zone."""
         z = self.zones.get(zone_id)
         if not z:
-            raise TotalConnectError(f'zone {zone_id} does not exist')
+            raise TotalConnectError(f"zone {zone_id} does not exist")
         return z.status
-
-    def get_armed_status(self):
-        """Get the status of the panel."""
-        # FIXME: why does this getter, but no others, fetch new state?
-        self.get_panel_meta_data()
-        # TODO:  return state for the partition ???
-        return self.arming_state
 
     def arm_custom(self, arm_type):
         """NOT OPERATIONAL YET.
@@ -460,7 +333,7 @@ class TotalConnectLocation:
             f"CustomArmSecuritySystem(self.token, "
             f"{self.location_id}, "
             f"{self.security_device_id}, "
-            f"{arm_type}, '{self.usercode}', "
+            f"{arm_type.value}, '{self.usercode}', "
             f"{CUSTOM_ARM_SETTINGS})"
         )
 
