@@ -8,12 +8,16 @@ and TotalConnectZone (from .location, .partition, and .zone respectively), but
 users of this interface never create those themselves.
 """
 
-from .client import TotalConnectClient
+from . import client, location, partition, zone, const
 
-from .const import (
-    ARM_TYPE_AWAY,
-    ARM_TYPE_STAY,
-    ARM_TYPE_STAY_INSTANT,
-    ARM_TYPE_AWAY_INSTANT,
-    ARM_TYPE_STAY_NIGHT,
-)
+TotalConnectClient = client.TotalConnectClient
+TotalConnectLocation = location.TotalConnectLocation
+TotalConnectPartition = partition.TotalConnectPartition
+TotalConnectZone = zone.TotalConnectZone
+ZoneStatus = zone.ZoneStatus
+ZoneType = zone.ZoneType
+
+__all__ = [
+    'TotalConnectClient', 'TotalConnectLocation', 'TotalConnectPartition',
+    'TotalConnectZone', 'ZoneType', 'ZoneStatus'
+]

@@ -1,29 +1,50 @@
 """Total Connect Zone."""
 
-from enum import Enum
+from enum import Enum, IntFlag
 
-ZONE_STATUS_NORMAL = 0
-ZONE_STATUS_BYPASSED = 1
-ZONE_STATUS_FAULT = 2
-ZONE_STATUS_TROUBLE = 8  # is also Tampered
-ZONE_STATUS_LOW_BATTERY = 64
-ZONE_STATUS_TRIGGERED = 256
+
+class ZoneStatus(IntFlag):
+    NORMAL      =   0
+    BYPASSED    =   1
+    FAULT       =   2
+    TROUBLE     =   8  # is also Tampered
+    LOW_BATTERY =  64
+    TRIGGERED   = 256
 
 
 class ZoneType(Enum):
-    SECURITY = 0
-    LYRIC_CONTACT = 1
-    PROA7_SECURITY = 3
-    LYRIC_MOTION = 4
-    LYRIC_POLICE = 6
-    PROA7_POLICE = 7
-    FIRE_SMOKE = 9
-    PROA7_INTERIOR_DELAY = 10
-    LYRIC_TEMP = 12
-    PROA7_FLOOD = 12
-    CARBON_MONOXIDE = 14
-    PROA7_MEDICAL = 15
+    """
+    These are the "standard" Honeywell zone types. However some panels such
+    as the Lynx 7000 report most security zones as zone type 3.
+
+    https://www.alarmliquidators.com/content/Vista%2021IP-%20Programming%20Guide.pdf
+    http://techresource.online/training/ssnw/honeywell/zone-types
+    """
+    SECURITY          = 0  # for Vista, zone type 0 is not used
+    ENTRY_EXIT1       = 1  # starts countdown timer #1
+    ENTRY_EXIT2       = 2  # like ENTRY_EXIT1 but uses timer #2
+    PERIMETER         = 3  # zone type 3 usually triggers an immediate alarm...
+    PROA7_SECURITY    = 3  # but some panels like Lynx 7000 report timed zones as 3
+    INTERIOR_FOLLOWER = 4  # inactive when armed STAY
+    TROUBLE_ALARM     = 5  # trouble by day, alarm by night
+    SILENT_24HR       = 6  # 24-hour silent alarm (often used for police/hold-up)
+    AUDIBLE_24HR      = 7  # 24-hour audible alarm (often used for police)
+    AUX_24HR          = 8  # no local siren but keypad beeps (often used for medical)
+    FIRE_SMOKE        = 9
+    INTERIOR_DELAY    = 10 # inactive when armed STAY, otherwise like ENTRY_EXIT1
+    MONITOR           = 12  # e.g. temperature or flood
+    CARBON_MONOXIDE   = 14
+    PROA7_MEDICAL     = 15
+    FIRE_W_VERIFICATION = 16  # must trigger twice to cause an alarm
     LYRIC_LOCAL_ALARM = 89
+
+    # According to the VISTA docs, these can be programmed via downloader software
+    # or from a keypad using data fields *182-*185
+
+    VISTA_CONFIGURABLE_90 = 90
+    VISTA_CONFIGURABLE_91 = 91
+    VISTA_CONFIGURABLE_92 = 92
+    VISTA_CONFIGURABLE_93 = 93
 
 
 class TotalConnectZone:
@@ -55,7 +76,7 @@ class TotalConnectZone:
 
         self.description = zone.get("ZoneDescription")
         self.partition = zone.get("PartitionID")
-        self.status = zone.get("ZoneStatus")
+        self.status = ZoneStatus(zone.get("ZoneStatus"))
         self.can_be_bypassed = zone.get("CanBeBypassed")
 
         self.zone_type_id = zone.get("ZoneTypeId", self.zone_type_id)
@@ -92,32 +113,32 @@ class TotalConnectZone:
 
     def is_bypassed(self):
         """Return true if the zone is bypassed."""
-        return self.status & ZONE_STATUS_BYPASSED > 0
+        return self.status & ZoneStatus.BYPASSED > 0
 
     def _mark_as_bypassed(self):
         """Set is_bypassed status."""
         # TODO: when does this get reset to no longer bypassed?
-        self.status |= ZONE_STATUS_BYPASSED
+        self.status |= ZoneStatus.BYPASSED
 
     def is_faulted(self):
         """Return true if the zone is faulted."""
-        return self.status & ZONE_STATUS_FAULT > 0
+        return self.status & ZoneStatus.FAULT > 0
 
     def is_tampered(self):
         """Return true if zone is tampered."""
-        return self.status & ZONE_STATUS_TROUBLE > 0
+        return self.status & ZoneStatus.TROUBLE > 0
 
     def is_low_battery(self):
         """Return true if low battery."""
-        return self.status & ZONE_STATUS_LOW_BATTERY > 0
+        return self.status & ZoneStatus.LOW_BATTERY > 0
 
     def is_troubled(self):
         """Return true if zone is troubled."""
-        return self.status & ZONE_STATUS_TROUBLE > 0
+        return self.status & ZoneStatus.TROUBLE > 0
 
     def is_triggered(self):
         """Return true if zone is triggered."""
-        return self.status & ZONE_STATUS_TRIGGERED > 0
+        return self.status & ZoneStatus.TRIGGERED > 0
 
     def is_type_button(self):
         """Return true if zone is a button."""
@@ -126,7 +147,11 @@ class TotalConnectZone:
         if self.is_type_security() and not self.can_be_bypassed:
             return True
 
-        if self.zone_type_id in (ZoneType.PROA7_MEDICAL, ZoneType.PROA7_POLICE):
+        if self.zone_type_id in (
+                ZoneType.PROA7_MEDICAL,
+                ZoneType.AUDIBLE_24HR,
+                ZoneType.SILENT_24HR,
+        ):
             return True
 
         return False
@@ -134,24 +159,27 @@ class TotalConnectZone:
     def is_type_security(self):
         """Return true if zone type is security."""
 
-        # LYRIC_POLICE is here but PROA7_POLICE is not. why?
         return self.zone_type_id in (
             ZoneType.SECURITY,
-            ZoneType.LYRIC_CONTACT,
-            ZoneType.PROA7_SECURITY,
-            ZoneType.LYRIC_MOTION,
-            ZoneType.LYRIC_POLICE,
-            ZoneType.PROA7_INTERIOR_DELAY,
+            ZoneType.ENTRY_EXIT1,
+            ZoneType.ENTRY_EXIT2,
+            ZoneType.PERIMETER,
+            ZoneType.INTERIOR_FOLLOWER,
+            ZoneType.TROUBLE_ALARM,
+            ZoneType.SILENT_24HR,
+            ZoneType.AUDIBLE_24HR,
+            ZoneType.INTERIOR_DELAY,
             ZoneType.LYRIC_LOCAL_ALARM,
         )
 
     def is_type_motion(self):
         """Return true if zone type is motion."""
-        return self.zone_type_id == ZoneType.LYRIC_MOTION
+        return self.zone_type_id == ZoneType.INTERIOR_FOLLOWER
 
     def is_type_fire(self):
         """Return true if zone type is fire or smoke."""
-        return self.zone_type_id in (ZoneType.FIRE_SMOKE, ZoneType.LYRIC_TEMP)
+        # TODO: why is ZoneType.MONITOR here? it's not a fire or smoke zone type
+        return self.zone_type_id in (ZoneType.FIRE_SMOKE, ZoneType.MONITOR)
 
     def is_type_carbon_monoxide(self):
         """Return true if zone type is carbon monoxide."""

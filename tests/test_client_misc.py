@@ -16,7 +16,7 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_UNKNOWN,
 )
-from total_connect_client.zone import ZONE_STATUS_NORMAL
+from total_connect_client.zone import ZoneStatus
 from total_connect_client.exceptions import (
     TotalConnectError, BadResultCodeError, PartialResponseError
 )
@@ -42,7 +42,7 @@ class TestTotalConnectClient(unittest.TestCase):
             assert self.client.locations[self.location_id].is_disarmed() is True
 
             # ask for status of zone 1, which exists
-            assert self.client.zone_status(self.location_id, "1") is ZONE_STATUS_NORMAL
+            assert self.client.zone_status(self.location_id, "1") == ZoneStatus.NORMAL
 
             # ask for status of zone 99, which does not exist
             with pytest.raises(TotalConnectError):
