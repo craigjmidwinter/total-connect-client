@@ -1,11 +1,8 @@
 """Test total_connect_client."""
 
-from tests.const import RESPONSE_PARTITION_DETAILS_TWO
 from unittest.mock import patch
 
 import pytest
-from total_connect_client.client import TotalConnectClient
-from total_connect_client.exceptions import TotalConnectError
 from const import (
     RESPONSE_AUTHENTICATE,
     RESPONSE_AUTHENTICATE_EMPTY,
@@ -13,6 +10,10 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_PARTITION_DETAILS,
 )
+
+from tests.const import RESPONSE_PARTITION_DETAILS_TWO
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import TotalConnectError
 
 
 def tests_init_usercodes_none():
@@ -67,6 +68,7 @@ def tests_init_usercodes_string():
             # string is not a valid type for usercodes (only dict)
             mock_client = TotalConnectClient("username", "password", usercodes="123456")
 
+
 def tests_init_partitions():
     """Test that partitions populate correctly."""
     # one partition
@@ -105,4 +107,4 @@ def tests_init_partitions():
             pass
         assert mock_request.call_count == 4
 
-        assert len(mock_client.locations["123456"].partitions) == 2        
+        assert len(mock_client.locations["123456"].partitions) == 2

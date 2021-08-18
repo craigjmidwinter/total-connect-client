@@ -2,12 +2,11 @@
 
 import logging
 
-from .const import ArmType, ArmingState
+from .const import ArmingState, ArmType
 from .device import TotalConnectDevice
+from .exceptions import PartialResponseError, TotalConnectError
 from .partition import TotalConnectPartition
 from .zone import TotalConnectZone
-from .exceptions import PartialResponseError, TotalConnectError
-
 
 DEFAULT_USERCODE = "-1"
 
@@ -88,13 +87,15 @@ class TotalConnectLocation:
     def set_zone_details(self, result):
         """
         Update from GetZonesListInStateEx_V1.
-        
+
         ZoneStatusInfoWithPartitionId provides additional info for setting up zones.
         If we used TotalConnectZone.update() it would overwrite missing data with None.
         """
-        zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get("ZoneStatusInfoWithPartitionId")
+        zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get(
+            "ZoneStatusInfoWithPartitionId"
+        )
         if not zone_info:
-            raise PartialResponseError('no ZoneStatusInfoWithPartitionId', result)
+            raise PartialResponseError("no ZoneStatusInfoWithPartitionId", result)
 
         for zonedata in zone_info:
             self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
@@ -111,12 +112,11 @@ class TotalConnectLocation:
         self.update_partitions(result)
         self.update_zones(result)
 
-
     def set_status(self, result):
         """Update from result."""
         data = (result or {}).get("PanelMetadataAndStatus")
         if not data:
-            raise PartialResponseError('no PanelMetadataAndStatus', result)
+            raise PartialResponseError("no PanelMetadataAndStatus", result)
 
         self.ac_loss = data.get("IsInACLoss")
         self.low_battery = data.get("IsInLowBattery")
@@ -126,9 +126,8 @@ class TotalConnectLocation:
 
         astate = result.get("ArmingState")
         if not astate:
-            raise PartialResponseError('no ArmingState', result)
+            raise PartialResponseError("no ArmingState", result)
         self.arming_state = ArmingState(astate)
-
 
     def get_zone_details(self):
         """Get Zone details."""
@@ -146,16 +145,18 @@ class TotalConnectLocation:
 
     def update_partitions(self, result):
         """Update partition info from Partitions."""
-        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get("PartitionInfo")
+        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get(
+            "PartitionInfo"
+        )
         if not pi:
-            raise PartialResponseError('no PartitionInfo', result)
+            raise PartialResponseError("no PartitionInfo", result)
 
         # loop through partitions and update
         # NOTE: do not use keys because they don't line up with PartitionID
         for partition in pi:
             if "PartitionID" not in partition:
-                raise PartialResponseError('no PartitionID', result)
-            partition_id = int(partition["PartitionID"])            
+                raise PartialResponseError("no PartitionID", result)
+            partition_id = int(partition["PartitionID"])
             if partition_id in self.partitions:
                 self.partitions[partition_id].update(partition)
             else:
@@ -171,15 +172,15 @@ class TotalConnectLocation:
             )
             # PartialResponseError would mean this is retryable without fixing
             # anything, and this needs fixing
-            raise TotalConnectError('no zones found: panel sync required')
+            raise TotalConnectError("no zones found: panel sync required")
 
         zone_info = data.get("ZoneInfoEx") or data.get("ZoneInfo")
         if not zone_info:
-            raise PartialResponseError('no ZoneInfoEx or ZoneInfo', result)
+            raise PartialResponseError("no ZoneInfoEx or ZoneInfo", result)
         for zonedata in zone_info:
             zid = (zonedata or {}).get("ZoneID")
             if not zid:
-                raise PartialResponseError('no ZoneID', result)
+                raise PartialResponseError("no ZoneID", result)
             zone = self.zones.get(zid)
             if zone:
                 zone.update(zonedata)
@@ -209,9 +210,11 @@ class TotalConnectLocation:
             )
             raise
 
-        partition_details = ((result or {}).get("PartitionsInfoList") or {}).get("PartitionDetails")
+        partition_details = ((result or {}).get("PartitionsInfoList") or {}).get(
+            "PartitionDetails"
+        )
         if not partition_details:
-            raise PartialResponseError('no PartitionDetails', result)
+            raise PartialResponseError("no PartitionDetails", result)
 
         new_partition_list = []
         for partition in partition_details:
@@ -249,8 +252,10 @@ class TotalConnectLocation:
             partition_list = self._partition_list
         else:
             if partition_id not in self.partitions:
-                raise TotalConnectError(f"Partition {partition_id} does not exist "
-                                        f"at location {self.location_id}")
+                raise TotalConnectError(
+                    f"Partition {partition_id} does not exist "
+                    f"at location {self.location_id}"
+                )
             partition_list.append(partition_id)
 
         result = self.parent.request(
@@ -264,7 +269,9 @@ class TotalConnectLocation:
         if result["ResultCode"] == self.parent.COMMAND_FAILED:
             LOGGER.warning("could not arm system; is a zone faulted?")
         self.parent.raise_for_resultcode(result)
-        LOGGER.info(f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}")
+        LOGGER.info(
+            f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}"
+        )
 
     def disarm(self, partition_id=None):
         """Disarm the system."""
@@ -275,8 +282,10 @@ class TotalConnectLocation:
             partition_list = self._partition_list
         else:
             if partition_id not in self.partitions:
-                raise TotalConnectError(f"Partition {partition_id} does not exist "
-                                        f"at location {self.location_id}")
+                raise TotalConnectError(
+                    f"Partition {partition_id} does not exist "
+                    f"at location {self.location_id}"
+                )
             partition_list.append(partition_id)
 
         result = self.parent.request(
@@ -306,7 +315,7 @@ class TotalConnectLocation:
         """Get status of a zone."""
         z = self.zones.get(zone_id)
         if not z:
-            raise TotalConnectError(f'zone {zone_id} does not exist')
+            raise TotalConnectError(f"zone {zone_id} does not exist")
         return z.status
 
     def arm_custom(self, arm_type):

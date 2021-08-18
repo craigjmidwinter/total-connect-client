@@ -15,12 +15,15 @@ import warnings
 import zeep
 
 from .const import ArmType
+from .exceptions import (
+    AuthenticationError,
+    BadResultCodeError,
+    InvalidSessionError,
+    RetryableTotalConnectError,
+    TotalConnectError,
+)
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
-from .exceptions import (
-    TotalConnectError, AuthenticationError, InvalidSessionError,
-    BadResultCodeError, RetryableTotalConnectError,
-)
 
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
 
@@ -139,11 +142,11 @@ class TotalConnectClient:
         """
         rc = response["ResultCode"]
         if rc == self.INVALID_SESSION:
-            raise InvalidSessionError('invalid session', response)
+            raise InvalidSessionError("invalid session", response)
         if rc == self.CONNECTION_ERROR:
-            raise RetryableTotalConnectError('connection error', response)
+            raise RetryableTotalConnectError("connection error", response)
         if rc == self.FAILED_TO_CONNECT:
-            raise RetryableTotalConnectError('failed to connect with panel', response)
+            raise RetryableTotalConnectError("failed to connect with panel", response)
 
     def raise_for_resultcode(self, response):
         """If response.ResultCode indicates success, return and do nothing.
@@ -151,32 +154,34 @@ class TotalConnectClient:
         """
         rc = response["ResultCode"]
         if rc in (
-                self.SUCCESS,
-                self.ARM_SUCCESS,
-                self.DISARM_SUCCESS,
-                self.SESSION_INITIATED,
+            self.SUCCESS,
+            self.ARM_SUCCESS,
+            self.DISARM_SUCCESS,
+            self.SESSION_INITIATED,
         ):
             return
         self._raise_for_retry(response)
         if rc == self.COMMAND_FAILED:
-            raise BadResultCodeError('command failed', response)
+            raise BadResultCodeError("command failed", response)
         if rc == self.FEATURE_NOT_SUPPORTED:
-            raise BadResultCodeError('feature not supported', response)
+            raise BadResultCodeError("feature not supported", response)
         if rc == self.USER_CODE_INVALID:
-            raise BadResultCodeError('user code invalid', response)
+            raise BadResultCodeError("user code invalid", response)
         if rc == self.BAD_USER_OR_PASSWORD:
-            raise AuthenticationError('bad user or password', response)
+            raise AuthenticationError("bad user or password", response)
         if rc == self.AUTHENTICATION_FAILED:
-            raise AuthenticationError('authentication failed', response)
+            raise AuthenticationError("authentication failed", response)
         if rc == self.USER_CODE_UNAVAILABLE:
-            raise AuthenticationError('user code unavailable', response)
-        raise BadResultCodeError(f'unknown result code {rc}', response)
+            raise AuthenticationError("user code unavailable", response)
+        raise BadResultCodeError(f"unknown result code {rc}", response)
 
     def request(self, request, attempts=0):
         """Send a SOAP request."""
 
         if not self.soap_client:
-            self.soap_client = zeep.Client("https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL")
+            self.soap_client = zeep.Client(
+                "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
+            )
         try:
             LOGGER.debug(f"sending API request {request}")
             r = eval("self.soap_client.service." + request)
@@ -205,10 +210,13 @@ class TotalConnectClient:
         start_time = time.time()
         if self._invalid_credentials:
             raise AuthenticationError(
-                f"not authenticating: password already failed for user {self.username}")
+                f"not authenticating: password already failed for user {self.username}"
+            )
 
         # LoginAndGetSessionDetails is very slow, so only use it when necessary
-        verb = "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
+        verb = (
+            "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
+        )
         response = self.request(
             verb + "(self.username, self.password, "
             "self.application_id, self.application_version)"
@@ -239,7 +247,10 @@ class TotalConnectClient:
             f"ValidateUserCode(self.token, {device_id}, '{usercode}')"
         )
 
-        if response["ResultCode"] in (self.USER_CODE_INVALID, self.USER_CODE_UNAVAILABLE):
+        if response["ResultCode"] in (
+            self.USER_CODE_INVALID,
+            self.USER_CODE_UNAVAILABLE,
+        ):
             LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
             return False
         self.raise_for_resultcode(response)
@@ -402,6 +413,7 @@ class ArmingHelper:
     Alternatively, you can use ArmingHelper.
        Example: ArmingHelper(partition).arm_away()
     """
+
     def __init__(self, partition_or_location):
         self.armable = partition_or_location
 

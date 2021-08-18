@@ -4,34 +4,34 @@ from enum import Enum
 
 
 class ArmType(Enum):
-    AWAY         = 0
-    STAY         = 1
+    AWAY = 0
+    STAY = 1
     STAY_INSTANT = 2
     AWAY_INSTANT = 3
-    STAY_NIGHT   = 4
+    STAY_NIGHT = 4
 
 
 class ArmingState(Enum):
-    DISARMED                  = 10200
-    DISARMED_BYPASS           = 10211
+    DISARMED = 10200
+    DISARMED_BYPASS = 10211
 
-    ARMED_AWAY                = 10201
-    ARMED_AWAY_BYPASS         = 10202
-    ARMED_STAY                = 10203
-    ARMED_STAY_BYPASS         = 10204
-    ARMED_AWAY_INSTANT        = 10205
+    ARMED_AWAY = 10201
+    ARMED_AWAY_BYPASS = 10202
+    ARMED_STAY = 10203
+    ARMED_STAY_BYPASS = 10204
+    ARMED_AWAY_INSTANT = 10205
     ARMED_AWAY_INSTANT_BYPASS = 10206
-    ARMED_STAY_INSTANT        = 10209
+    ARMED_STAY_INSTANT = 10209
     ARMED_STAY_INSTANT_BYPASS = 10210
-    ARMED_STAY_NIGHT          = 10218
-    ARMED_CUSTOM_BYPASS       = 10223
+    ARMED_STAY_NIGHT = 10218
+    ARMED_CUSTOM_BYPASS = 10223
 
-    ALARMING                  = 10207
-    ALARMING_FIRE_SMOKE       = 10212
-    ALARMING_CARBON_MONOXIDE  = 10213
+    ALARMING = 10207
+    ALARMING_FIRE_SMOKE = 10212
+    ALARMING_CARBON_MONOXIDE = 10213
 
-    ARMING                    = 10307
-    DISARMING                 = 10308
+    ARMING = 10307
+    DISARMING = 10308
 
     def is_arming(self):
         """Return true if the system is in the process of arming."""

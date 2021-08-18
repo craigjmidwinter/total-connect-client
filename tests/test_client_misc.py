@@ -1,9 +1,9 @@
 """Test total_connect_client."""
 
-from unittest.mock import patch
 import unittest
-import pytest
+from unittest.mock import patch
 
+import pytest
 from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
@@ -16,10 +16,13 @@ from const import (
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_UNKNOWN,
 )
-from total_connect_client.zone import ZONE_STATUS_NORMAL
+
 from total_connect_client.exceptions import (
-    TotalConnectError, BadResultCodeError, PartialResponseError
+    BadResultCodeError,
+    PartialResponseError,
+    TotalConnectError,
 )
+from total_connect_client.zone import ZONE_STATUS_NORMAL
 
 
 class TestTotalConnectClient(unittest.TestCase):
@@ -37,9 +40,15 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_zone_status(self):
         """Test zone_status."""
         responses = [RESPONSE_DISARMED]
-        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
+        with patch(
+            "total_connect_client.client.TotalConnectClient.request",
+            side_effect=responses,
+        ):
             # should start disarmed
-            assert self.client.locations[self.location_id].arming_state.is_disarmed() is True
+            assert (
+                self.client.locations[self.location_id].arming_state.is_disarmed()
+                is True
+            )
 
             # ask for status of zone 1, which exists
             assert self.client.zone_status(self.location_id, "1") is ZONE_STATUS_NORMAL
@@ -47,7 +56,6 @@ class TestTotalConnectClient(unittest.TestCase):
             # ask for status of zone 99, which does not exist
             with pytest.raises(TotalConnectError):
                 self.client.zone_status(self.location_id, "99")
-
 
     def tests_get_zone_details(self):
         """Test get_zone_details."""
@@ -57,7 +65,10 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_UNKNOWN,
             RESPONSE_GET_ZONE_DETAILS_NONE,
         ]
-        with patch("total_connect_client.client.TotalConnectClient.request", side_effect=responses):
+        with patch(
+            "total_connect_client.client.TotalConnectClient.request",
+            side_effect=responses,
+        ):
             # first response is SUCCESS
             self.client.get_zone_details(self.location_id)
             # second response is FEATURE_NOT_SUPPORTED

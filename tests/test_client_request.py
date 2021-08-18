@@ -4,8 +4,6 @@ import unittest
 from unittest.mock import patch
 
 import pytest
-from total_connect_client.client import TotalConnectClient
-from total_connect_client.exceptions import TotalConnectError, AuthenticationError
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
@@ -20,6 +18,9 @@ from const import (
     RESPONSE_SESSION_INITIATED,
     RESPONSE_UNKNOWN,
 )
+
+from total_connect_client.client import TotalConnectClient
+from total_connect_client.exceptions import AuthenticationError, TotalConnectError
 
 
 class FakeResponse:
@@ -64,9 +65,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
-            "builtins.eval", side_effect=eval_responses
-        ) as mock_request:
+        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
@@ -88,9 +87,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
-            "builtins.eval", side_effect=eval_responses
-        ) as mock_request:
+        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
             with pytest.raises(AuthenticationError):
                 TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
@@ -109,9 +106,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
-            "time.sleep", autospec=True
-        ), patch(
+        ), patch("time.sleep", autospec=True), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request, pytest.raises(
             Exception
@@ -141,14 +136,14 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
-            "time.sleep", autospec=True
-        ), patch(
+        ), patch("time.sleep", autospec=True), patch(
             "builtins.eval", side_effect=eval_responses
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
-            client = TotalConnectClient("username", "password", usercodes=None, retry_delay=0)
+            client = TotalConnectClient(
+                "username", "password", usercodes=None, retry_delay=0
+            )
             assert mock_request.call_count == TotalConnectClient.MAX_RETRY_ATTEMPTS
             assert client.is_valid_credentials() is False
             assert client.is_logged_in() is False
@@ -191,9 +186,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
-            "builtins.eval", side_effect=eval_responses
-        ) as mock_request:
+        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
@@ -216,9 +209,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
-            "builtins.eval", side_effect=eval_responses
-        ) as mock_request:
+        ), patch("builtins.eval", side_effect=eval_responses) as mock_request:
             with pytest.raises(TotalConnectError):
                 TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
