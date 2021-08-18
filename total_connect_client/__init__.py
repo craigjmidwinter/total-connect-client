@@ -22,7 +22,6 @@ ArmingState = const.ArmingState
 ArmType = const.ArmType
 
 __all__ = [
-    'TotalConnectClient', 'TotalConnectLocation', 'TotalConnectPartition',
-    'TotalConnectZone', 'ArmingHelper', 'ZoneType', 'ZoneStatus',
-    'ArmingState', 'ArmType'
+    'TotalConnectClient', 'ArmType', 'ArmingState', 'ArmingHelper',
+    'ZoneType', 'ZoneStatus',
 ]

@@ -1,9 +1,10 @@
 """Testing constants."""
 
 from total_connect_client import (
-    TotalConnectClient, TotalConnectLocation, TotalConnectPartition, ArmingState,
-    ZoneType, ZoneStatus
+    TotalConnectClient, ArmingState, ZoneType, ZoneStatus,
 )
+from total_connect_client.location import TotalConnectLocation
+from total_connect_client.partition import TotalConnectPartition
 
 PASSWORD_BAD = "none"
 USERNAME_BAD = "none"
