@@ -8,10 +8,7 @@ from total_connect_client.client import TotalConnectClient
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
 if len(sys.argv) != 4:
-    print(
-        "usage:  username password "
-        "location1=usercode1,location2=usercode2 \n"
-    )
+    print("usage:  username password " "location1=usercode1,location2=usercode2 \n")
     sys.exit()
 
 

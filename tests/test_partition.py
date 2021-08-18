@@ -3,13 +3,12 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
+import pytest
 from const import PARTITION_DETAILS_1, PARTITION_DISARMED
 
 from total_connect_client.client import ArmingHelper
-from total_connect_client.partition import TotalConnectPartition
 from total_connect_client.exceptions import PartialResponseError
-
-import pytest
+from total_connect_client.partition import TotalConnectPartition
 
 
 def tests_partition():

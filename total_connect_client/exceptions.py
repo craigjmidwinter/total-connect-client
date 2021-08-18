@@ -24,6 +24,7 @@ class RetryableTotalConnectError(TotalConnectError):
     If an error requires some other action (such as reauthenticating an
     expired session) before being retried, it is not "retryable."
     """
+
     pass
 
 
@@ -31,4 +32,5 @@ class PartialResponseError(RetryableTotalConnectError):
     """Raised if the response is missing a section that it is always supposed to have.
     Because the TotalConnect servers are flaky, these are rather frequent.
     """
+
     pass

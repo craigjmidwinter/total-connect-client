@@ -1,7 +1,7 @@
 """Testing constants."""
 
-from total_connect_client.const import ArmingState
 from total_connect_client.client import TotalConnectClient
+from total_connect_client.const import ArmingState
 from total_connect_client.zone import (
     ZONE_STATUS_LOW_BATTERY,
     ZONE_STATUS_NORMAL,
@@ -34,7 +34,7 @@ LOCATION_INFO_BASIC_NORMAL = {
     "SecurityDeviceID": "987654",
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
     "LocationModuleFlags": "Security=1,Video=0,Automation=0,GPS=0,VideoPIR=0",
-    "DeviceList": { "DeviceInfoBasic": DEVICE_LIST },
+    "DeviceList": {"DeviceInfoBasic": DEVICE_LIST},
 }
 
 LOCATIONS = {"LocationInfoBasic": [LOCATION_INFO_BASIC_NORMAL]}
@@ -269,7 +269,7 @@ PARTITION_DETAILS_2 = {
     "PartitionName": "Test2",
 }
 
-PARTITION_DETAILS = { "PartitionDetails": [PARTITION_DETAILS_1] }
+PARTITION_DETAILS = {"PartitionDetails": [PARTITION_DETAILS_1]}
 
 RESPONSE_PARTITION_DETAILS = {
     "ResultCode": TotalConnectClient.SUCCESS,
@@ -277,7 +277,7 @@ RESPONSE_PARTITION_DETAILS = {
     "PartitionsInfoList": PARTITION_DETAILS,
 }
 
-PARTITION_DETAILS_TWO = { "PartitionDetails": [PARTITION_DETAILS_1, PARTITION_DETAILS_2] }
+PARTITION_DETAILS_TWO = {"PartitionDetails": [PARTITION_DETAILS_1, PARTITION_DETAILS_2]}
 RESPONSE_PARTITION_DETAILS_TWO = {
     "ResultCode": TotalConnectClient.SUCCESS,
     "ResultData": "testing partition details",

@@ -1,12 +1,9 @@
 """Test total_connect_client."""
 
-from unittest.mock import patch
 import unittest
+from unittest.mock import patch
+
 import pytest
-
-from total_connect_client.client import TotalConnectClient, ArmingHelper
-from total_connect_client.exceptions import BadResultCodeError, AuthenticationError
-
 from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
@@ -16,6 +13,9 @@ from const import (
     RESPONSE_DISARMED,
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
+
+from total_connect_client.client import ArmingHelper, TotalConnectClient
+from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 
@@ -70,4 +70,3 @@ def tests_arm_away():
         location.get_panel_meta_data()
         assert location.arming_state.is_armed_away()
         assert location.partitions[1].arming_state.is_armed_away()
-

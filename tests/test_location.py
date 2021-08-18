@@ -1,20 +1,21 @@
 """Test total_connect_client location."""
 
-import pytest
 import unittest
 from copy import deepcopy
 from unittest.mock import Mock
 
+import pytest
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
-    RESPONSE_DISARMED,
-    RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     METADATA_DISARMED,
     METADATA_DISARMED_LOW_BATTERY,
+    RESPONSE_DISARMED,
+    RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     ZONE_DETAIL_STATUS,
 )
-from total_connect_client.location import DEFAULT_USERCODE, TotalConnectLocation
+
 from total_connect_client.exceptions import PartialResponseError, TotalConnectError
+from total_connect_client.location import DEFAULT_USERCODE, TotalConnectLocation
 
 
 class TestTotalConnectLocation(unittest.TestCase):

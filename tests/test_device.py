@@ -1,6 +1,7 @@
 """Test TotalConnectDevice."""
 
 from const import DEVICE_INFO_BASIC_1
+
 from total_connect_client.device import TotalConnectDevice
 
 

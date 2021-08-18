@@ -8,6 +8,5 @@ and TotalConnectZone (from .location, .partition, and .zone respectively), but
 users of this interface never create those themselves.
 """
 
-from .const import ArmType, ArmingState
-
-from .client import TotalConnectClient, ArmingHelper
+from .client import ArmingHelper, TotalConnectClient
+from .const import ArmingState, ArmType

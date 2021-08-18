@@ -1,7 +1,7 @@
 """Total Connect Partition."""
 
-from .exceptions import PartialResponseError
 from .const import ArmingState
+from .exceptions import PartialResponseError
 
 
 class TotalConnectPartition:
@@ -16,17 +16,14 @@ class TotalConnectPartition:
 
     def __str__(self):
         """Return a string that is printable."""
-        data = (
-            f"PARTITION {self.id} - {self.name}\n"
-            f"  {self.arming_state}\n"
-        )
+        data = f"PARTITION {self.id} - {self.name}\n" f"  {self.arming_state}\n"
         return data
 
     def update(self, info):
         """Update partition based on PartitionInfo."""
         astate = (info or {}).get("ArmingState")
         if astate is None:
-            raise PartialResponseError('no ArmingState')
+            raise PartialResponseError("no ArmingState")
         self.arming_state = ArmingState(astate)
 
     def arm(self, arm_type):

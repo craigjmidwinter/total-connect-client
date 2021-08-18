@@ -12,10 +12,11 @@ from const import (
     ZONE_STATUS_LYRIC_TEMP,
     ZS_NORMAL,
 )
+
 from total_connect_client.zone import (
-    ZONE_STATUS_NORMAL,
     ZONE_STATUS_BYPASSED,
     ZONE_STATUS_FAULT,
+    ZONE_STATUS_NORMAL,
     ZONE_STATUS_TRIGGERED,
     ZONE_STATUS_TROUBLE,
     ZONE_TYPE_CARBON_MONOXIDE,
