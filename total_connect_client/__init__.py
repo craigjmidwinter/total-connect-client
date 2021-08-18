@@ -8,13 +8,10 @@ and TotalConnectZone (from .location, .partition, and .zone respectively), but
 users of this interface never create those themselves.
 """
 
-from . import client, location, partition, zone, const
+from . import client, zone, const
 
 TotalConnectClient = client.TotalConnectClient
 ArmingHelper = client.ArmingHelper
-TotalConnectLocation = location.TotalConnectLocation
-TotalConnectPartition = partition.TotalConnectPartition
-TotalConnectZone = zone.TotalConnectZone
 
 ZoneStatus = zone.ZoneStatus
 ZoneType = zone.ZoneType
