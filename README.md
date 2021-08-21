@@ -33,48 +33,40 @@ If you're an end user, just install Home Assistant and things should just work.
 
 If you're a developer and want to interface to TotalConnect from a system other than Home Assistant:
 
+```
 pip install total-connect-client
+```
 
-NOTE: Expect changes to the interface over the next few releases.
+```
+from total_connect_client import TotalConnectClient, ArmType, ArmingHelper
+```
 
-from total_connect_client.client import TotalConnectClient
-
-to arm or disarm the system you must provide the usercode.
-the usercodes dictionary maps locationid to usercode; if
+To arm or disarm the system you must provide the usercode.
+The usercodes dictionary maps locationid to usercode; if
 the locationid is not found it uses the default usercode.
 ```python
 usercodes = { 'default': '1234' }
 client = TotalConnectClient(username, password, usercodes)
 
 for location in client.locations:
-    # location.arming_state can be matched against specific constants
-    # or you can call the following convenience methods:
-    location.is_disarmed()
-    location.is_armed() # true if system is armed in any way
-    location.is_armed_away()
-    location.is_armed_custom_bypass()
-    location.is_armed_home()
-    location.is_armed_night()
-    location.is_pending() # true if system is arming or disarming
-    location.is_arming()
-    location.is_disarming()
+    # location.arming_state can be matched against the ArmingState enum members
+    # or you can call the ArmingState convenience methods:
+    location.arming_state.is_disarmed()
+    location.arming_state.is_armed() # true if system is armed in any way
+    location.arming_state.is_armed_away()
+    location.arming_state.is_pending() # true if system is arming or disarming
+    location.arming_state.is_triggered() # true if system is in any alarm state
+    location.arming_state.is_triggered_gas() # true if in carbon monoxide alarm state
+    #    and many more convenience methods
 
-    # you can pass a constant arm_type to location.arm() or call
-    # one of the specific methods.
-    # arm/disarm methods accept an optional partition_id.
-    location.arm(arm_type)
-    location.arm_away()
-    location.arm_stay()
-    location.arm_stay_instant()
-    location.arm_stay_night()
+    # you can pass one of the ArmType enum members to location.arm(), e.g.
+    #    location.arm(ArmType.STAY_INSTANT)
+    # or, equivalently, you can use any of the specific methods on ArmingHelper:
+    #    ArmingHelper(location).arm_away()
+
     location.disarm()
 
     location.zone_bypass(zoneid)
-
-    location.is_triggered() # true if system is triggered (alarming) in any way
-    location.is_triggered_police() # police or medical
-    location.is_triggered_fire()
-    location.is_triggered_gas() # carbon monoxide
 
     location.is_ac_loss()
     location.is_low_battery()
@@ -90,7 +82,7 @@ for location in client.locations:
         zone.is_troubled()
         zone.is_triggered()
 
-        # zone.zone_type_id can be matched against specific constants
+        # zone.zone_type_id can be matched against the ZoneType enum members,
         # or you can call the following convenience methods:
         zone.is_type_button()
         zone.is_type_security()
@@ -117,15 +109,16 @@ for location in client.locations:
     location.get_zone_details()
     location.get_panel_meta_data()
 
-    # to arm or disarm a single partition
-    for partition_id in location.partitions:
-        location.arm_away(partition_id)
+    # to arm or disarm by partition
+    for (partition_id, partition) in location.partitions.items():
+        ArmingHelper(partition).arm_stay()
         etc.
 ```
 
 ## Recent Interface Changes
 
-* Partition support has been added. The TotalConnectLocation.arm and disarm family of methods now accept an optional partition_id parameter.
+* Partition support has been added. The TotalConnectLocation.arm and disarm family of methods now accept an optional partition_id parameter, and a single TotalConnectPartition object has arm() and disarm() methods and can be used with ArmingHelper.
+* Previously most methods returned True on success and False on failure, with no exceptions expected. Now successful methods return but on failure raise subclasses of TotalConnectError.
 * The arming control methods in TotalConnectClient have been deprecated; instead use the
 similar methods on the values of self.locations.
 
@@ -133,7 +126,6 @@ similar methods on the values of self.locations.
 
 * Previously if the usercodes dictionary was invalid, the DEFAULT_USERCODE
 was silently used. In a future release, we will raise an exception on an invalid dictionary.
-* Previously most methods returned True on success and False on failure, with no exceptions expected. In a future release, those methods will return no value and raise subclasses of TotalConnectError on failure.
 
 If there's something about the interface you don't understand, check out the (Home Assistant integration)[https://github.com/home-assistant/core/blob/dev/homeassistant/components/totalconnect/] that uses this package, or submit an issue here.
 

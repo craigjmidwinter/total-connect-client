@@ -13,48 +13,38 @@ from const import (
     ZS_NORMAL,
 )
 
-from total_connect_client.zone import (
-    ZONE_STATUS_BYPASSED,
-    ZONE_STATUS_FAULT,
-    ZONE_STATUS_NORMAL,
-    ZONE_STATUS_TRIGGERED,
-    ZONE_STATUS_TROUBLE,
-    ZONE_TYPE_CARBON_MONOXIDE,
-    ZONE_TYPE_FIRE_SMOKE,
-    ZONE_TYPE_PROA7_MEDICAL,
-    ZONE_TYPE_SECURITY,
-)
+from total_connect_client.zone import ZoneStatus, ZoneType
 from total_connect_client.zone import TotalConnectZone as tcz
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": ZONE_STATUS_BYPASSED,
+    "ZoneStatus": ZoneStatus.BYPASSED,
 }
 
 ZONE_FAULTED = {
     "ZoneDescription": "Faulted",
     "ZoneID": "1",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": ZONE_STATUS_FAULT,
+    "ZoneStatus": ZoneStatus.FAULT,
 }
 
 ZONE_TAMPERED = {
     "ZoneDescription": "Tampered",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": ZONE_STATUS_TROUBLE,
+    "ZoneStatus": ZoneStatus.TROUBLE,
 }
 
 ZONE_BYPASSED_LOW_BATTERY = {
     "ZoneDescription": "Bypassed Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 65,
 }
@@ -62,7 +52,7 @@ ZONE_BYPASSED_LOW_BATTERY = {
 ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneDescription": "Trouble Low Battery",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 72,
 }
@@ -70,33 +60,33 @@ ZONE_TROUBLE_LOW_BATTERY = {
 ZONE_TRIGGERED = {
     "ZoneDescription": "Triggered",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": ZONE_STATUS_TRIGGERED,
+    "ZoneStatus": ZoneStatus.TRIGGERED,
 }
 
 ZONE_BUTTON = {
     "ZoneDescription": "Button",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 0,
-    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZoneStatus.NORMAL,
 }
 
 ZONE_SMOKE = {
     "ZoneDescription": "Smoke",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_FIRE_SMOKE,
+    "ZoneTypeId": ZoneType.FIRE_SMOKE,
     "CanBeBypassed": 0,
-    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZoneStatus.NORMAL,
 }
 
 ZONE_GAS = {
     "ZoneDescription": "Gas",
     "PartitionId": "1",
-    "ZoneTypeId": ZONE_TYPE_CARBON_MONOXIDE,
+    "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
     "CanBeBypassed": 0,
-    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZoneStatus.NORMAL,
 }
 
 
@@ -247,10 +237,10 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_button.is_type_button())
         self.assertFalse(self.zone_smoke.is_type_button())
         self.assertFalse(self.zone_gas.is_type_button())
+        self.assertTrue(self.zone_lyric_police.is_type_button())
         self.assertFalse(self.zone_lyric_contact.is_type_button())
         self.assertFalse(self.zone_lyric_local_alarm.is_type_button())
         self.assertFalse(self.zone_lyric_motion.is_type_button())
-        self.assertFalse(self.zone_lyric_police.is_type_button())
         self.assertFalse(self.zone_lyric_temp.is_type_button())
 
     def tests_type_security(self):
@@ -308,9 +298,9 @@ def test_proa7_zones():
     ZONE_MEDICAL = {
         "ZoneDescription": "Gas",
         "PartitionId": "1",
-        "ZoneTypeId": ZONE_TYPE_PROA7_MEDICAL,
+        "ZoneTypeId": ZoneType.PROA7_MEDICAL,
         "CanBeBypassed": 0,
-        "ZoneStatus": ZONE_STATUS_NORMAL,
+        "ZoneStatus": ZoneStatus.NORMAL,
     }
 
     zone = tcz(ZONE_MEDICAL)

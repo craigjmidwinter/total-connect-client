@@ -1,17 +1,10 @@
 """Testing constants."""
 
-from total_connect_client.client import TotalConnectClient
-from total_connect_client.const import ArmingState
-from total_connect_client.zone import (
-    ZONE_STATUS_LOW_BATTERY,
-    ZONE_STATUS_NORMAL,
-    ZONE_TYPE_LYRIC_CONTACT,
-    ZONE_TYPE_LYRIC_LOCAL_ALARM,
-    ZONE_TYPE_LYRIC_MOTION,
-    ZONE_TYPE_LYRIC_POLICE,
-    ZONE_TYPE_LYRIC_TEMP,
-    ZONE_TYPE_SECURITY,
+from total_connect_client import (
+    TotalConnectClient, ArmingState, ZoneType, ZoneStatus,
 )
+from total_connect_client.location import TotalConnectLocation
+from total_connect_client.partition import TotalConnectPartition
 
 PASSWORD_BAD = "none"
 USERNAME_BAD = "none"
@@ -51,17 +44,17 @@ USER = {
 ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
-    "ZoneStatus": ZONE_STATUS_NORMAL,
+    "ZoneStatus": ZoneStatus.NORMAL,
     "PartitionID": "1",
 }
 
 ZONE_LOW_BATTERY = {
     "ZoneID": "1",
     "ZoneDescription": "Low Battery",
+    "ZoneTypeId": ZoneType.SECURITY,
     "PartitionID": "1",
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
     "CanBeBypassed": 1,
-    "ZoneStatus": ZONE_STATUS_LOW_BATTERY,
+    "ZoneStatus": ZoneStatus.LOW_BATTERY,
 }
 
 ZONE_INFO = []
@@ -78,27 +71,26 @@ ZS_NORMAL = {
     "Signalstrength": "-1",
     "zoneAdditionalInfo": None,
     "ZoneID": "1",
-    "ZoneStatus": ZONE_STATUS_NORMAL,
-    "ZoneTypeId": ZONE_TYPE_SECURITY,
+    "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneFlags": None,
 }
 
 ZONE_STATUS_LYRIC_CONTACT = ZS_NORMAL.copy()
-ZONE_STATUS_LYRIC_CONTACT["ZoneTypeId"] = ZONE_TYPE_LYRIC_CONTACT
+ZONE_STATUS_LYRIC_CONTACT["ZoneTypeId"] = ZoneType.ENTRY_EXIT1
 
 ZONE_STATUS_LYRIC_MOTION = ZS_NORMAL.copy()
-ZONE_STATUS_LYRIC_MOTION["ZoneTypeId"] = ZONE_TYPE_LYRIC_MOTION
+ZONE_STATUS_LYRIC_MOTION["ZoneTypeId"] = ZoneType.INTERIOR_FOLLOWER
 
 ZONE_STATUS_LYRIC_POLICE = ZS_NORMAL.copy()
-ZONE_STATUS_LYRIC_POLICE["ZoneTypeId"] = ZONE_TYPE_LYRIC_POLICE
+ZONE_STATUS_LYRIC_POLICE["ZoneTypeId"] = ZoneType.SILENT_24HR
 
 ZONE_STATUS_LYRIC_TEMP = ZS_NORMAL.copy()
-ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = ZONE_TYPE_LYRIC_TEMP
+ZONE_STATUS_LYRIC_TEMP["ZoneTypeId"] = ZoneType.MONITOR
 
 ZONE_STATUS_LYRIC_LOCAL_ALARM = ZS_NORMAL.copy()
-ZONE_STATUS_LYRIC_LOCAL_ALARM["ZoneTypeId"] = ZONE_TYPE_LYRIC_LOCAL_ALARM
-
+ZONE_STATUS_LYRIC_LOCAL_ALARM["ZoneTypeId"] = ZoneType.LYRIC_LOCAL_ALARM
 
 ZONE_STATUS_INFO = []
 ZONE_STATUS_INFO.append(ZS_NORMAL)
