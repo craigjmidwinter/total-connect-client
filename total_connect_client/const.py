@@ -14,6 +14,7 @@ class ArmType(Enum):
 class ArmingState(Enum):
     DISARMED = 10200
     DISARMED_BYPASS = 10211
+    DISARMED_ZONE_FAULTED = 10214   # only seems to apply to location, not to partition.  See issue #144
 
     ARMED_AWAY = 10201
     ARMED_AWAY_BYPASS = 10202
@@ -47,7 +48,7 @@ class ArmingState(Enum):
 
     def is_disarmed(self):
         """Return True if the system is disarmed."""
-        return self in (ArmingState.DISARMED, ArmingState.DISARMED_BYPASS)
+        return self in (ArmingState.DISARMED, ArmingState.DISARMED_BYPASS, ArmingState.DISARMED_ZONE_FAULTED)
 
     def is_armed_away(self):
         """Return True if the system is armed away in any way."""
