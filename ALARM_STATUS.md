@@ -20,7 +20,7 @@ Code | Status
 10211 | Disarmed bypass
 10212 | Alarming Fire/Smoke. This code is reported for smoke detectors.  It is also reported for manually pushed buttons on the panel for Fire.
 10213 | Alarming Carbon Monoxide
-10214 | UNKNOWN - reported by Pro7A panel
+10214 | Disarmed not ready to arm - zone(s) faulted
 10218 | Armed Stay Night
 10223 | Armed custom bypass
 10307 | Arming
