@@ -1,7 +1,12 @@
 """Total Connect Partition."""
 
+import logging
+
 from .const import ArmingState
 from .exceptions import PartialResponseError
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TotalConnectPartition:
@@ -24,7 +29,11 @@ class TotalConnectPartition:
         astate = (info or {}).get("ArmingState")
         if astate is None:
             raise PartialResponseError("no ArmingState")
-        self.arming_state = ArmingState(astate)
+        try:
+            self.arming_state = ArmingState(astate)
+        except ValueError:
+            LOGGER.error(f"unknown ArmingState {astate} in {result} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
+            raise
 
     def arm(self, arm_type):
         """Arm the partition."""

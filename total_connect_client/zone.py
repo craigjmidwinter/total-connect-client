@@ -1,6 +1,10 @@
 """Total Connect Zone."""
 
+import logging
 from enum import Enum, IntFlag
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ZoneStatus(IntFlag):
@@ -81,10 +85,24 @@ class TotalConnectZone:
             self.partition = str(zone["PartitionId"])
         else:
             self.partition = zone.get("PartitionID")
-        self.status = ZoneStatus(zone.get("ZoneStatus"))
+        try:
+            self.status = ZoneStatus(zone.get("ZoneStatus"))
+        except ValueError:
+            LOGGER.error(f"unknown ZoneStatus in {zone} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
+            raise
         self.can_be_bypassed = zone.get("CanBeBypassed")
 
-        self.zone_type_id = zone.get("ZoneTypeId", self.zone_type_id)
+        try:
+            zid = zone.get("ZoneTypeId", self.zone_type_id)
+            # TODO: if zid is None should we raise PartialResponseError?
+            self.zone_type_id = None if zid is None else ZoneType(zid)
+        except ValueError:
+            LOGGER.error(f"unknown ZoneType {zid} in {zone} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
+            # if we get an unknown ZoneType we do not raise an exception, because
+            # we know there are more zone types than we have in our enum, and
+            # having an unknown ZoneType doesn't keep us from doing our work
+            self.zone_type_id = zid
+
         self.battery_level = zone.get("Batterylevel", self.battery_level)
         self.signal_strength = zone.get("Signalstrength", self.signal_strength)
         info = zone.get("zoneAdditionalInfo")

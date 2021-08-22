@@ -127,7 +127,11 @@ class TotalConnectLocation:
         astate = result.get("ArmingState")
         if not astate:
             raise PartialResponseError("no ArmingState", result)
-        self.arming_state = ArmingState(astate)
+        try:
+            self.arming_state = ArmingState(astate)
+        except ValueError:
+            LOGGER.error(f"unknown ArmingState {astate} in {result} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
+            raise
 
     def get_zone_details(self):
         """Get Zone details."""
