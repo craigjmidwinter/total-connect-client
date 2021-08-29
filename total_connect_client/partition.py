@@ -32,7 +32,7 @@ class TotalConnectPartition:
         try:
             self.arming_state = ArmingState(astate)
         except ValueError:
-            LOGGER.error(f"unknown ArmingState {astate} in {result} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
+            LOGGER.error(f"unknown ArmingState {astate} in {info} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
             raise
 
     def arm(self, arm_type):
