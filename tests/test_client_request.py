@@ -22,8 +22,7 @@ from const import (
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError, TotalConnectError
 
-PATCH_EVAL = "total_connect_client.client.TotalConnectClient._eval"
-# PATCH_EVAL = "builtins.eval"  ### this should work but doesn't
+PATCH_EVAL = "builtins.eval"
 
 class FakeResponse:
     """Fake response from zeep."""
@@ -67,7 +66,9 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
+        ), patch(
+            "zeep.Client"
+        ),patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
@@ -89,6 +90,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
+        ), patch(
+            "zeep.Client"
         ), patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
             with pytest.raises(AuthenticationError):
                 TotalConnectClient("username", "password", usercodes=None)
@@ -108,6 +111,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
+        ), patch(
+            "zeep.Client"
         ), patch("time.sleep", autospec=True), patch(
             PATCH_EVAL, side_effect=eval_responses
         ) as mock_request, pytest.raises(
@@ -138,6 +143,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
+        ), patch(
+            "zeep.Client"
         ), patch("time.sleep", autospec=True), patch(
             PATCH_EVAL, side_effect=eval_responses
         ) as mock_request, pytest.raises(
@@ -188,6 +195,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
+        ), patch(
+            "zeep.Client"
         ), patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
@@ -211,6 +220,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
+        ), patch(
+            "zeep.Client"
         ), patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
             with pytest.raises(TotalConnectError):
                 TotalConnectClient("username", "password", usercodes=None)
