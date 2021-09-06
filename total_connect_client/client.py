@@ -179,10 +179,6 @@ class TotalConnectClient:
             raise AuthenticationError("user code unavailable", response)
         raise BadResultCodeError(f"unknown result code {rc}", response)
 
-    def _eval(self, soap_request):
-        """unittest doesn't like injecting responses for builtins.eval"""
-        return eval(soap_request)
-
     def request(self, request, attempts=0):
         """Send a SOAP request."""
 
@@ -192,7 +188,7 @@ class TotalConnectClient:
             )
         try:
             LOGGER.debug(f"sending API request {request}")
-            r = self._eval("self.soap_client.service." + request)
+            r = eval("self.soap_client.service." + request)
             response = zeep.helpers.serialize_object(r)
             self._raise_for_retry(response)
             return response
@@ -203,19 +199,19 @@ class TotalConnectClient:
         except requests.exceptions.RequestException as err:
             if attempts > self.MAX_RETRY_ATTEMPTS:
                 raise
-            LOGGER.info(f"retrying {err}, attempt # {attempts}")
+            LOGGER.info(f"retrying {err} on {self.username}, attempt # {attempts}")
             time.sleep(self.retry_delay)
             return self.request(request, attempts + 1)
         except RetryableTotalConnectError as err:
             if attempts > self.MAX_RETRY_ATTEMPTS:
                 raise
-            LOGGER.info(f"retrying {err.args[0]}, attempt # {attempts}")
+            LOGGER.info(f"retrying {err.args[0]} on {self.username}, attempt # {attempts}")
             time.sleep(self.retry_delay)
             return self.request(request, attempts + 1)
         except InvalidSessionError:
             if attempts > self.MAX_RETRY_ATTEMPTS:
                 raise
-            LOGGER.info(f"reauthenticating session, attempt # {attempts}")
+            LOGGER.info(f"reauthenticating session for {self.username}, attempt # {attempts}")
             self.token = None
             self.authenticate()
             return self.request(request, attempts + 1)
