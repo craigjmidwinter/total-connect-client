@@ -13,6 +13,7 @@ import time
 import warnings
 
 import zeep
+import requests.exceptions
 
 from .const import ArmType
 from .exceptions import (
@@ -191,16 +192,26 @@ class TotalConnectClient:
             response = zeep.helpers.serialize_object(r)
             self._raise_for_retry(response)
             return response
+        # To retry an exception that could be raised during the request,
+        # add it to one of the following except blocks, depending on what
+        # you want to have happen. The first two blocks are the same except
+        # for what gets logged. The third block causes reauthentication.
+        except requests.exceptions.RequestException as err:
+            if attempts > self.MAX_RETRY_ATTEMPTS:
+                raise
+            LOGGER.info(f"retrying {err} on {self.username}, attempt # {attempts}")
+            time.sleep(self.retry_delay)
+            return self.request(request, attempts + 1)
         except RetryableTotalConnectError as err:
             if attempts > self.MAX_RETRY_ATTEMPTS:
                 raise
-            LOGGER.info(f"retrying {err.args[0]}, attempt # {attempts}")
+            LOGGER.info(f"retrying {err.args[0]} on {self.username}, attempt # {attempts}")
             time.sleep(self.retry_delay)
             return self.request(request, attempts + 1)
         except InvalidSessionError:
             if attempts > self.MAX_RETRY_ATTEMPTS:
                 raise
-            LOGGER.info(f"reauthenticating session, attempt # {attempts}")
+            LOGGER.info(f"reauthenticating session for {self.username}, attempt # {attempts}")
             self.token = None
             self.authenticate()
             return self.request(request, attempts + 1)
