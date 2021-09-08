@@ -145,23 +145,20 @@ class TotalConnectClient:
         """
         rc = _ResultCode.from_response(response)
         if rc in (
-            _ResultCode.SUCCESS,
-            _ResultCode.ARM_SUCCESS,
-            _ResultCode.DISARM_SUCCESS,
-            _ResultCode.SESSION_INITIATED,
+                _ResultCode.SUCCESS,
+                _ResultCode.ARM_SUCCESS,
+                _ResultCode.DISARM_SUCCESS,
+                _ResultCode.SESSION_INITIATED,
         ):
             return
         self._raise_for_retry(response)
-        if rc == _ResultCode.BAD_USER_OR_PASSWORD:
-            raise AuthenticationError("bad user or password", response)
-        if rc == _ResultCode.AUTHENTICATION_FAILED:
-            raise AuthenticationError("authentication failed", response)
-        if rc == _ResultCode.USER_CODE_UNAVAILABLE:
-            raise AuthenticationError("user code unavailable", response)
-        # If we get here, a new result code was added to the enum but we haven't
-        # processed it above. So if you see this error you should add
-        # an if block above that raises an appropriate error.
-        raise BadResultCodeError(f"unknown result code {rc.name}", response)
+        if rc in (
+                _ResultCode.BAD_USER_OR_PASSWORD,
+                _ResultCode.AUTHENTICATION_FAILED,
+                _ResultCode.USER_CODE_UNAVAILABLE,
+                ):
+            raise AuthenticationError(rc.name, response)
+        raise BadResultCodeError(rc.name, response)
 
     def _send_one_request(self, operation_name, args):
         LOGGER.debug(f"sending API request {operation_name}{args}")
