@@ -16,7 +16,7 @@ class ArmType(Enum):
 class ArmingState(Enum):
     DISARMED = 10200
     DISARMED_BYPASS = 10211
-    DISARMED_ZONE_FAULTED = 10214   # only seems to apply to location, not to partition.  See issue #144
+    DISARMED_ZONE_FAULTED = 10214  # seems to apply to location, not to partition.  See issue #144
 
     ARMED_AWAY = 10201
     ARMED_AWAY_BYPASS = 10202
@@ -50,7 +50,9 @@ class ArmingState(Enum):
 
     def is_disarmed(self):
         """Return True if the system is disarmed."""
-        return self in (ArmingState.DISARMED, ArmingState.DISARMED_BYPASS, ArmingState.DISARMED_ZONE_FAULTED)
+        return self in (
+            ArmingState.DISARMED, ArmingState.DISARMED_BYPASS, ArmingState.DISARMED_ZONE_FAULTED
+        )
 
     def is_armed_away(self):
         """Return True if the system is armed away in any way."""
@@ -82,10 +84,8 @@ class ArmingState(Enum):
     def is_armed(self):
         """Return True if the system is armed in any way."""
         return (
-            self.is_armed_away()
-            or self.is_armed_custom_bypass()
-            or self.is_armed_home()
-            or self.is_armed_night()
+            self.is_armed_away() or self.is_armed_home() or  # noqa: W504
+            self.is_armed_night() or self.is_armed_custom_bypass()
         )
 
     def is_triggered_police(self):
@@ -103,9 +103,7 @@ class ArmingState(Enum):
     def is_triggered(self):
         """Return True if the system is triggered in any way."""
         return (
-            self.is_triggered_fire()
-            or self.is_triggered_gas()
-            or self.is_triggered_police()
+            self.is_triggered_fire() or self.is_triggered_gas() or self.is_triggered_police()
         )
 
 
@@ -113,6 +111,7 @@ class _ResultCode(Enum):
     """As suggested by the leading underscore, this class is not used by
     callers of the API.
     """
+
     @staticmethod
     def from_response(response_dict):
         try:
@@ -137,3 +136,6 @@ class _ResultCode(Enum):
     INVALID_SESSION = -102
     AUTHENTICATION_FAILED = -100
     CONNECTION_ERROR = 4101
+
+
+PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"

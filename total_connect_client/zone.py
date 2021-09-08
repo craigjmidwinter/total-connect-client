@@ -3,6 +3,8 @@
 import logging
 from enum import Enum, IntFlag
 
+from .const import PROJECT_URL
+from .exceptions import TotalConnectError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ class ZoneType(Enum):
     https://www.alarmliquidators.com/content/Vista%2021IP-%20Programming%20Guide.pdf
     http://techresource.online/training/ssnw/honeywell/zone-types
     """
+
     SECURITY          = 0  # for Vista, zone type 0 is not used
     ENTRY_EXIT1       = 1  # starts countdown timer #1
     ENTRY_EXIT2       = 2  # like ENTRY_EXIT1 but uses timer #2
@@ -35,7 +38,7 @@ class ZoneType(Enum):
     AUDIBLE_24HR      = 7  # 24-hour audible alarm (often used for police)
     AUX_24HR          = 8  # no local siren but keypad beeps (often used for medical)
     FIRE_SMOKE        = 9
-    INTERIOR_DELAY    = 10 # inactive when armed STAY, otherwise like ENTRY_EXIT1
+    INTERIOR_DELAY    = 10  # inactive when armed STAY, otherwise like ENTRY_EXIT1
     MONITOR           = 12  # e.g. temperature or flood
     CARBON_MONOXIDE   = 14
     PROA7_MEDICAL     = 15
@@ -180,8 +183,8 @@ class TotalConnectZone:
         try:
             self.status = ZoneStatus(zone.get("ZoneStatus"))
         except ValueError:
-            LOGGER.error(f"unknown ZoneStatus in {zone} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
-            raise
+            LOGGER.error(f"unknown ZoneStatus in {zone}: please report at {PROJECT_URL}/issues")
+            raise TotalConnectError(f"unknown ZoneStatus in {zone}") from None
         self.can_be_bypassed = zone.get("CanBeBypassed")
 
         try:
@@ -189,7 +192,7 @@ class TotalConnectZone:
             # TODO: if zid is None should we raise PartialResponseError?
             self.zone_type_id = None if zid is None else ZoneType(zid)
         except ValueError:
-            LOGGER.error(f"unknown ZoneType {zid} in {zone} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
+            LOGGER.error(f"unknown ZoneType {zid} in {zone}: please report at {PROJECT_URL}/issues")
             # if we get an unknown ZoneType we do not raise an exception, because
             # we know there are more zone types than we have in our enum, and
             # having an unknown ZoneType doesn't keep us from doing our work

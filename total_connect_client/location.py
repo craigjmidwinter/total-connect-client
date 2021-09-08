@@ -2,7 +2,7 @@
 
 import logging
 
-from .const import ArmingState, ArmType, _ResultCode
+from .const import ArmingState, ArmType, _ResultCode, PROJECT_URL
 from .device import TotalConnectDevice
 from .exceptions import PartialResponseError, TotalConnectError
 from .partition import TotalConnectPartition
@@ -282,8 +282,10 @@ class TotalConnectLocation:
         try:
             self.arming_state = ArmingState(astate)
         except ValueError:
-            LOGGER.error(f"unknown ArmingState {astate} in {result} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
-            raise TotalConnectError("unknown ArmingState {astate} in {result}") from None
+            LOGGER.error(
+                f"unknown ArmingState {astate} in {result}: please report at {PROJECT_URL}/issues"
+            )
+            raise TotalConnectError(f"unknown ArmingState {astate} in {result}") from None
 
     def _update_partitions(self, result):
         """Update partition info from Partitions."""

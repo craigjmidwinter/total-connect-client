@@ -9,7 +9,6 @@ from const import LOCATION_INFO_BASIC_NORMAL
 
 from total_connect_client.const import _ResultCode
 from total_connect_client.exceptions import BadResultCodeError
-from total_connect_client.location import TotalConnectLocation
 
 RESPONSE_ZONE_BYPASS_SUCCESS = {
     "ResultCode": _ResultCode.SUCCESS.value,

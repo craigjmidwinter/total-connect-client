@@ -1,22 +1,21 @@
 """Test total_connect_client."""
 
-import unittest
 from unittest.mock import patch
 
-import pytest
 from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
-    RESPONSE_ARMED_STAY,
-    RESPONSE_ARMED_STAY_NIGHT,
-    RESPONSE_DISARMED,
-    RESPONSE_FEATURE_NOT_SUPPORTED,
+    # these are tested in test_client_arm_disarm for now
+    # RESPONSE_ARMED_STAY,
+    # RESPONSE_ARMED_STAY_NIGHT,
+    # RESPONSE_DISARMED,
+    # RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
 from total_connect_client.const import _ResultCode
 from total_connect_client.client import ArmingHelper
-from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
+# from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 

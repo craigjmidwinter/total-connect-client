@@ -7,7 +7,7 @@ import pytest
 from const import PARTITION_DETAILS_1, PARTITION_DISARMED
 
 from total_connect_client.client import ArmingHelper
-from total_connect_client.exceptions import PartialResponseError
+from total_connect_client.exceptions import PartialResponseError, TotalConnectError
 from total_connect_client.partition import TotalConnectPartition
 
 
@@ -21,9 +21,8 @@ def tests_partition():
 
     unknown = deepcopy(PARTITION_DISARMED)
     unknown["ArmingState"] = "999999999"
-    with pytest.raises(ValueError):
+    with pytest.raises(TotalConnectError):
         test_partition._update(unknown)
-
 
     # remove ArmingState
     data = deepcopy(PARTITION_DETAILS_1)

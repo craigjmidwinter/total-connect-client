@@ -2,8 +2,8 @@
 
 import logging
 
-from .const import ArmingState
-from .exceptions import PartialResponseError
+from .const import ArmingState, PROJECT_URL
+from .exceptions import PartialResponseError, TotalConnectError
 
 
 LOGGER = logging.getLogger(__name__)
@@ -40,5 +40,5 @@ class TotalConnectPartition:
         try:
             self.arming_state = ArmingState(astate)
         except ValueError:
-            LOGGER.error(f"unknown ArmingState {astate} in {info} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
-            raise
+            LOGGER.error(f"unknown ArmingState {astate} in {info}: report at {PROJECT_URL}/issues")
+            raise TotalConnectError(f"unknown ArmingState {astate} in {info}") from None

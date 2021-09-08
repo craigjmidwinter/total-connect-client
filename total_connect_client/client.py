@@ -10,9 +10,6 @@ for location in client.locations:
 
 import logging
 import time
-import warnings
-
-from enum import Enum
 
 import zeep
 import zeep.cache
@@ -29,8 +26,6 @@ from .exceptions import (
 )
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
-
-PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
 
 DEFAULT_USERCODE = "-1"
 
@@ -156,7 +151,7 @@ class TotalConnectClient:
                 _ResultCode.BAD_USER_OR_PASSWORD,
                 _ResultCode.AUTHENTICATION_FAILED,
                 _ResultCode.USER_CODE_UNAVAILABLE,
-                ):
+        ):
             raise AuthenticationError(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
@@ -287,9 +282,8 @@ class TotalConnectClient:
 
             # set the usercode for the location
             usercode = (
-                self.usercodes.get(location_id)
-                or self.usercodes.get(str(location_id))
-                or self.usercodes.get("default")
+                self.usercodes.get(location_id) or  # noqa: W504
+                self.usercodes.get(str(location_id)) or self.usercodes.get("default")
             )
             if usercode:
                 location.usercode = usercode

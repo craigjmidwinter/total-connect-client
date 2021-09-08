@@ -80,6 +80,7 @@ class TestTotalConnectClient(unittest.TestCase):
                     armit(location)
                 location.get_panel_meta_data()
                 assert location.arming_state == armingstate
+
         def runall(success_response, armit, success_armingstate):
             # first test is all good
             run(None,
@@ -120,7 +121,7 @@ class TestTotalConnectClient(unittest.TestCase):
         runall(RESPONSE_ARMED_STAY_NIGHT,
                lambda loc: ArmingHelper(loc).arm_stay_night(),
                ArmingState.ARMED_STAY_NIGHT)
-        
+
     def tests_disarm(self):
         """Test disarm."""
         # first test with no issues

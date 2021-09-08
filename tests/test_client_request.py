@@ -25,6 +25,7 @@ from total_connect_client.exceptions import AuthenticationError, TotalConnectErr
 
 PATCH_EVAL = "total_connect_client.client.TotalConnectClient._send_one_request"
 
+
 class TestTotalConnectClient(unittest.TestCase):
     """Test TotalConnectClient request()."""
 
@@ -48,7 +49,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
         with patch(
             "zeep.Client"
-        ),patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
+        ), patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
@@ -89,10 +90,8 @@ class TestTotalConnectClient(unittest.TestCase):
             )
             assert mock_request.call_count == MAX_RETRY_ATTEMPTS
             assert client.is_logged_in() is False
-            assert (
-                str(e.value)
-                == "total-connect-client could not execute request.  Maximum attempts tried."
-            )
+            expected = "total-connect-client could not execute request.  Maximum attempts tried."
+            assert str(e.value) == expected
 
     def tests_request_connection_error(self):
         """Test a connection error."""
@@ -110,10 +109,8 @@ class TestTotalConnectClient(unittest.TestCase):
             )
             assert mock_request.call_count == MAX_RETRY_ATTEMPTS
             assert client.is_logged_in() is False
-            assert (
-                str(e.value)
-                == "total-connect-client could not execute request.  Maximum attempts tried."
-            )
+            expected = "total-connect-client could not execute request.  Maximum attempts tried."
+            assert str(e.value) == expected
 
     def tests_request_invalid_session(self):
         """Test an invalid session, which is when the session times out."""

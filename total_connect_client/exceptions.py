@@ -1,6 +1,4 @@
-"""
-Exceptions raised by TotalConnectClient.
-"""
+"""Exceptions raised by TotalConnectClient."""
 
 
 class TotalConnectError(Exception):

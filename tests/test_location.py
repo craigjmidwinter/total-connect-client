@@ -7,11 +7,9 @@ from unittest.mock import Mock, patch
 import pytest
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
-    METADATA_DISARMED,
     METADATA_DISARMED_LOW_BATTERY,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
-    ZONE_DETAIL_STATUS,
 )
 
 from total_connect_client.exceptions import PartialResponseError, TotalConnectError
@@ -38,14 +36,10 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.assertTrue(
             self.location_normal.location_id == LOCATION_INFO_BASIC_NORMAL["LocationID"]
         )
-        self.assertTrue(
-            self.location_normal.location_name
-            == LOCATION_INFO_BASIC_NORMAL["LocationName"]
-        )
-        self.assertTrue(
-            self.location_normal.security_device_id
-            == LOCATION_INFO_BASIC_NORMAL["SecurityDeviceID"]
-        )
+        lname = LOCATION_INFO_BASIC_NORMAL["LocationName"]
+        self.assertTrue(self.location_normal.location_name == lname)
+        lsdid = LOCATION_INFO_BASIC_NORMAL["SecurityDeviceID"]
+        self.assertTrue(self.location_normal.security_device_id == lsdid)
 
     def tests_panel(self):
         """Test panel attributes."""
