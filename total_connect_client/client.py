@@ -116,7 +116,7 @@ class TotalConnectClient:
 
         return data + locations
 
-    def get_times(self):
+    def times_as_string(self):
         """Return a string with times."""
         self.times["total running time"] = time.time() - self.time_start
         msg = "total-connect-client time info (seconds):\n"
@@ -171,6 +171,7 @@ class TotalConnectClient:
     API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
     API_APP_ID = "14588"
     API_APP_VERSION = "1.0.34"
+
     def request(self, operation_name, args, attempts_remaining=10):
         """Send a SOAP request. args is a list or tuple defining the
         parameters to the operation.

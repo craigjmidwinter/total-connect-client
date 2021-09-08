@@ -74,22 +74,6 @@ class TotalConnectLocation:
 
         return data + devices + partitions + zones
 
-    def set_zone_details(self, result):
-        """
-        Update from GetZonesListInStateEx_V1.
-
-        ZoneStatusInfoWithPartitionId provides additional info for setting up zones.
-        If we used TotalConnectZone.update() it would overwrite missing data with None.
-        """
-        zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get(
-            "ZoneStatusInfoWithPartitionId"
-        )
-        if not zone_info:
-            raise PartialResponseError("no ZoneStatusInfoWithPartitionId", result)
-
-        for zonedata in zone_info:
-            self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
-
     def get_panel_meta_data(self):
         """Get all meta data about the alarm panel."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPanelMetaDataAndFullStatus
@@ -101,30 +85,9 @@ class TotalConnectLocation:
         ))
         self.parent.raise_for_resultcode(result)
 
-        self.set_status(result)
-        self.update_partitions(result)
-        self.update_zones(result)
-
-    def set_status(self, result):
-        """Update from result."""
-        data = (result or {}).get("PanelMetadataAndStatus")
-        if not data:
-            raise PartialResponseError("no PanelMetadataAndStatus", result)
-
-        self.ac_loss = data.get("IsInACLoss")
-        self.low_battery = data.get("IsInLowBattery")
-        self.cover_tampered = data.get("IsCoverTampered")
-        self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
-        self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
-
-        astate = result.get("ArmingState")
-        if not astate:
-            raise PartialResponseError("no ArmingState", result)
-        try:
-            self.arming_state = ArmingState(astate)
-        except ValueError:
-            LOGGER.error(f"unknown ArmingState {astate} in {result} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
-            raise TotalConnectError("unknown ArmingState {astate} in {result}") from None
+        self._update_status(result)
+        self._update_partitions(result)
+        self._update_zones(result)
 
     def get_zone_details(self):
         """Get Zone details."""
@@ -139,55 +102,7 @@ class TotalConnectLocation:
                 "your Total Connect account or hardware"
             )
         self.parent.raise_for_resultcode(result)
-        self.set_zone_details(result)
-
-    def update_partitions(self, result):
-        """Update partition info from Partitions."""
-        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get(
-            "PartitionInfo"
-        )
-        if not pi:
-            raise PartialResponseError("no PartitionInfo", result)
-
-        # loop through partitions and update
-        # NOTE: do not use keys because they don't line up with PartitionID
-        for partition in pi:
-            if "PartitionID" not in partition:
-                raise PartialResponseError("no PartitionID", result)
-            partition_id = int(partition["PartitionID"])
-            if partition_id in self.partitions:
-                self.partitions[partition_id].update(partition)
-            else:
-                LOGGER.warning(f"Update provided for unknown partion {partition_id}")
-
-    def update_zones(self, result):
-        """Update zone info from ZoneInfo or ZoneInfoEx."""
-
-        data = (result.get("PanelMetadataAndStatus") or {}).get("Zones")
-        if not data:
-            LOGGER.error(
-                f"no zones found: sync your panel using TotalConnect app or website"
-            )
-            # PartialResponseError would mean this is retryable without fixing
-            # anything, and this needs fixing
-            raise TotalConnectError("no zones found: panel sync required")
-
-        zone_info = data.get("ZoneInfoEx") or data.get("ZoneInfo")
-        if not zone_info:
-            raise PartialResponseError("no ZoneInfoEx or ZoneInfo", result)
-        for zonedata in zone_info:
-            zid = (zonedata or {}).get("ZoneID")
-            if not zid:
-                raise PartialResponseError("no ZoneID", result)
-            zone = self.zones.get(zid)
-            if zone:
-                zone.update(zonedata)
-            else:
-                zone = TotalConnectZone(zonedata)
-                self.zones[zid] = zone
-
-            if zone.is_low_battery() and self.auto_bypass_low_battery:
-                self.zone_bypass(zid)
+        self._update_zone_details(result)
 
     def get_partition_details(self):
         """Get partition details for this location."""
@@ -332,3 +247,88 @@ class TotalConnectLocation:
         self.parent.raise_for_resultcode(result)
         # FIXME: returning the raw result is not right
         return result
+
+    def _update_zone_details(self, result):
+        """
+        Update from GetZonesListInStateEx_V1.
+
+        ZoneStatusInfoWithPartitionId provides additional info for setting up zones.
+        If we used TotalConnectZone._update() it would overwrite missing data with None.
+        """
+        zone_info = ((result.get("ZoneStatus") or {}).get("Zones") or {}).get(
+            "ZoneStatusInfoWithPartitionId"
+        )
+        if not zone_info:
+            raise PartialResponseError("no ZoneStatusInfoWithPartitionId", result)
+
+        for zonedata in zone_info:
+            self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
+
+    def _update_status(self, result):
+        """Update from result."""
+        data = (result or {}).get("PanelMetadataAndStatus")
+        if not data:
+            raise PartialResponseError("no PanelMetadataAndStatus", result)
+
+        self.ac_loss = data.get("IsInACLoss")
+        self.low_battery = data.get("IsInLowBattery")
+        self.cover_tampered = data.get("IsCoverTampered")
+        self.last_updated_timestamp_ticks = data.get("LastUpdatedTimestampTicks")
+        self.configuration_sequence_number = data.get("ConfigurationSequenceNumber")
+
+        astate = result.get("ArmingState")
+        if not astate:
+            raise PartialResponseError("no ArmingState", result)
+        try:
+            self.arming_state = ArmingState(astate)
+        except ValueError:
+            LOGGER.error(f"unknown ArmingState {astate} in {result} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
+            raise TotalConnectError("unknown ArmingState {astate} in {result}") from None
+
+    def _update_partitions(self, result):
+        """Update partition info from Partitions."""
+        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get(
+            "PartitionInfo"
+        )
+        if not pi:
+            raise PartialResponseError("no PartitionInfo", result)
+
+        # loop through partitions and update
+        # NOTE: do not use keys because they don't line up with PartitionID
+        for partition in pi:
+            if "PartitionID" not in partition:
+                raise PartialResponseError("no PartitionID", result)
+            partition_id = int(partition["PartitionID"])
+            if partition_id in self.partitions:
+                self.partitions[partition_id]._update(partition)
+            else:
+                LOGGER.warning(f"Update provided for unknown partion {partition_id}")
+
+    def _update_zones(self, result):
+        """Update zone info from ZoneInfo or ZoneInfoEx."""
+
+        data = (result.get("PanelMetadataAndStatus") or {}).get("Zones")
+        if not data:
+            LOGGER.error(
+                f"no zones found: sync your panel using TotalConnect app or website"
+            )
+            # PartialResponseError would mean this is retryable without fixing
+            # anything, and this needs fixing
+            raise TotalConnectError("no zones found: panel sync required")
+
+        zone_info = data.get("ZoneInfoEx") or data.get("ZoneInfo")
+        if not zone_info:
+            raise PartialResponseError("no ZoneInfoEx or ZoneInfo", result)
+        for zonedata in zone_info:
+            zid = (zonedata or {}).get("ZoneID")
+            if not zid:
+                raise PartialResponseError("no ZoneID", result)
+            zone = self.zones.get(zid)
+            if zone:
+                zone._update(zonedata)
+            else:
+                zone = TotalConnectZone(zonedata)
+                self.zones[zid] = zone
+
+            if zone.is_low_battery() and self.auto_bypass_low_battery:
+                self.zone_bypass(zid)
