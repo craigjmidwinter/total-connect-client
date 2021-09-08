@@ -7,27 +7,27 @@ import pytest
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
-from total_connect_client.client import TotalConnectClient
+from total_connect_client.const import _ResultCode
 from total_connect_client.exceptions import BadResultCodeError
 
 RESPONSE_VALID = {
-    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultCode": _ResultCode.SUCCESS.value,
     "ResultData": "None",
 }
 
 RESPONSE_INVALID = {
-    "ResultCode": TotalConnectClient.USER_CODE_INVALID,
+    "ResultCode": _ResultCode.USER_CODE_INVALID.value,
     "ResultData": "None",
 }
 
 RESPONSE_UNAVAILABLE = {
-    "ResultCode": TotalConnectClient.USER_CODE_UNAVAILABLE,
+    "ResultCode": _ResultCode.USER_CODE_UNAVAILABLE.value,
     "ResultData": "None",
 }
 
 # random unknown response
 RESPONSE_FAILED = {
-    "ResultCode": TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": _ResultCode.COMMAND_FAILED.value,
     "ResultData": "None",
 }
 

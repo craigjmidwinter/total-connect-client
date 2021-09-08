@@ -2,7 +2,7 @@
 
 import unittest
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 from const import (
@@ -131,27 +131,29 @@ class TestTotalConnectLocation(unittest.TestCase):
         """Test auto bypass of low battery zones."""
 
         mock_client = Mock()
-
         loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, mock_client)
 
         # should not try to bypass by default
         assert loc.auto_bypass_low_battery is False
         r = deepcopy(RESPONSE_DISARMED)
         r["PanelMetadataAndStatus"] = METADATA_DISARMED_LOW_BATTERY
-        loc.set_status(r)
-        loc.update_partitions(r)
-        loc.update_zones(r)
-        assert mock_client.zone_bypass.call_count == 0
+
+        zbp = "total_connect_client.client.TotalConnectLocation.zone_bypass"
+        with patch(zbp) as mock:
+            loc.set_status(r)
+            loc.update_partitions(r)
+            loc.update_zones(r)
+            assert mock.call_count == 0
 
         # now set to auto bypass
         loc.auto_bypass_low_battery = True
-        assert loc.auto_bypass_low_battery is True
 
         # now update status with a low battery and ensure it is bypassed
-        loc.set_status(r)
-        loc.update_partitions(r)
-        loc.update_zones(r)
-        assert mock_client.zone_bypass.call_count == 1
+        with patch(zbp) as mock:
+            loc.set_status(r)
+            loc.update_partitions(r)
+            loc.update_zones(r)
+            assert mock.call_count == 1
 
     def tests_set_usercode(self):
         """Test set_usercode."""

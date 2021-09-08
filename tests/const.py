@@ -1,10 +1,11 @@
 """Testing constants."""
 
-from total_connect_client import (
-    TotalConnectClient, ArmingState, ZoneType, ZoneStatus,
-)
+from total_connect_client import ArmingState, ZoneType, ZoneStatus
+from total_connect_client.const import _ResultCode
 from total_connect_client.location import TotalConnectLocation
 from total_connect_client.partition import TotalConnectPartition
+
+MAX_RETRY_ATTEMPTS = 10  # default argument to TotalConnectClient.requests()
 
 PASSWORD_BAD = "none"
 USERNAME_BAD = "none"
@@ -214,33 +215,33 @@ RESPONSE_AUTHENTICATE_EMPTY = RESPONSE_AUTHENTICATE.copy()
 RESPONSE_AUTHENTICATE_EMPTY["Locations"] = None
 
 RESPONSE_BAD_USER_OR_PASSWORD = {
-    "ResultCode": TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultCode": _ResultCode.BAD_USER_OR_PASSWORD.value,
     "ResultData": "testing bad user or password",
 }
 
 RESPONSE_INVALID_SESSION = {
-    "ResultCode": TotalConnectClient.INVALID_SESSION,
+    "ResultCode": _ResultCode.INVALID_SESSION.value,
     "ResultData": "testing invalid session",
 }
 
 RESPONSE_FAILED_TO_CONNECT = {
-    "ResultCode": TotalConnectClient.FAILED_TO_CONNECT,
+    "ResultCode": _ResultCode.FAILED_TO_CONNECT.value,
     "ResultData": "testing failed to connect",
 }
 
 RESPONSE_CONNECTION_ERROR = {
-    "ResultCode": TotalConnectClient.CONNECTION_ERROR,
+    "ResultCode": _ResultCode.CONNECTION_ERROR.value,
     "ResultData": "testing connection error",
 }
 
 
 RESPONSE_SESSION_INITIATED = {
-    "ResultCode": TotalConnectClient.SESSION_INITIATED,
+    "ResultCode": _ResultCode.SESSION_INITIATED.value,
     "ResultData": "testing session initiated",
 }
 
 RESPONSE_FEATURE_NOT_SUPPORTED = {
-    "ResultCode": TotalConnectClient.FEATURE_NOT_SUPPORTED,
+    "ResultCode": _ResultCode.FEATURE_NOT_SUPPORTED.value,
     "ResultData": "testing user code feature not supported",
 }
 
@@ -264,14 +265,14 @@ PARTITION_DETAILS_2 = {
 PARTITION_DETAILS = {"PartitionDetails": [PARTITION_DETAILS_1]}
 
 RESPONSE_PARTITION_DETAILS = {
-    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultCode": _ResultCode.SUCCESS.value,
     "ResultData": "testing partition details",
     "PartitionsInfoList": PARTITION_DETAILS,
 }
 
 PARTITION_DETAILS_TWO = {"PartitionDetails": [PARTITION_DETAILS_1, PARTITION_DETAILS_2]}
 RESPONSE_PARTITION_DETAILS_TWO = {
-    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultCode": _ResultCode.SUCCESS.value,
     "ResultData": "testing partition details",
     "PartitionsInfoList": PARTITION_DETAILS_TWO,
 }

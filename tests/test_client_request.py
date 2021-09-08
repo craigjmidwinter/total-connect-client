@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from const import (
+    MAX_RETRY_ATTEMPTS,
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
     RESPONSE_AUTHENTICATE,
@@ -22,15 +23,15 @@ from const import (
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError, TotalConnectError
 
-PATCH_EVAL = "builtins.eval"
+PATCH_EVAL = "total_connect_client.client.TotalConnectClient._send_one_request"
 
-class FakeResponse:
+class FakeResponse(dict):
     """Fake response from zeep."""
 
     def __init__(self, code, data):
         """Initialize."""
-        self.ResultCode = code
-        self.ResultData = data
+        self["ResultCode"] = code
+        self["ResultData"] = data
 
 
 class TestTotalConnectClient(unittest.TestCase):
@@ -47,16 +48,6 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_init(self):
         """Test normal init sequence with no problems."""
-        eval_responses = [
-            FakeResponse(
-                RESPONSE_AUTHENTICATE["ResultCode"], "Authentication Succeess."
-            ),
-            FakeResponse(RESPONSE_PARTITION_DETAILS["ResultCode"], "Partition Success"),
-            FakeResponse(
-                RESPONSE_GET_ZONE_DETAILS_SUCCESS["ResultCode"], "Zone Details Success"
-            ),
-            FakeResponse(RESPONSE_DISARMED["ResultCode"], "Response Disarmed"),
-        ]
         serialize_responses = [
             RESPONSE_AUTHENTICATE,
             RESPONSE_PARTITION_DETAILS,
@@ -65,16 +56,13 @@ class TestTotalConnectClient(unittest.TestCase):
         ]
 
         with patch(
-            "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
             "zeep.Client"
-        ),patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
+        ),patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
             assert mock_request.call_count == 4
-            assert client.is_valid_credentials() is True
             assert client.is_logged_in() is True
 
     def tests_request_init_bad_user_or_password(self):
@@ -99,30 +87,21 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_init_failed_to_connect(self):
         """Test init sequence when fails to connect."""
-        eval_responses = []
         serialize_responses = []
-        for x in range(TotalConnectClient.MAX_RETRY_ATTEMPTS):
-            eval_responses.append(
-                FakeResponse(
-                    RESPONSE_FAILED_TO_CONNECT["ResultCode"], "Response Disarmed"
-                )
-            )
+        for x in range(MAX_RETRY_ATTEMPTS):
             serialize_responses.append(RESPONSE_FAILED_TO_CONNECT)
 
         with patch(
-            "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
             "zeep.Client"
         ), patch("time.sleep", autospec=True), patch(
-            PATCH_EVAL, side_effect=eval_responses
+            PATCH_EVAL, side_effect=serialize_responses
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
             client = TotalConnectClient(
                 "username", "password", usercodes=None, retry_delay=0
             )
-            assert mock_request.call_count == TotalConnectClient.MAX_RETRY_ATTEMPTS
-            assert client.is_valid_credentials() is False
+            assert mock_request.call_count == MAX_RETRY_ATTEMPTS
             assert client.is_logged_in() is False
             assert (
                 str(e.value)
@@ -133,7 +112,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test a connection error."""
         eval_responses = []
         serialize_responses = []
-        for x in range(TotalConnectClient.MAX_RETRY_ATTEMPTS):
+        for x in range(MAX_RETRY_ATTEMPTS):
             eval_responses.append(
                 FakeResponse(
                     RESPONSE_CONNECTION_ERROR["ResultCode"], "Response Disarmed"
@@ -153,8 +132,7 @@ class TestTotalConnectClient(unittest.TestCase):
             client = TotalConnectClient(
                 "username", "password", usercodes=None, retry_delay=0
             )
-            assert mock_request.call_count == TotalConnectClient.MAX_RETRY_ATTEMPTS
-            assert client.is_valid_credentials() is False
+            assert mock_request.call_count == MAX_RETRY_ATTEMPTS
             assert client.is_logged_in() is False
             assert (
                 str(e.value)
@@ -166,63 +144,36 @@ class TestTotalConnectClient(unittest.TestCase):
         # First three responses set up 'normal' session
         # Call to client.arm_away() will first get an invalid session,
         # which will trigger client.authenticate() before completing the arm_away()
-        eval_responses = [
-            FakeResponse(
-                RESPONSE_AUTHENTICATE["ResultCode"], "Authentication Succeess."
-            ),
-            FakeResponse(RESPONSE_PARTITION_DETAILS["ResultCode"], "Partition Success"),
-            FakeResponse(
-                RESPONSE_GET_ZONE_DETAILS_SUCCESS["ResultCode"], "Zone Details Success"
-            ),
-            FakeResponse(RESPONSE_DISARMED["ResultCode"], "Response Disarmed"),
-            FakeResponse(
-                RESPONSE_INVALID_SESSION["ResultCode"], "Response Invalid Session"
-            ),
-            FakeResponse(
-                RESPONSE_SESSION_INITIATED["ResultCode"], "Session initiated."
-            ),
-            FakeResponse(RESPONSE_ARMED_AWAY["ResultCode"], "Response armed"),
-        ]
-        # invalid_session responses don't get serialized
         serialize_responses = [
             RESPONSE_AUTHENTICATE,
             RESPONSE_PARTITION_DETAILS,
             RESPONSE_GET_ZONE_DETAILS_SUCCESS,
             RESPONSE_DISARMED,
+            RESPONSE_INVALID_SESSION,
             RESPONSE_SESSION_INITIATED,
             RESPONSE_ARMED_AWAY,
         ]
 
         with patch(
-            "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
             "zeep.Client"
-        ), patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
+        ), patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
                 pass
             assert mock_request.call_count == 4
-            assert client.is_valid_credentials() is True
             assert client.is_logged_in() is True
-
-            client.arm_away(self.location_id)
-            assert mock_request.call_count == 5
+            assert mock_request.call_count == 4
 
     def tests_request_unknown_result_code(self):
         """Test an unknown result code."""
-        eval_responses = [
-            FakeResponse(RESPONSE_UNKNOWN["ResultCode"], "unknown code."),
-        ]
         serialize_responses = [
             RESPONSE_UNKNOWN,
         ]
 
         with patch(
-            "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
             "zeep.Client"
-        ), patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
+        ), patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
             with pytest.raises(TotalConnectError):
                 TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1

@@ -14,44 +14,45 @@ from const import (
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
-from total_connect_client.client import ArmingHelper, TotalConnectClient
+from total_connect_client.const import _ResultCode
+from total_connect_client.client import ArmingHelper
 from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 
 RESPONSE_ARM_SUCCESS = {
-    "ResultCode": TotalConnectClient.ARM_SUCCESS,
+    "ResultCode": _ResultCode.ARM_SUCCESS.value,
     "ResultData": "testing arm success",
 }
 RESPONSE_DISARM_SUCCESS = {
-    "ResultCode": TotalConnectClient.DISARM_SUCCESS,
+    "ResultCode": _ResultCode.DISARM_SUCCESS.value,
     "ResultData": "testing disarm success",
 }
 
 # returned when a zone is faulted
 RESPONSE_ARM_FAILED = {
-    "ResultCode": TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": _ResultCode.COMMAND_FAILED.value,
     "ResultData": "testing arm failed",
 }
 RESPONSE_DISARM_FAILED = {
-    "ResultCode": TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": _ResultCode.COMMAND_FAILED.value,
     "ResultData": "testing disarm failed",
 }
 
 # appears to be for a bad/wrong code
 RESPONSE_USER_CODE_INVALID = {
-    "ResultCode": TotalConnectClient.USER_CODE_INVALID,
+    "ResultCode": _ResultCode.USER_CODE_INVALID.value,
     "ResultData": "testing user code invalid",
 }
 
 # appears to be for a code entered for a wrong device/location
 RESPONSE_USER_CODE_UNAVAILABLE = {
-    "ResultCode": TotalConnectClient.USER_CODE_UNAVAILABLE,
+    "ResultCode": _ResultCode.USER_CODE_UNAVAILABLE.value,
     "ResultData": "testing user code unavailable",
 }
 
 RESPONSE_SUCCESS = {
-    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultCode": _ResultCode.SUCCESS.value,
     "ResultData": "testing success",
 }
 

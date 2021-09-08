@@ -33,6 +33,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test setup."""
         self.client = create_client()
         self.location_id = LOCATION_INFO_BASIC_NORMAL["LocationID"]
+        self.location = self.client.locations[self.location_id]
 
     def tearDown(self):
         """Test cleanup."""
@@ -46,17 +47,14 @@ class TestTotalConnectClient(unittest.TestCase):
             side_effect=responses,
         ):
             # should start disarmed
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            assert self.location.arming_state.is_disarmed()
 
             # ask for status of zone 1, which exists
-            assert self.client.zone_status(self.location_id, "1") == ZoneStatus.NORMAL
+            assert self.location.zone_status("1") == ZoneStatus.NORMAL
 
             # ask for status of zone 99, which does not exist
             with pytest.raises(TotalConnectError):
-                self.client.zone_status(self.location_id, "99")
+                self.location.zone_status("99")
 
     def tests_get_zone_details(self):
         """Test get_zone_details."""
@@ -71,14 +69,14 @@ class TestTotalConnectClient(unittest.TestCase):
             side_effect=responses,
         ):
             # first response is SUCCESS
-            self.client.get_zone_details(self.location_id)
+            self.location.get_zone_details()
             # second response is FEATURE_NOT_SUPPORTED
             with pytest.raises(BadResultCodeError):
-                self.client.get_zone_details(self.location_id)
+                self.location.get_zone_details()
             # third response is UNKNOWN
             with pytest.raises(BadResultCodeError):
-                self.client.get_zone_details(self.location_id)
+                self.location.get_zone_details()
             # third response is SUCCESS but with empty ZoneStatus
             # ...which we've seen before in the wild
             with pytest.raises(PartialResponseError):
-                self.client.get_zone_details(self.location_id)
+                self.location.get_zone_details()

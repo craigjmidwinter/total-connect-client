@@ -2,7 +2,7 @@
 
 import logging
 
-from .const import ArmingState, ArmType
+from .const import ArmingState, ArmType, _ResultCode
 from .device import TotalConnectDevice
 from .exceptions import PartialResponseError, TotalConnectError
 from .partition import TotalConnectPartition
@@ -36,7 +36,7 @@ class TotalConnectLocation:
         self._partition_list = None
         self.zones = {}
         self.usercode = DEFAULT_USERCODE
-        self._auto_bypass_low_battery = False
+        self.auto_bypass_low_battery = False
 
         dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
         tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
@@ -74,16 +74,6 @@ class TotalConnectLocation:
 
         return data + devices + partitions + zones
 
-    @property
-    def auto_bypass_low_battery(self):
-        """Return true if set to automatically bypass a low battery."""
-        return self._auto_bypass_low_battery
-
-    @auto_bypass_low_battery.setter
-    def auto_bypass_low_battery(self, value: bool):
-        """Set to automatically bypass a low battery."""
-        self._auto_bypass_low_battery = value
-
     def set_zone_details(self, result):
         """
         Update from GetZonesListInStateEx_V1.
@@ -103,9 +93,12 @@ class TotalConnectLocation:
     def get_panel_meta_data(self):
         """Get all meta data about the alarm panel."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPanelMetaDataAndFullStatus
-        result = self.parent.request(
-            f"GetPanelMetaDataAndFullStatusEx_V2(self.token, {self.location_id}, 0, 0, {self._partition_list})"
-        )
+        result = self.parent.request("GetPanelMetaDataAndFullStatusEx_V2", (
+            # to speed this up we could replace the first zero with
+            # the most recent ConfigurationSequenceNumber and the
+            # second with LastUpdatedTimestampTicks
+            self.parent.token, self.location_id, 0, 0, self._partition_list
+        ))
         self.parent.raise_for_resultcode(result)
 
         self.set_status(result)
@@ -131,15 +124,16 @@ class TotalConnectLocation:
             self.arming_state = ArmingState(astate)
         except ValueError:
             LOGGER.error(f"unknown ArmingState {astate} in {result} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
-            raise
+            raise TotalConnectError("unknown ArmingState {astate} in {result}") from None
 
     def get_zone_details(self):
         """Get Zone details."""
-        result = self.parent.request(
-            f"GetZonesListInStateEx_V1(self.token, {self.location_id}, {self._partition_list}, 0)"
-        )
+        result = self.parent.request("GetZonesListInStateEx_V1", (
+            # 0 is the ListIdentifierID, whatever that might be
+            self.parent.token, self.location_id, self._partition_list, 0
+        ))
 
-        if result["ResultCode"] == self.parent.FEATURE_NOT_SUPPORTED:
+        if _ResultCode.from_response(result) == _ResultCode.FEATURE_NOT_SUPPORTED:
             LOGGER.warning(
                 "getting Zone Details is a feature not supported by "
                 "your Total Connect account or hardware"
@@ -164,7 +158,7 @@ class TotalConnectLocation:
             if partition_id in self.partitions:
                 self.partitions[partition_id].update(partition)
             else:
-                LOGGER.warning(f"Update provided for unknown partion {partition_id} ")
+                LOGGER.warning(f"Update provided for unknown partion {partition_id}")
 
     def update_zones(self, result):
         """Update zone info from ZoneInfo or ZoneInfoEx."""
@@ -193,15 +187,15 @@ class TotalConnectLocation:
                 self.zones[zid] = zone
 
             if zone.is_low_battery() and self.auto_bypass_low_battery:
-                self.parent.zone_bypass(zone, self.location_id)
+                self.zone_bypass(zid)
 
     def get_partition_details(self):
         """Get partition details for this location."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPartitionsDetails
 
-        result = self.parent.request(
-            f"GetPartitionsDetails(self.token, {self.location_id}, {self.security_device_id})"
-        )
+        result = self.parent.request("GetPartitionsDetails", (
+            self.parent.token, self.location_id, self.security_device_id
+        ))
         try:
             self.parent.raise_for_resultcode(result)
         except TotalConnectError:
@@ -243,7 +237,7 @@ class TotalConnectLocation:
     def set_usercode(self, usercode):
         """Set the usercode. Return true if successful."""
         if self.parent.validate_usercode(self.security_device_id, usercode):
-            self.usercode = usercode
+            self.usercode = str(usercode)
             return True
         return False
 
@@ -262,15 +256,11 @@ class TotalConnectLocation:
                 )
             partition_list.append(partition_id)
 
-        result = self.parent.request(
-            f"ArmSecuritySystemPartitionsV1(self.token, "
-            f"{self.location_id}, "
-            f"{self.security_device_id}, "
-            f"{arm_type.value}, "
-            f"'{self.usercode}', "
-            f"{partition_list})"
-        )
-        if result["ResultCode"] == self.parent.COMMAND_FAILED:
+        result = self.parent.request("ArmSecuritySystemPartitionsV1", (
+            self.parent.token, self.location_id, self.security_device_id,
+            arm_type.value, self.usercode, partition_list
+        ))
+        if _ResultCode.from_response(result) == _ResultCode.COMMAND_FAILED:
             LOGGER.warning("could not arm system; is a zone faulted?")
         self.parent.raise_for_resultcode(result)
         LOGGER.info(
@@ -292,25 +282,18 @@ class TotalConnectLocation:
                 )
             partition_list.append(partition_id)
 
-        result = self.parent.request(
-            f"DisarmSecuritySystemPartitionsV1(self.token, "
-            f"{self.location_id}, "
-            f"{self.security_device_id}, "
-            f"'{self.usercode}', "
-            f"{partition_list})"
-        )
+        result = self.parent.request("DisarmSecuritySystemPartitionsV1", (
+            self.parent.token, self.location_id, self.security_device_id,
+            self.usercode, partition_list
+        ))
         self.parent.raise_for_resultcode(result)
         LOGGER.info(f"DISARMED partitions {partition_list} at {self.location_id}")
 
     def zone_bypass(self, zone_id):
         """Bypass a zone."""
-        result = self.parent.request(
-            f"Bypass(self.token, "
-            f"{self.location_id}, "
-            f"{self.security_device_id}, "
-            f"{zone_id}, "
-            f"'{self.usercode}')"
-        )
+        result = self.parent.request("Bypass", (
+            self.parent.token, self.location_id, self.security_device_id, zone_id, self.usercode
+        ))
         self.parent.raise_for_resultcode(result)
         LOGGER.info(f"BYPASSED {zone_id} at {self.location_id}")
         self.zones[zone_id]._mark_as_bypassed()
@@ -327,44 +310,25 @@ class TotalConnectLocation:
         Arm custom the system.  Return true if successful.
         """
         ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": 0}
-
         ZONES_LIST = {}
         ZONES_LIST[0] = ZONE_INFO
+        settings = {"ArmMode": "1", "ArmDelay": "5", "ZonesList": ZONES_LIST}
 
-        CUSTOM_ARM_SETTINGS = {"ArmMode": "1", "ArmDelay": "5", "ZonesList": ZONES_LIST}
-
-        result = self.request(
-            f"CustomArmSecuritySystem(self.token, "
-            f"{self.location_id}, "
-            f"{self.security_device_id}, "
-            f"{arm_type.value}, '{self.usercode}', "
-            f"{CUSTOM_ARM_SETTINGS})"
-        )
-
-        if result["ResultCode"] != self.SUCCESS:
-            LOGGER.error(
-                f"Could not arm custom. ResultCode: {result['ResultCode']}. "
-                f"ResultData: {result['ResultData']}"
-            )
-            return False
-
-        # remove after this is all working
-        print(
-            f"arm_custom ResultCode: {result['ResultCode']}. "
-            f"arm_custom ResultData: {result['ResultData']}"
-        )
-
-        return True
+        result = self.request("CustomArmSecuritySystem", (
+            self.parent.token, self.location_id, self.security_device_id,
+            arm_type.value, self.usercode, settings
+        ))
+        self.parent.raise_for_resultcode(result)
+        # FIXME: returning the raw result is not right
+        return result
 
     def get_custom_arm_settings(self):
         """NOT OPERATIONAL YET.
         Get custom arm settings.
         """
-        result = self.parent.request(
-            f"GetCustomArmSettings(self.token, "
-            f"{self.location_id}, "
-            f"{self.security_device_id})"
-        )
+        result = self.parent.request("GetCustomArmSettings", (
+            self.parent.token, self.location_id, self.security_device_id
+        ))
         self.parent.raise_for_resultcode(result)
         # FIXME: returning the raw result is not right
         return result

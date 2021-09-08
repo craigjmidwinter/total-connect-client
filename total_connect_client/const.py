@@ -2,6 +2,8 @@
 
 from enum import Enum
 
+from .exceptions import BadResultCodeError
+
 
 class ArmType(Enum):
     AWAY = 0
@@ -105,3 +107,33 @@ class ArmingState(Enum):
             or self.is_triggered_gas()
             or self.is_triggered_police()
         )
+
+
+class _ResultCode(Enum):
+    """As suggested by the leading underscore, this class is not used by
+    callers of the API.
+    """
+    @staticmethod
+    def from_response(response_dict):
+        try:
+            return _ResultCode(response_dict["ResultCode"])
+        except ValueError:
+            raise BadResultCodeError(
+                f"unknown result code {response_dict['ResultCode']}", response_dict
+            ) from None
+
+    SUCCESS = 0
+    ARM_SUCCESS = 4500
+    DISARM_SUCCESS = 4500
+    SESSION_INITIATED = 4500
+
+    BAD_USER_OR_PASSWORD = -50004
+    INVALID_SESSIONID = -30002
+    COMMAND_FAILED = -4502
+    USER_CODE_UNAVAILABLE = -4114
+    USER_CODE_INVALID = -4106
+    FAILED_TO_CONNECT = -4104
+    FEATURE_NOT_SUPPORTED = -120
+    INVALID_SESSION = -102
+    AUTHENTICATION_FAILED = -100
+    CONNECTION_ERROR = 4101

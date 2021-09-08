@@ -14,44 +14,45 @@ from const import (
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
-from total_connect_client.client import TotalConnectClient
+from total_connect_client import ArmingHelper
+from total_connect_client.const import ArmingState, _ResultCode
 from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 
 RESPONSE_ARM_SUCCESS = {
-    "ResultCode": TotalConnectClient.ARM_SUCCESS,
+    "ResultCode": _ResultCode.ARM_SUCCESS.value,
     "ResultData": "testing arm success",
 }
 RESPONSE_DISARM_SUCCESS = {
-    "ResultCode": TotalConnectClient.DISARM_SUCCESS,
+    "ResultCode": _ResultCode.DISARM_SUCCESS.value,
     "ResultData": "testing disarm success",
 }
 
 # returned when a zone is faulted
 RESPONSE_ARM_FAILED = {
-    "ResultCode": TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": _ResultCode.COMMAND_FAILED.value,
     "ResultData": "testing arm failed",
 }
 RESPONSE_DISARM_FAILED = {
-    "ResultCode": TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": _ResultCode.COMMAND_FAILED.value,
     "ResultData": "testing disarm failed",
 }
 
 # appears to be for a bad/wrong code
 RESPONSE_USER_CODE_INVALID = {
-    "ResultCode": TotalConnectClient.USER_CODE_INVALID,
+    "ResultCode": _ResultCode.USER_CODE_INVALID.value,
     "ResultData": "testing user code invalid",
 }
 
 # appears to be for a code entered for a wrong device/location
 RESPONSE_USER_CODE_UNAVAILABLE = {
-    "ResultCode": TotalConnectClient.USER_CODE_UNAVAILABLE,
+    "ResultCode": _ResultCode.USER_CODE_UNAVAILABLE.value,
     "ResultData": "testing user code unavailable",
 }
 
 RESPONSE_SUCCESS = {
-    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultCode": _ResultCode.SUCCESS.value,
     "ResultData": "testing success",
 }
 
@@ -61,308 +62,70 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def setUp(self):
         """Test setup."""
-        self.client = None
         self.location_id = LOCATION_INFO_BASIC_NORMAL["LocationID"]
 
     def tearDown(self):
         """Test cleanup."""
-        self.client = None
+        pass
 
-    def tests_arm_away(self):
-        """Test arm away."""
-        # first test with no issues
-        self.client = create_client()
-        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            self.client.arm_away(self.location_id)
+    def tests_arm(self):
+        def run(error, responses, armit, armingstate):
+            client = create_client()
+            location = client.locations[self.location_id]
+            with patch(TCC_REQUEST_METHOD, side_effect=responses):
+                if error:
+                    with pytest.raises(error):
+                        armit(location)
+                else:
+                    armit(location)
+                location.get_panel_meta_data()
+                assert location.arming_state == armingstate
+        def runall(success_response, armit, success_armingstate):
+            # first test is all good
+            run(None,
+                [RESPONSE_ARM_SUCCESS, success_response],
+                armit,
+                success_armingstate)
+            for failresponse in (
+                    RESPONSE_ARM_FAILED,            # "zone faulted"
+                    RESPONSE_USER_CODE_INVALID,     # "bad usercode"
+                    RESPONSE_FEATURE_NOT_SUPPORTED,
+            ):
+                run(BadResultCodeError,
+                    [failresponse, RESPONSE_DISARMED],
+                    armit,
+                    ArmingState.DISARMED)
+            # last test has 'unavailable' usercode
+            run(AuthenticationError,
+                [RESPONSE_USER_CODE_UNAVAILABLE, RESPONSE_DISARMED],
+                armit,
+                ArmingState.DISARMED)
 
-            # confirm armed_away
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
-
-        # second test with a zone faulted
-        self.client = create_client()
-        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_away(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-        # third test with bad usercode
-        self.client = create_client()
-        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_away(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-        # fourth test with 'unavailable' usercode
-        self.client = create_client()
-        responses = [RESPONSE_USER_CODE_UNAVAILABLE, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(AuthenticationError):
-                self.client.arm_away(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-        # fifth test with 'other' usercode
-        self.client = create_client()
-        responses = [RESPONSE_FEATURE_NOT_SUPPORTED, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_away(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-    def tests_arm_away_instant(self):
-        """Test arm away instant."""
-        # first test with no issues
-        self.client = create_client()
-        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_AWAY]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            self.client.arm_away_instant(self.location_id)
-
-            # confirm armed_away
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
-
-        # second test with a zone faulted
-        self.client = create_client()
-        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_away_instant(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-        # third test with bad usercode
-        self.client = create_client()
-        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_away_instant(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-    def tests_arm_stay(self):
-        """Test arm stay."""
-        # first test with no issues
-        self.client = create_client()
-        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            self.client.arm_stay(self.location_id)
-
-            # confirm armed_away
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_home()
-                is True
-            )
-
-        # second test with a zone faulted
-        self.client = create_client()
-        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_stay(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_home()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-        # third test with bad usercode
-        self.client = create_client()
-        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_stay(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_home()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-    def tests_arm_stay_instant(self):
-        """Test arm stay instant."""
-        # first test with no issues
-        self.client = create_client()
-        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            self.client.arm_stay_instant(self.location_id)
-
-            # confirm armed_away
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_home()
-                is True
-            )
-
-        # second test with a zone faulted
-        self.client = create_client()
-        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_stay_instant(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_home()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-        # third test with bad usercode
-        self.client = create_client()
-        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_stay_instant(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_home()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-    def tests_arm_stay_night(self):
-        """Test arm stay night."""
-        # first test with no issues
-        self.client = create_client()
-        responses = [RESPONSE_ARM_SUCCESS, RESPONSE_ARMED_STAY_NIGHT]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            self.client.arm_stay_night(self.location_id)
-
-            # confirm armed_away
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_night()
-                is True
-            )
-
-        # second test with a zone faulted
-        self.client = create_client()
-        responses = [RESPONSE_ARM_FAILED, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_stay_night(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_night()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
-        # third test with bad usercode
-        self.client = create_client()
-        responses = [RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
-        with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            with pytest.raises(BadResultCodeError):
-                self.client.arm_stay_night(self.location_id)
-
-            # should still be disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_night()
-                is False
-            )
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
-
+        runall(RESPONSE_ARMED_AWAY,
+               lambda loc: ArmingHelper(loc).arm_away(),
+               ArmingState.ARMED_AWAY)
+        # this test claims to be testing arm away instant but uses the
+        # arm away response
+        runall(RESPONSE_ARMED_AWAY,
+               lambda loc: ArmingHelper(loc).arm_away_instant(),
+               ArmingState.ARMED_AWAY)
+        runall(RESPONSE_ARMED_STAY,
+               lambda loc: ArmingHelper(loc).arm_stay(),
+               ArmingState.ARMED_STAY)
+        # this test claims to be testing arm stay instant but uses the
+        # arm stay response
+        runall(RESPONSE_ARMED_STAY,
+               lambda loc: ArmingHelper(loc).arm_stay_instant(),
+               ArmingState.ARMED_STAY)
+        runall(RESPONSE_ARMED_STAY_NIGHT,
+               lambda loc: ArmingHelper(loc).arm_stay_night(),
+               ArmingState.ARMED_STAY_NIGHT)
+        
     def tests_disarm(self):
         """Test disarm."""
         # first test with no issues
-        self.client = create_client()
+        client = create_client()
+        location = client.locations[self.location_id]
         responses = [
             RESPONSE_ARM_SUCCESS,
             RESPONSE_ARMED_AWAY,
@@ -371,25 +134,20 @@ class TestTotalConnectClient(unittest.TestCase):
         ]
         with patch(TCC_REQUEST_METHOD, side_effect=responses):
             # arm the system and confirm armed_away
-            self.client.arm_away(self.location_id)
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
+            ArmingHelper(location).arm_away()
+            location.get_panel_meta_data()
+            assert location.arming_state.is_armed_away()
 
             # now disarm
-            self.client.disarm(self.location_id)
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            ArmingHelper(location).disarm()
+            location.get_panel_meta_data()
+            assert location.arming_state.is_disarmed()
 
     def tests_disarm_command_failed(self):
         """Test disarm with command failed."""
         # first test with no issues
-        self.client = create_client()
+        client = create_client()
+        location = client.locations[self.location_id]
         responses = [
             RESPONSE_ARM_SUCCESS,
             RESPONSE_ARMED_AWAY,
@@ -398,28 +156,22 @@ class TestTotalConnectClient(unittest.TestCase):
         ]
         with patch(TCC_REQUEST_METHOD, side_effect=responses):
             # arm the system and confirm armed_away
-            self.client.arm_away(self.location_id)
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
+            ArmingHelper(location).arm_away()
+            location.get_panel_meta_data()
+            assert location.arming_state.is_armed_away()
 
             # now disarm, should fail
             with pytest.raises(BadResultCodeError):
-                self.client.disarm(self.location_id)
+                ArmingHelper(location).disarm()
 
             # should still be armed_away
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
+            location.get_panel_meta_data()
+            assert location.arming_state.is_armed_away()
 
     def tests_disarm_user_code_invalid(self):
         """Test disarm with invalid user code."""
-        # first test with no issues
-        self.client = create_client()
+        client = create_client()
+        location = client.locations[self.location_id]
         responses = [
             RESPONSE_ARM_SUCCESS,
             RESPONSE_ARMED_AWAY,
@@ -428,40 +180,29 @@ class TestTotalConnectClient(unittest.TestCase):
         ]
         with patch(TCC_REQUEST_METHOD, side_effect=responses):
             # arm the system and confirm armed_away
-            self.client.arm_away(self.location_id)
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
+            ArmingHelper(location).arm_away()
+            location.get_panel_meta_data()
+            assert location.arming_state.is_armed_away()
 
             with pytest.raises(BadResultCodeError):
-                self.client.disarm(self.location_id)
+                ArmingHelper(location).disarm()
 
             # should still be armed_away when disarming fails
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
+            location.get_panel_meta_data()
+            assert location.arming_state.is_armed_away()
 
     def tests_disarm_disarmed(self):
         """Test attempt to disarm an already disarmed system."""
         # Did this once on my Lynx 7000 and it gave result code SUCCESS
 
-        self.client = create_client()
+        client = create_client()
+        location = client.locations[self.location_id]
         responses = [RESPONSE_DISARMED, RESPONSE_SUCCESS, RESPONSE_DISARMED]
         with patch(TCC_REQUEST_METHOD, side_effect=responses):
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            location.get_panel_meta_data()
+            assert location.arming_state.is_disarmed()
 
             # now disarm
-            self.client.disarm(self.location_id)
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            ArmingHelper(location).disarm()
+            location.get_panel_meta_data()
+            assert location.arming_state.is_disarmed()

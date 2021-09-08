@@ -7,18 +7,18 @@ import pytest
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
-from total_connect_client.client import TotalConnectClient
+from total_connect_client.const import _ResultCode
 from total_connect_client.exceptions import BadResultCodeError
 from total_connect_client.location import TotalConnectLocation
 
 RESPONSE_ZONE_BYPASS_SUCCESS = {
-    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultCode": _ResultCode.SUCCESS.value,
     "ResultData": "None",
 }
 
 # guessing on the response...don't know for sure
 RESPONSE_ZONE_BYPASS_FAILURE = {
-    "ResultCode": TotalConnectClient.COMMAND_FAILED,
+    "ResultCode": _ResultCode.COMMAND_FAILED.value,
     "ResultData": "None",
 }
 
@@ -37,7 +37,8 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_zone_bypass_success(self):
         """Test Zone Bypass with a normal response."""
-        zone = self.client.locations[self.location_id].zones["1"]
+        location = self.client.locations[self.location_id]
+        zone = location.zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_SUCCESS]
         with patch(
             "total_connect_client.client.TotalConnectClient.request",
@@ -47,14 +48,15 @@ class TestTotalConnectClient(unittest.TestCase):
             assert zone.is_bypassed() is False
 
             # now bypass the zone
-            self.client.zone_bypass("1", self.location_id)
+            location.zone_bypass("1")
 
             # should now be bypassed
             assert zone.is_bypassed() is True
 
     def tests_zone_bypass_failure(self):
         """Test Zone Bypass with a normal response."""
-        zone = self.client.locations[self.location_id].zones["1"]
+        location = self.client.locations[self.location_id]
+        zone = location.zones["1"]
         responses = [RESPONSE_ZONE_BYPASS_FAILURE]
         with patch(
             "total_connect_client.client.TotalConnectClient.request",
@@ -65,7 +67,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # try to bypass the zone
             with pytest.raises(BadResultCodeError):
-                self.client.zone_bypass("1", self.location_id)
+                location.zone_bypass("1")
 
             # should not be bypassed
             assert zone.is_bypassed() is False
