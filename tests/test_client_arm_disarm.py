@@ -64,10 +64,6 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test setup."""
         self.location_id = LOCATION_INFO_BASIC_NORMAL["LocationID"]
 
-    def tearDown(self):
-        """Test cleanup."""
-        pass
-
     def tests_arm(self):
         def run(error, responses, armit, armingstate):
             client = create_client()

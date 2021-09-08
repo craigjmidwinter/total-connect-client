@@ -64,9 +64,9 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.assertFalse(self.location_normal.arming_state.is_triggered())
 
         loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
-        r = deepcopy(RESPONSE_DISARMED)
-        r["PanelMetadataAndStatus"] = METADATA_DISARMED_LOW_BATTERY
-        loc._update_zones(r)
+        response = deepcopy(RESPONSE_DISARMED)
+        response["PanelMetadataAndStatus"] = METADATA_DISARMED_LOW_BATTERY
+        loc._update_zones(response)
         assert loc.zones["1"].is_low_battery() is True
 
     def tests_update_status_none(self):
@@ -109,17 +109,17 @@ class TestTotalConnectLocation(unittest.TestCase):
         self.location_normal._update_zone_details(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
 
         # "Zones" is None
-        r = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
-        r["ZoneStatus"]["Zones"] = None
+        response = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
+        response["ZoneStatus"]["Zones"] = None
         with pytest.raises(PartialResponseError):
-            self.location_normal._update_zone_details(r)
+            self.location_normal._update_zone_details(response)
 
         # "ZoneStatusInfoWithPartitionId" is None
-        r = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
-        r["ZoneStatus"]["Zones"] = {"ZoneStatusInfoWithPartitionId": None}
+        response = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
+        response["ZoneStatus"]["Zones"] = {"ZoneStatusInfoWithPartitionId": None}
         # now test with "ZoneInfo" is none
         with pytest.raises(PartialResponseError):
-            self.location_normal._update_zone_details(r)
+            self.location_normal._update_zone_details(response)
 
     def tests_auto_bypass_low_battery(self):
         """Test auto bypass of low battery zones."""
@@ -129,14 +129,14 @@ class TestTotalConnectLocation(unittest.TestCase):
 
         # should not try to bypass by default
         assert loc.auto_bypass_low_battery is False
-        r = deepcopy(RESPONSE_DISARMED)
-        r["PanelMetadataAndStatus"] = METADATA_DISARMED_LOW_BATTERY
+        response = deepcopy(RESPONSE_DISARMED)
+        response["PanelMetadataAndStatus"] = METADATA_DISARMED_LOW_BATTERY
 
         zbp = "total_connect_client.client.TotalConnectLocation.zone_bypass"
         with patch(zbp) as mock:
-            loc._update_status(r)
-            loc._update_partitions(r)
-            loc._update_zones(r)
+            loc._update_status(response)
+            loc._update_partitions(response)
+            loc._update_zones(response)
             assert mock.call_count == 0
 
         # now set to auto bypass
@@ -144,9 +144,9 @@ class TestTotalConnectLocation(unittest.TestCase):
 
         # now update status with a low battery and ensure it is bypassed
         with patch(zbp) as mock:
-            loc._update_status(r)
-            loc._update_partitions(r)
-            loc._update_zones(r)
+            loc._update_status(response)
+            loc._update_partitions(response)
+            loc._update_zones(response)
             assert mock.call_count == 1
 
     def tests_set_usercode(self):

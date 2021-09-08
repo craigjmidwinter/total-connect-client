@@ -59,7 +59,7 @@ class TotalConnectZone:
 
     def __init__(self, zone):
         """Initialize."""
-        self.id = zone.get("ZoneID")
+        self.zoneid = zone.get("ZoneID")
         self.partition = None
         self.status = None
         self.zone_type_id = None
@@ -78,7 +78,7 @@ class TotalConnectZone:
     def __str__(self):
         """Return a string that is printable."""
         return (
-            f"Zone {self.id} - {self.description}\n"
+            f"Zone {self.zoneid} - {self.description}\n"
             f"  Partition: {self.partition}\t\t"
             f"Zone Type: {self.zone_type_id}\t"
             f"CanBeBypassed: {self.can_be_bypassed}\t"
@@ -171,7 +171,7 @@ class TotalConnectZone:
         """Update the zone."""
         assert zone
         zid = zone.get("ZoneID")
-        assert self.id == zid, (self.id, zid)
+        assert self.zoneid == zid, (self.zoneid, zid)
 
         self.description = zone.get("ZoneDescription")
         # ZoneInfo gives 'PartitionID' but ZoneStatusInfoWithPartitionId gives 'PartitionId'

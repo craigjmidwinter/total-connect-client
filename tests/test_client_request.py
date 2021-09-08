@@ -73,10 +73,8 @@ class TestTotalConnectClient(unittest.TestCase):
             assert mock_request.call_count == 1
 
     def tests_request_init_failed_to_connect(self):
-        """Test init sequence when fails to connect."""
-        serialize_responses = []
-        for x in range(MAX_RETRY_ATTEMPTS):
-            serialize_responses.append(RESPONSE_FAILED_TO_CONNECT)
+        """Test init sequence when it fails to connect."""
+        serialize_responses = [RESPONSE_FAILED_TO_CONNECT for x in range(MAX_RETRY_ATTEMPTS)]
 
         with patch(
             "zeep.Client"
@@ -84,14 +82,14 @@ class TestTotalConnectClient(unittest.TestCase):
             PATCH_EVAL, side_effect=serialize_responses
         ) as mock_request, pytest.raises(
             Exception
-        ) as e:
+        ) as exc:
             client = TotalConnectClient(
                 "username", "password", usercodes=None, retry_delay=0
             )
             assert mock_request.call_count == MAX_RETRY_ATTEMPTS
             assert client.is_logged_in() is False
             expected = "total-connect-client could not execute request.  Maximum attempts tried."
-            assert str(e.value) == expected
+            assert str(exc.value) == expected
 
     def tests_request_connection_error(self):
         """Test a connection error."""
@@ -103,14 +101,14 @@ class TestTotalConnectClient(unittest.TestCase):
             "zeep.helpers.serialize_object", side_effect=serialize_responses
         ) as mock_request, pytest.raises(
             Exception
-        ) as e:
+        ) as exc:
             client = TotalConnectClient(
                 "username", "password", usercodes=None, retry_delay=0
             )
             assert mock_request.call_count == MAX_RETRY_ATTEMPTS
             assert client.is_logged_in() is False
             expected = "total-connect-client could not execute request.  Maximum attempts tried."
-            assert str(e.value) == expected
+            assert str(exc.value) == expected
 
     def tests_request_invalid_session(self):
         """Test an invalid session, which is when the session times out."""

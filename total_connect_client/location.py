@@ -40,7 +40,7 @@ class TotalConnectLocation:
 
         dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
         tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
-        self.devices = {tcdev.id: tcdev for tcdev in tcdevs}
+        self.devices = {tcdev.deviceid: tcdev for tcdev in tcdevs}
 
     def __str__(self):
         """Return a text string that is printable."""
@@ -65,12 +65,12 @@ class TotalConnectLocation:
             devices = devices + str(self.devices[device]) + "\n"
 
         partitions = f"PARTITIONS: {len(self.partitions)}\n\n"
-        for partition in self.partitions:
-            partitions = partitions + str(self.partitions[partition]) + "\n"
+        for status in self.partitions.values():
+            partitions += str(status) + "\n"
 
         zones = f"ZONES: {len(self.zones)}\n\n"
-        for zone in self.zones:
-            zones = zones + str(self.zones[zone])
+        for status in self.zones.values():
+            zones += str(status)
 
         return data + devices + partitions + zones
 
@@ -132,8 +132,8 @@ class TotalConnectLocation:
         new_partition_list = []
         for partition in partition_details:
             new_partition = TotalConnectPartition(partition, self)
-            self.partitions[new_partition.id] = new_partition
-            new_partition_list.append(new_partition.id)
+            self.partitions[new_partition.partitionid] = new_partition
+            new_partition_list.append(new_partition.partitionid)
 
         self._partition_list = {"int": new_partition_list}
 
@@ -215,26 +215,25 @@ class TotalConnectLocation:
 
     def zone_status(self, zone_id):
         """Get status of a zone."""
-        z = self.zones.get(zone_id)
-        if not z:
+        zone = self.zones.get(zone_id)
+        if not zone:
             raise TotalConnectError(f"zone {zone_id} does not exist")
-        return z.status
+        return zone.status
 
     def arm_custom(self, arm_type):
         """NOT OPERATIONAL YET.
         Arm custom the system.  Return true if successful.
         """
-        ZONE_INFO = {"ZoneID": "12", "ByPass": False, "ZoneStatus": 0}
-        ZONES_LIST = {}
-        ZONES_LIST[0] = ZONE_INFO
-        settings = {"ArmMode": "1", "ArmDelay": "5", "ZonesList": ZONES_LIST}
+        zones_list = {}
+        zones_list[0] = {"ZoneID": "12", "ByPass": False, "ZoneStatus": 0}
+        settings = {"ArmMode": "1", "ArmDelay": "5", "ZonesList": zones_list}
 
-        result = self.request("CustomArmSecuritySystem", (
+        result = self.parent.request("CustomArmSecuritySystem", (
             self.parent.token, self.location_id, self.security_device_id,
             arm_type.value, self.usercode, settings
         ))
         self.parent.raise_for_resultcode(result)
-        # FIXME: returning the raw result is not right
+        # TODO: returning the raw result is not right
         return result
 
     def get_custom_arm_settings(self):
@@ -245,7 +244,7 @@ class TotalConnectLocation:
             self.parent.token, self.location_id, self.security_device_id
         ))
         self.parent.raise_for_resultcode(result)
-        # FIXME: returning the raw result is not right
+        # TODO: returning the raw result is not right
         return result
 
     def _update_zone_details(self, result):
@@ -289,15 +288,15 @@ class TotalConnectLocation:
 
     def _update_partitions(self, result):
         """Update partition info from Partitions."""
-        pi = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get(
+        pinfo = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get(
             "PartitionInfo"
         )
-        if not pi:
+        if not pinfo:
             raise PartialResponseError("no PartitionInfo", result)
 
         # loop through partitions and update
         # NOTE: do not use keys because they don't line up with PartitionID
-        for partition in pi:
+        for partition in pinfo:
             if "PartitionID" not in partition:
                 raise PartialResponseError("no PartitionID", result)
             partition_id = int(partition["PartitionID"])
@@ -311,9 +310,7 @@ class TotalConnectLocation:
 
         data = (result.get("PanelMetadataAndStatus") or {}).get("Zones")
         if not data:
-            LOGGER.error(
-                f"no zones found: sync your panel using TotalConnect app or website"
-            )
+            LOGGER.error("no zones found: sync your panel using TotalConnect app or website")
             # PartialResponseError would mean this is retryable without fixing
             # anything, and this needs fixing
             raise TotalConnectError("no zones found: panel sync required")

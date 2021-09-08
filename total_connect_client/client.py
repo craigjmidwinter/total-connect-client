@@ -37,7 +37,7 @@ class TotalConnectClient:
 
     TIMEOUT = 60  # seconds until SOAP I/O will fail
 
-    def __init__(
+    def __init__(         # pylint: disable=too-many-arguments
         self,
         username,
         password,

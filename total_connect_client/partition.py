@@ -15,22 +15,22 @@ class TotalConnectPartition:
     def __init__(self, details, parent):
         """Initialize Partition based on PartitionDetails."""
         self.parent = parent
-        self.id = details.get("PartitionID")
+        self.partitionid = details.get("PartitionID")
         self.name = details.get("PartitionName")
         self._update(details)
 
     def __str__(self):
         """Return a string that is printable."""
-        data = f"PARTITION {self.id} - {self.name}\n" f"  {self.arming_state}\n"
+        data = f"PARTITION {self.partitionid} - {self.name}\n" f"  {self.arming_state}\n"
         return data
 
     def arm(self, arm_type):
         """Arm the partition."""
-        self.parent.arm(arm_type, self.id)
+        self.parent.arm(arm_type, self.partitionid)
 
     def disarm(self):
         """Disarm the partition."""
-        self.parent.disarm(self.id)
+        self.parent.disarm(self.partitionid)
 
     def _update(self, info):
         """Update partition based on PartitionInfo."""

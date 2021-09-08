@@ -295,7 +295,7 @@ class TestTotalConnectZone(unittest.TestCase):
 def test_proa7_zones():
     """Test ProA7."""
 
-    ZONE_MEDICAL = {
+    zone_medical = {
         "ZoneDescription": "Gas",
         "PartitionId": "1",
         "ZoneTypeId": ZoneType.PROA7_MEDICAL,
@@ -303,6 +303,6 @@ def test_proa7_zones():
         "ZoneStatus": ZoneStatus.NORMAL,
     }
 
-    zone = tcz(ZONE_MEDICAL)
+    zone = tcz(zone_medical)
     assert zone.is_type_medical() is True
     assert zone.is_type_button() is True
