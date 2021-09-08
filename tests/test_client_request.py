@@ -25,15 +25,6 @@ from total_connect_client.exceptions import AuthenticationError, TotalConnectErr
 
 PATCH_EVAL = "total_connect_client.client.TotalConnectClient._send_one_request"
 
-class FakeResponse(dict):
-    """Fake response from zeep."""
-
-    def __init__(self, code, data):
-        """Initialize."""
-        self["ResultCode"] = code
-        self["ResultData"] = data
-
-
 class TestTotalConnectClient(unittest.TestCase):
     """Test TotalConnectClient request()."""
 
@@ -67,20 +58,15 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_init_bad_user_or_password(self):
         """Test init sequence with no a bad password."""
-        eval_responses = [
-            FakeResponse(
-                RESPONSE_BAD_USER_OR_PASSWORD["ResultCode"], "Response Disarmed"
-            ),
-        ]
         serialize_responses = [
             RESPONSE_BAD_USER_OR_PASSWORD,
         ]
 
         with patch(
-            "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
             "zeep.Client"
-        ), patch(PATCH_EVAL, side_effect=eval_responses) as mock_request:
+        ), patch(
+            "zeep.helpers.serialize_object", side_effect=serialize_responses
+        ) as mock_request:
             with pytest.raises(AuthenticationError):
                 TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
@@ -110,22 +96,12 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_connection_error(self):
         """Test a connection error."""
-        eval_responses = []
-        serialize_responses = []
-        for x in range(MAX_RETRY_ATTEMPTS):
-            eval_responses.append(
-                FakeResponse(
-                    RESPONSE_CONNECTION_ERROR["ResultCode"], "Response Disarmed"
-                )
-            )
-            serialize_responses.append(RESPONSE_CONNECTION_ERROR)
+        serialize_responses = [RESPONSE_CONNECTION_ERROR for x in range(MAX_RETRY_ATTEMPTS)]
 
         with patch(
-            "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ), patch(
             "zeep.Client"
         ), patch("time.sleep", autospec=True), patch(
-            PATCH_EVAL, side_effect=eval_responses
+            "zeep.helpers.serialize_object", side_effect=serialize_responses
         ) as mock_request, pytest.raises(
             Exception
         ) as e:
