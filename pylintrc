@@ -63,36 +63,38 @@ confidence=
 disable=print-statement,
         parameter-unpacking,
         unpacking-in-except,
-        old-raise-syntax,
         long-suffix,
         import-star-module-level,
         use-symbolic-message-instead,
-        coerce-method,
-        delslice-method,
-        getslice-method,
-        setslice-method,
+        # coerce-method,
+        # delslice-method,
+        # getslice-method,
+        # setslice-method,
+        # nonzero-method,
+        # cmp-method,
+        next-method-defined,
         no-absolute-import,
-        old-division,
-        dict-iter-method,
-        dict-view-method,
         next-method-called,
         metaclass-assignment,
         indexing-exception,
-        raising-string,
-        nonzero-method,
-        cmp-method,
         exception-message-attribute,
         sys-max-int,
-        bad-python3-import,
-        next-method-defined,
-        dict-items-not-iterating,
-        dict-keys-not-iterating,
-        dict-values-not-iterating,
         xreadlines-attribute,
         exception-escape,
         comprehension-escape,
-        logging-fstring-interpolation,
-        missing-class-docstring
+
+        # These warnings may make sense in huge projects but pylint
+        # is simply not smart enough to know when these are actually bad.
+        too-few-public-methods,
+        duplicate-code,
+        no-self-use,
+
+        too-many-instance-attributes,  # not appropriate for this project
+        logging-fstring-interpolation,  # we don't need high-performance log messages
+        missing-function-docstring,  # flake8 has more granularity
+        missing-class-docstring,  # flake8 has more granularity
+        protected-access,   # there are many good reasons to do this
+        line-too-long       # redundant with flake8
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -212,6 +214,7 @@ single-line-class-stmt=no
 # else.
 single-line-if-stmt=no
 
+good-names=rc
 
 [LOGGING]
 
