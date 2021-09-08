@@ -12,6 +12,7 @@ setup(
     keywords=["alarm", "TotalConnect"],
     package_data={"": ["data/*.json"]},
     install_requires=["zeep>=4.0"],
+    python_requires=">=3.7",
     packages=["total_connect_client"],
     include_package_data=True,  # use MANIFEST.in during install
     zip_safe=False,
