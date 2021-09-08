@@ -16,24 +16,24 @@ def tests_partition():
     test_partition = TotalConnectPartition(PARTITION_DETAILS_1, None)
     assert test_partition.id == 1
 
-    test_partition.update(PARTITION_DISARMED)
+    test_partition._update(PARTITION_DISARMED)
     assert test_partition.arming_state.value == PARTITION_DISARMED["ArmingState"]
 
     unknown = deepcopy(PARTITION_DISARMED)
     unknown["ArmingState"] = "999999999"
     with pytest.raises(ValueError):
-        test_partition.update(unknown)
+        test_partition._update(unknown)
 
 
     # remove ArmingState
     data = deepcopy(PARTITION_DETAILS_1)
     del data["ArmingState"]
     with pytest.raises(PartialResponseError):
-        test_partition.update(data)
+        test_partition._update(data)
 
     # no info
     with pytest.raises(PartialResponseError):
-        test_partition.update(None)
+        test_partition._update(None)
 
 
 def tests_str():
