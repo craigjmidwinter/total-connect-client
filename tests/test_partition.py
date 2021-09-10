@@ -35,19 +35,6 @@ def tests_partition():
         test_partition._update(None)
 
 
-def tests_str():
-    """Test __str__()."""
-    test_partition = TotalConnectPartition(PARTITION_DETAILS_1, None)
-
-    data = (
-        f"PARTITION {PARTITION_DETAILS_1['PartitionID']} - "
-        f"{PARTITION_DETAILS_1['PartitionName']}\n"
-        f"  ArmingState.DISARMED\n"
-    )
-
-    assert str(test_partition) == data
-
-
 def tests_arm_disarm():
     """Test arm and disarm functions."""
     location = Mock()
