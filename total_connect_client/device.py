@@ -6,7 +6,7 @@ class TotalConnectDevice:
 
     def __init__(self, info):
         """Initialize device based on DeviceInfoBasic."""
-        self.id = info.get("DeviceID")
+        self.deviceid = info.get("DeviceID")
         self.name = info.get("DeviceName")
         self.class_id = info.get("DeviceClassID")
         self.serial_number = info.get("DeviceSerialNumber")
@@ -22,7 +22,7 @@ class TotalConnectDevice:
     def __str__(self):
         """Return a string that is printable."""
         data = (
-            f"DEVICE {self.id} - {self.name}\n"
+            f"DEVICE {self.deviceid} - {self.name}\n"
             f"  ClassID: {self.class_id}\n"
             f"  Security Panel Type ID: {self.security_panel_type_id}\n"
             f"  Serial Number: {self.serial_number}\n"

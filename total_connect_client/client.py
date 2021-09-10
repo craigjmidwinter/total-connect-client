@@ -10,14 +10,13 @@ for location in client.locations:
 
 import logging
 import time
-import warnings
 
 import zeep
 import zeep.cache
 import zeep.transports
 import requests.exceptions
 
-from .const import ArmType
+from .const import ArmType, _ResultCode
 from .exceptions import (
     AuthenticationError,
     BadResultCodeError,
@@ -28,8 +27,6 @@ from .exceptions import (
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
 
-PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
-
 DEFAULT_USERCODE = "-1"
 
 LOGGER = logging.getLogger(__name__)
@@ -38,25 +35,9 @@ LOGGER = logging.getLogger(__name__)
 class TotalConnectClient:
     """Client for Total Connect."""
 
-    SUCCESS = 0
-    ARM_SUCCESS = 4500
-    DISARM_SUCCESS = 4500
-    SESSION_INITIATED = 4500
-    CONNECTION_ERROR = 4101
-    FAILED_TO_CONNECT = -4104
-    USER_CODE_INVALID = -4106
-    USER_CODE_UNAVAILABLE = -4114
-    COMMAND_FAILED = -4502
-    INVALID_SESSION = -102
-    INVALID_SESSIONID = -30002
-    BAD_USER_OR_PASSWORD = -50004
-    AUTHENTICATION_FAILED = -100
-    FEATURE_NOT_SUPPORTED = -120
-
-    MAX_RETRY_ATTEMPTS = 10
     TIMEOUT = 60  # seconds until SOAP I/O will fail
 
-    def __init__(
+    def __init__(         # pylint: disable=too-many-arguments
         self,
         username,
         password,
@@ -68,8 +49,6 @@ class TotalConnectClient:
         self.times = {}
         self.time_start = time.time()
         self.soap_client = None
-        self.application_id = "14588"
-        self.application_version = "1.0.34"
 
         self.username = username
         self.password = password
@@ -132,7 +111,7 @@ class TotalConnectClient:
 
         return data + locations
 
-    def get_times(self):
+    def times_as_string(self):
         """Return a string with times."""
         self.times["total running time"] = time.time() - self.time_start
         msg = "total-connect-client time info (seconds):\n"
@@ -145,60 +124,60 @@ class TotalConnectClient:
         """Used internally to determine which responses should be retried in
         request().
         """
-        rc = response["ResultCode"]
-        if rc == self.INVALID_SESSION:
+        rc = _ResultCode.from_response(response)
+        if rc == _ResultCode.INVALID_SESSION:
             raise InvalidSessionError("invalid session", response)
-        if rc == self.INVALID_SESSIONID:
+        if rc == _ResultCode.INVALID_SESSIONID:
             raise InvalidSessionError("invalid session ID", response)
-        if rc == self.CONNECTION_ERROR:
+        if rc == _ResultCode.CONNECTION_ERROR:
             raise RetryableTotalConnectError("connection error", response)
-        if rc == self.FAILED_TO_CONNECT:
+        if rc == _ResultCode.FAILED_TO_CONNECT:
             raise RetryableTotalConnectError("failed to connect with panel", response)
 
     def raise_for_resultcode(self, response):
         """If response.ResultCode indicates success, return and do nothing.
         If it indicates an authentication error, raise AuthenticationError.
         """
-        rc = response["ResultCode"]
+        rc = _ResultCode.from_response(response)
         if rc in (
-            self.SUCCESS,
-            self.ARM_SUCCESS,
-            self.DISARM_SUCCESS,
-            self.SESSION_INITIATED,
+                _ResultCode.SUCCESS,
+                _ResultCode.ARM_SUCCESS,
+                _ResultCode.DISARM_SUCCESS,
+                _ResultCode.SESSION_INITIATED,
         ):
             return
         self._raise_for_retry(response)
-        if rc == self.COMMAND_FAILED:
-            raise BadResultCodeError("command failed", response)
-        if rc == self.FEATURE_NOT_SUPPORTED:
-            raise BadResultCodeError("feature not supported", response)
-        if rc == self.USER_CODE_INVALID:
-            raise BadResultCodeError("user code invalid", response)
-        if rc == self.BAD_USER_OR_PASSWORD:
-            raise AuthenticationError("bad user or password", response)
-        if rc == self.AUTHENTICATION_FAILED:
-            raise AuthenticationError("authentication failed", response)
-        if rc == self.USER_CODE_UNAVAILABLE:
-            raise AuthenticationError("user code unavailable", response)
-        raise BadResultCodeError(f"unknown result code {rc}", response)
+        if rc in (
+                _ResultCode.BAD_USER_OR_PASSWORD,
+                _ResultCode.AUTHENTICATION_FAILED,
+                _ResultCode.USER_CODE_UNAVAILABLE,
+        ):
+            raise AuthenticationError(rc.name, response)
+        raise BadResultCodeError(rc.name, response)
 
-    def request(self, request, attempts=0):
-        """Send a SOAP request."""
+    def _send_one_request(self, operation_name, args):
+        LOGGER.debug(f"sending API request {operation_name}{args}")
+        operation_proxy = self.soap_client.service[operation_name]
+        return zeep.helpers.serialize_object(operation_proxy(*args))
 
+    API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
+    API_APP_ID = "14588"
+    API_APP_VERSION = "1.0.34"
+
+    def request(self, operation_name, args, attempts_remaining=10):
+        """Send a SOAP request. args is a list or tuple defining the
+        parameters to the operation.
+        """
+        attempts_remaining -= 1
         if not self.soap_client:
             transport = zeep.transports.Transport(
                 cache=zeep.cache.InMemoryCache(timeout=3600),
                 timeout=self.TIMEOUT,  # for loading WSDL and xsd documents
                 operation_timeout=self.TIMEOUT,  # for operations (POST/GET)
             )
-            self.soap_client = zeep.Client(
-                "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL",
-                transport=transport
-            )
+            self.soap_client = zeep.Client(self.API_ENDPOINT, transport=transport)
         try:
-            LOGGER.debug(f"sending API request {request}")
-            r = eval("self.soap_client.service." + request)
-            response = zeep.helpers.serialize_object(r)
+            response = self._send_one_request(operation_name, args)
             self._raise_for_retry(response)
             return response
         # To retry an exception that could be raised during the request,
@@ -206,24 +185,22 @@ class TotalConnectClient:
         # you want to have happen. The first two blocks are the same except
         # for what gets logged. The third block causes reauthentication.
         except requests.exceptions.RequestException as err:
-            if attempts > self.MAX_RETRY_ATTEMPTS:
+            if attempts_remaining <= 0:
                 raise
-            LOGGER.info(f"retrying {err} on {self.username}, attempt # {attempts}")
+            LOGGER.info(f"retrying {err} on {self.username}: {attempts_remaining}")
             time.sleep(self.retry_delay)
-            return self.request(request, attempts + 1)
         except RetryableTotalConnectError as err:
-            if attempts > self.MAX_RETRY_ATTEMPTS:
+            if attempts_remaining <= 0:
                 raise
-            LOGGER.info(f"retrying {err.args[0]} on {self.username}, attempt # {attempts}")
+            LOGGER.info(f"retrying {err.args[0]} on {self.username}: {attempts_remaining}")
             time.sleep(self.retry_delay)
-            return self.request(request, attempts + 1)
         except InvalidSessionError:
-            if attempts > self.MAX_RETRY_ATTEMPTS:
+            if attempts_remaining <= 0:
                 raise
-            LOGGER.info(f"reauthenticating session for {self.username}, attempt # {attempts}")
+            LOGGER.info(f"reauthenticating {self.username}: {attempts_remaining}")
             self.token = None
             self.authenticate()
-            return self.request(request, attempts + 1)
+        return self.request(operation_name, args, attempts_remaining)
 
     def authenticate(self):
         """Login to the system. Upon success, self.token is a valid credential
@@ -237,13 +214,12 @@ class TotalConnectClient:
             )
 
         # LoginAndGetSessionDetails is very slow, so only use it when necessary
-        verb = (
+        operation_name = (
             "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
         )
-        response = self.request(
-            verb + "(self.username, self.password, "
-            "self.application_id, self.application_version)"
-        )
+        response = self.request(operation_name, (
+            self.username, self.password, self.API_APP_ID, self.API_APP_VERSION
+        ))
         try:
             self.raise_for_resultcode(response)
         except AuthenticationError:
@@ -266,13 +242,10 @@ class TotalConnectClient:
 
     def validate_usercode(self, device_id, usercode):
         """Return True if the usercode is valid for the device."""
-        response = self.request(
-            f"ValidateUserCode(self.token, {device_id}, '{usercode}')"
-        )
-
-        if response["ResultCode"] in (
-            self.USER_CODE_INVALID,
-            self.USER_CODE_UNAVAILABLE,
+        response = self.request("ValidateUserCode", (self.token, device_id, str(usercode)))
+        if _ResultCode.from_response(response) in (
+            _ResultCode.USER_CODE_INVALID,
+            _ResultCode.USER_CODE_UNAVAILABLE,
         ):
             LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
             return False
@@ -280,7 +253,9 @@ class TotalConnectClient:
         return True
 
     def is_logged_in(self):
-        """Return true if the client is logged into Total Connect service."""
+        """Return true if the client is logged into the Total Connect service
+        with valid credentials.
+        """
         return self.token is not None
 
     def log_out(self):
@@ -288,144 +263,36 @@ class TotalConnectClient:
         still might be logged in.
         """
         if self.is_logged_in():
-            response = self.request("Logout(self.token)")
+            response = self.request("Logout", (self.token,))
             self.raise_for_resultcode(response)
             LOGGER.info("Logout Successful")
             self.token = None
-
-    def is_valid_credentials(self):
-        """Return True if the credentials are known to be valid."""
-        return self.token is not None
 
     def _make_locations(self, response):
         """Return a dict mapping LocationID to TotalConnectLocation."""
         start_time = time.time()
         new_locations = {}
 
-        for location in (response["Locations"] or {}).get("LocationInfoBasic", {}):
-            location_id = location["LocationID"]
-            new_locations[location_id] = TotalConnectLocation(location, self)
+        for locationinfo in (response["Locations"] or {}).get("LocationInfoBasic", {}):
+            location_id = locationinfo["LocationID"]
+            location = TotalConnectLocation(locationinfo, self)
+            new_locations[location_id] = location
 
-            # set auto_bypass
-            new_locations[
-                location_id
-            ].auto_bypass_low_battery = self.auto_bypass_low_battery
+            location.auto_bypass_low_battery = self.auto_bypass_low_battery
 
             # set the usercode for the location
             usercode = (
-                self.usercodes.get(location_id)
-                or self.usercodes.get(str(location_id))
-                or self.usercodes.get("default")
+                self.usercodes.get(location_id) or  # noqa: W504
+                self.usercodes.get(str(location_id)) or self.usercodes.get("default")
             )
             if usercode:
-                new_locations[location_id].usercode = usercode
+                location.usercode = usercode
             else:
                 LOGGER.warning(f"no usercode for location {location_id}")
-                new_locations[location_id].usercode = DEFAULT_USERCODE
+                location.usercode = DEFAULT_USERCODE
 
         self.times["_make_locations()"] = time.time() - start_time
         return new_locations
-
-    def arm_away(self, location_id):
-        """Arm the system (Away)."""
-        warnings.warn(
-            "Using deprecated client.arm_away(). " "Use location.arm_away().",
-            DeprecationWarning,
-        )
-        return self.arm(ArmType.AWAY, location_id)
-
-    def arm_stay(self, location_id):
-        """Arm the system (Stay)."""
-        warnings.warn(
-            "Using deprecated client.arm_stay(). " "Use location.arm_stay().",
-            DeprecationWarning,
-        )
-        return self.arm(ArmType.STAY, location_id)
-
-    def arm_stay_instant(self, location_id):
-        """Arm the system (Stay - Instant)."""
-        warnings.warn(
-            "Using deprecated client.arm_stay_instant(). "
-            "Use location.arm_stay_instant().",
-            DeprecationWarning,
-        )
-        return self.arm(ArmType.STAY_INSTANT, location_id)
-
-    def arm_away_instant(self, location_id):
-        """Arm the system (Away - Instant)."""
-        warnings.warn(
-            "Using deprecated client.arm_away_instant(). "
-            "Use location.arm_away_instant().",
-            DeprecationWarning,
-        )
-        return self.arm(ArmType.AWAY_INSTANT, location_id)
-
-    def arm_stay_night(self, location_id):
-        """Arm the system (Stay - Night)."""
-        warnings.warn(
-            "Using deprecated client.arm_stay_night(). "
-            "Use location.arm_stay_night().",
-            DeprecationWarning,
-        )
-        return self.arm(ArmType.STAY_NIGHT, location_id)
-
-    def arm(self, arm_type, location_id):
-        """Arm the system. Return True if successful."""
-        warnings.warn(
-            "Using deprecated client.arm(). " "Use location.arm().", DeprecationWarning
-        )
-        return self.locations[location_id].arm(arm_type)
-
-    def get_custom_arm_settings(self, location_id):
-        """Get custom arm settings.  Return true if successful."""
-        warnings.warn(
-            "Using deprecated client.get_custom_arm_settings(). "
-            "Use location.get_custom_arm_settings().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].get_custom_arm_settings()
-
-    def get_panel_meta_data(self, location_id):
-        """Get all meta data about the alarm panel."""
-        warnings.warn(
-            "Using deprecated client.get_panel_meta_data(). "
-            "Use location.get_panel_meta_data().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].get_panel_meta_data()
-
-    def zone_status(self, location_id, zone_id):
-        """Get status of a zone."""
-        warnings.warn(
-            "Using deprecated client.zone_status(). " "Use location.zone_status().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].zone_status(zone_id)
-
-    def disarm(self, location_id):
-        """Disarm the system. Return True if successful."""
-        warnings.warn(
-            "Using deprecated client.disarm(). " "Use location.disarm().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].disarm()
-
-    def zone_bypass(self, zone_id, location_id):
-        """Bypass a zone.  Return true if successful."""
-        warnings.warn(
-            "Using deprecated client.zone_bypass(). " "Use location.zone_bypass().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].zone_bypass(zone_id)
-
-    def get_zone_details(self, location_id):
-        """Get Zone details. Return True if successful."""
-        warnings.warn(
-            "Using deprecated client.get_zone_details(). "
-            "Use location.get_zone_details().",
-            DeprecationWarning,
-        )
-        return self.locations[location_id].get_zone_details()
 
 
 class ArmingHelper:

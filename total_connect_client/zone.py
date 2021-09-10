@@ -3,6 +3,8 @@
 import logging
 from enum import Enum, IntFlag
 
+from .const import PROJECT_URL
+from .exceptions import TotalConnectError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ class ZoneType(Enum):
     https://www.alarmliquidators.com/content/Vista%2021IP-%20Programming%20Guide.pdf
     http://techresource.online/training/ssnw/honeywell/zone-types
     """
+
     SECURITY          = 0  # for Vista, zone type 0 is not used
     ENTRY_EXIT1       = 1  # starts countdown timer #1
     ENTRY_EXIT2       = 2  # like ENTRY_EXIT1 but uses timer #2
@@ -35,7 +38,7 @@ class ZoneType(Enum):
     AUDIBLE_24HR      = 7  # 24-hour audible alarm (often used for police)
     AUX_24HR          = 8  # no local siren but keypad beeps (often used for medical)
     FIRE_SMOKE        = 9
-    INTERIOR_DELAY    = 10 # inactive when armed STAY, otherwise like ENTRY_EXIT1
+    INTERIOR_DELAY    = 10  # inactive when armed STAY, otherwise like ENTRY_EXIT1
     MONITOR           = 12  # e.g. temperature or flood
     CARBON_MONOXIDE   = 14
     PROA7_MEDICAL     = 15
@@ -56,7 +59,7 @@ class TotalConnectZone:
 
     def __init__(self, zone):
         """Initialize."""
-        self.id = zone.get("ZoneID")
+        self.zoneid = zone.get("ZoneID")
         self.partition = None
         self.status = None
         self.zone_type_id = None
@@ -70,55 +73,12 @@ class TotalConnectZone:
         self.supervision_type = None
         self.chime_state = None
         self.device_type = None
-        self.update(zone)
-
-    def update(self, zone):
-        """Update the zone."""
-        assert zone
-        zid = zone.get("ZoneID")
-        assert self.id == zid, (self.id, zid)
-
-        self.description = zone.get("ZoneDescription")
-        # ZoneInfo gives 'PartitionID' but ZoneStatusInfoWithPartitionId gives 'PartitionId'
-        if "PartitionId" in zone:
-            # ...and PartitionId gives an int instead of a string
-            self.partition = str(zone["PartitionId"])
-        else:
-            self.partition = zone.get("PartitionID")
-        try:
-            self.status = ZoneStatus(zone.get("ZoneStatus"))
-        except ValueError:
-            LOGGER.error(f"unknown ZoneStatus in {zone} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
-            raise
-        self.can_be_bypassed = zone.get("CanBeBypassed")
-
-        try:
-            zid = zone.get("ZoneTypeId", self.zone_type_id)
-            # TODO: if zid is None should we raise PartialResponseError?
-            self.zone_type_id = None if zid is None else ZoneType(zid)
-        except ValueError:
-            LOGGER.error(f"unknown ZoneType {zid} in {zone} -- please file an issue at https://github.com/craigjmidwinter/total-connect-client/issues")
-            # if we get an unknown ZoneType we do not raise an exception, because
-            # we know there are more zone types than we have in our enum, and
-            # having an unknown ZoneType doesn't keep us from doing our work
-            self.zone_type_id = zid
-
-        self.battery_level = zone.get("Batterylevel", self.battery_level)
-        self.signal_strength = zone.get("Signalstrength", self.signal_strength)
-        info = zone.get("zoneAdditionalInfo")
-        if info:
-            self.sensor_serial_number = info.get("SensorSerialNumber")
-            self.loop_number = info.get("LoopNumber")
-            self.response_type = info.get("ResponseType")
-            self.alarm_report_state = info.get("AlarmReportState")
-            self.supervision_type = info.get("ZoneSupervisionType")
-            self.chime_state = info.get("ChimeState")
-            self.device_type = info.get("DeviceType")
+        self._update(zone)
 
     def __str__(self):
         """Return a string that is printable."""
         return (
-            f"Zone {self.id} - {self.description}\n"
+            f"Zone {self.zoneid} - {self.description}\n"
             f"  Partition: {self.partition}\t\t"
             f"Zone Type: {self.zone_type_id}\t"
             f"CanBeBypassed: {self.can_be_bypassed}\t"
@@ -137,11 +97,6 @@ class TotalConnectZone:
     def is_bypassed(self):
         """Return true if the zone is bypassed."""
         return self.status & ZoneStatus.BYPASSED > 0
-
-    def _mark_as_bypassed(self):
-        """Set is_bypassed status."""
-        # TODO: when does this get reset to no longer bypassed?
-        self.status |= ZoneStatus.BYPASSED
 
     def is_faulted(self):
         """Return true if the zone is faulted."""
@@ -211,3 +166,51 @@ class TotalConnectZone:
     def is_type_medical(self):
         """Return true if zone type is medical."""
         return self.zone_type_id == ZoneType.PROA7_MEDICAL
+
+    def _update(self, zone):
+        """Update the zone."""
+        assert zone
+        zid = zone.get("ZoneID")
+        assert self.zoneid == zid, (self.zoneid, zid)
+
+        self.description = zone.get("ZoneDescription")
+        # ZoneInfo gives 'PartitionID' but ZoneStatusInfoWithPartitionId gives 'PartitionId'
+        if "PartitionId" in zone:
+            # ...and PartitionId gives an int instead of a string
+            self.partition = str(zone["PartitionId"])
+        else:
+            self.partition = zone.get("PartitionID")
+        try:
+            self.status = ZoneStatus(zone.get("ZoneStatus"))
+        except ValueError:
+            LOGGER.error(f"unknown ZoneStatus in {zone}: please report at {PROJECT_URL}/issues")
+            raise TotalConnectError(f"unknown ZoneStatus in {zone}") from None
+        self.can_be_bypassed = zone.get("CanBeBypassed")
+
+        try:
+            zid = zone.get("ZoneTypeId", self.zone_type_id)
+            # TODO: if zid is None should we raise PartialResponseError?
+            self.zone_type_id = None if zid is None else ZoneType(zid)
+        except ValueError:
+            LOGGER.error(f"unknown ZoneType {zid} in {zone}: please report at {PROJECT_URL}/issues")
+            # if we get an unknown ZoneType we do not raise an exception, because
+            # we know there are more zone types than we have in our enum, and
+            # having an unknown ZoneType doesn't keep us from doing our work
+            self.zone_type_id = zid
+
+        self.battery_level = zone.get("Batterylevel", self.battery_level)
+        self.signal_strength = zone.get("Signalstrength", self.signal_strength)
+        info = zone.get("zoneAdditionalInfo")
+        if info:
+            self.sensor_serial_number = info.get("SensorSerialNumber")
+            self.loop_number = info.get("LoopNumber")
+            self.response_type = info.get("ResponseType")
+            self.alarm_report_state = info.get("AlarmReportState")
+            self.supervision_type = info.get("ZoneSupervisionType")
+            self.chime_state = info.get("ChimeState")
+            self.device_type = info.get("DeviceType")
+
+    def _mark_as_bypassed(self):
+        """Set is_bypassed status."""
+        # TODO: when does this get reset to no longer bypassed?
+        self.status |= ZoneStatus.BYPASSED

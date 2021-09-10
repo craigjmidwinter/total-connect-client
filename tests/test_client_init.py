@@ -63,10 +63,10 @@ def tests_init_usercodes_string():
 
     with patch(
         "total_connect_client.client.TotalConnectClient.request", side_effect=responses
-    ) as mock_request:
+    ):
         with pytest.raises(AttributeError):
             # string is not a valid type for usercodes (only dict)
-            mock_client = TotalConnectClient("username", "password", usercodes="123456")
+            TotalConnectClient("username", "password", usercodes="123456")
 
 
 def tests_init_partitions():

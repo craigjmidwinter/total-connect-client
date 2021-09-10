@@ -24,6 +24,7 @@ class TestTotalConnectClient(unittest.TestCase):
         """Test setup."""
         self.client = create_client()
         self.location_id = LOCATION_INFO_BASIC_NORMAL["LocationID"]
+        self.location = self.client.locations[self.location_id]
 
     def tearDown(self):
         """Test cleanup."""
@@ -37,24 +38,15 @@ class TestTotalConnectClient(unittest.TestCase):
             side_effect=responses,
         ):
             # should start disarmed
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            assert self.location.arming_state.is_disarmed()
 
             # first response shows armed_away
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_armed_away()
-                is True
-            )
+            self.location.get_panel_meta_data()
+            assert self.location.arming_state.is_armed_away()
 
             # second response shows disarmed
-            self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            self.location.get_panel_meta_data()
+            assert self.location.arming_state.is_disarmed()
 
     def tests_get_panel_meta_data_none(self):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
@@ -64,18 +56,13 @@ class TestTotalConnectClient(unittest.TestCase):
             side_effect=responses,
         ):
             # should start disarmed
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            assert self.location.arming_state.is_disarmed()
 
             # first response gives empty status...should remain the same
             with pytest.raises(PartialResponseError):
-                self.client.get_panel_meta_data(self.location_id)
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+                self.location.get_panel_meta_data()
+
+            assert self.location.arming_state.is_disarmed()
 
     def tests_get_panel_meta_data_failed(self):
         """Test get_panel_meta_data() with an empty PanelMetadataAndStatus response."""
@@ -85,10 +72,7 @@ class TestTotalConnectClient(unittest.TestCase):
             side_effect=responses,
         ):
             # should start disarmed
-            assert (
-                self.client.locations[self.location_id].arming_state.is_disarmed()
-                is True
-            )
+            assert self.location.arming_state.is_disarmed()
 
             with pytest.raises(BadResultCodeError):
-                self.client.get_panel_meta_data(self.location_id)
+                self.location.get_panel_meta_data()

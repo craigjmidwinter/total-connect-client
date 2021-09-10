@@ -144,15 +144,15 @@ class TestTotalConnectZone(unittest.TestCase):
     def tests_update(self):
         """Test updates to a zone."""
         self.assertFalse(self.zone_normal.is_faulted())
-        self.zone_normal.update(ZONE_FAULTED)
+        self.zone_normal._update(ZONE_FAULTED)
         self.assertTrue(self.zone_normal.is_faulted())
-        self.zone_normal.update(ZS_NORMAL)
+        self.zone_normal._update(ZS_NORMAL)
         self.assertFalse(self.zone_normal.is_faulted())
 
         self.assertFalse(self.zone_normal.is_low_battery())
-        self.zone_normal.update(ZONE_LOW_BATTERY)
+        self.zone_normal._update(ZONE_LOW_BATTERY)
         self.assertTrue(self.zone_normal.is_low_battery())
-        self.zone_normal.update(ZS_NORMAL)
+        self.zone_normal._update(ZS_NORMAL)
         self.assertFalse(self.zone_normal.is_low_battery())
 
     def tests_update_wrong_zone(self):
@@ -160,7 +160,7 @@ class TestTotalConnectZone(unittest.TestCase):
         zone_temp = ZS_NORMAL.copy()
         zone_temp["ZoneID"] = "99"
         with pytest.raises(Exception):
-            assert self.zone_normal.update(zone_temp)
+            assert self.zone_normal._update(zone_temp)
 
     def tests_bypassed(self):
         """Bypassed zone."""
@@ -295,7 +295,7 @@ class TestTotalConnectZone(unittest.TestCase):
 def test_proa7_zones():
     """Test ProA7."""
 
-    ZONE_MEDICAL = {
+    zone_medical = {
         "ZoneDescription": "Gas",
         "PartitionId": "1",
         "ZoneTypeId": ZoneType.PROA7_MEDICAL,
@@ -303,6 +303,6 @@ def test_proa7_zones():
         "ZoneStatus": ZoneStatus.NORMAL,
     }
 
-    zone = tcz(ZONE_MEDICAL)
+    zone = tcz(zone_medical)
     assert zone.is_type_medical() is True
     assert zone.is_type_button() is True

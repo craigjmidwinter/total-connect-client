@@ -7,28 +7,28 @@ import pytest
 from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
-from total_connect_client.client import TotalConnectClient
+from total_connect_client.const import _ResultCode
 from total_connect_client.exceptions import AuthenticationError
 
 RESPONSE_SUCCESS = {
-    "ResultCode": TotalConnectClient.SUCCESS,
+    "ResultCode": _ResultCode.SUCCESS.value,
     "ResultData": "None",
     "SessionID": "123456890",
 }
 
 RESPONSE_BAD_USER_OR_PASSWORD = {
-    "ResultCode": TotalConnectClient.BAD_USER_OR_PASSWORD,
+    "ResultCode": _ResultCode.BAD_USER_OR_PASSWORD.value,
     "ResultData": "None",
 }
 
 RESPONSE_AUTHENTICATION_FAILED = {
-    "ResultCode": TotalConnectClient.AUTHENTICATION_FAILED,
+    "ResultCode": _ResultCode.AUTHENTICATION_FAILED.value,
     "ResultData": "None",
 }
 
 # random unknown response
 RESPONSE_INVALID_SESSION = {
-    "ResultCode": TotalConnectClient.INVALID_SESSION,
+    "ResultCode": _ResultCode.INVALID_SESSION.value,
     "ResultData": "None",
 }
 
@@ -83,16 +83,13 @@ class TestTotalConnectClient(unittest.TestCase):
             # success (second SUCCESS)
             self.client.authenticate()
             assert self.client.is_logged_in() is True
-            assert self.client.is_valid_credentials() is True
 
             # bad user or pass
             with pytest.raises(AuthenticationError):
                 self.client.authenticate()
             assert self.client.is_logged_in() is False
-            assert self.client.is_valid_credentials() is False
 
             # authentication failed
             with pytest.raises(AuthenticationError):
                 self.client.authenticate()
             assert self.client.is_logged_in() is False
-            assert self.client.is_valid_credentials() is False
