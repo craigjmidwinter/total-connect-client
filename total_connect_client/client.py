@@ -13,6 +13,8 @@ import time
 import warnings
 
 import zeep
+import zeep.cache
+import zeep.transports
 import requests.exceptions
 
 from .const import ArmType
@@ -52,6 +54,7 @@ class TotalConnectClient:
     FEATURE_NOT_SUPPORTED = -120
 
     MAX_RETRY_ATTEMPTS = 10
+    TIMEOUT = 60  # seconds until SOAP I/O will fail
 
     def __init__(
         self,
@@ -183,8 +186,14 @@ class TotalConnectClient:
         """Send a SOAP request."""
 
         if not self.soap_client:
+            transport = zeep.transports.Transport(
+                cache=zeep.cache.InMemoryCache(timeout=3600),
+                timeout=self.TIMEOUT,  # for loading WSDL and xsd documents
+                operation_timeout=self.TIMEOUT,  # for operations (POST/GET)
+            )
             self.soap_client = zeep.Client(
-                "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
+                "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL",
+                transport=transport
             )
         try:
             LOGGER.debug(f"sending API request {request}")
