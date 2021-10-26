@@ -43,7 +43,7 @@ class TotalConnectClient:
         password,
         usercodes=None,
         auto_bypass_battery=False,
-        retry_delay=3,  # seconds between retries
+        retry_delay=6,  # seconds between retries
     ):
         """Initialize."""
         self.times = {}
@@ -164,10 +164,11 @@ class TotalConnectClient:
     API_APP_ID = "14588"
     API_APP_VERSION = "1.0.34"
 
-    def request(self, operation_name, args, attempts_remaining=10):
+    def request(self, operation_name, args, attempts_remaining=5):
         """Send a SOAP request. args is a list or tuple defining the
         parameters to the operation.
         """
+        is_first_request = attempts_remaining == 5
         attempts_remaining -= 1
         if not self.soap_client:
             transport = zeep.transports.Transport(
@@ -180,24 +181,26 @@ class TotalConnectClient:
             response = self._send_one_request(operation_name, args)
             self._raise_for_retry(response)
             return response
-        # To retry an exception that could be raised during the request,
-        # add it to one of the following except blocks, depending on what
-        # you want to have happen. The first two blocks are the same except
-        # for what gets logged. The third block causes reauthentication.
-        except requests.exceptions.RequestException as err:
+        # To retry an exception that could be raised during the
+        # request, add it to an except block here, depending on what
+        # you want to have happen. The first block just retries and
+        # logs. The second block causes reauthentication.
+        except (RetryableTotalConnectError, requests.exceptions.RequestException) as err:
             if attempts_remaining <= 0:
                 raise
-            LOGGER.info(f"retrying {err} on {self.username}: {attempts_remaining}")
-            time.sleep(self.retry_delay)
-        except RetryableTotalConnectError as err:
-            if attempts_remaining <= 0:
-                raise
-            LOGGER.info(f"retrying {err.args[0]} on {self.username}: {attempts_remaining}")
+            if isinstance(err, RetryableTotalConnectError):
+                msg = f"{self.username} {operation_name}{args} {err.args[0]} on response"
+            else:
+                msg = f"{self.username} {operation_name}{args} {err} on request"
+            if is_first_request:
+                LOGGER.info(f"{msg}: {attempts_remaining} retries remaining")
+            else:
+                LOGGER.debug(f"{msg}: {attempts_remaining} retries remaining")
             time.sleep(self.retry_delay)
         except InvalidSessionError:
             if attempts_remaining <= 0:
                 raise
-            LOGGER.info(f"reauthenticating {self.username}: {attempts_remaining}")
+            LOGGER.info(f"reauthenticating {self.username}: {attempts_remaining} retries remaining")
             self.token = None
             self.authenticate()
         return self.request(operation_name, args, attempts_remaining)
