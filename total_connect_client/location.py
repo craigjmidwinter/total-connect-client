@@ -156,20 +156,23 @@ class TotalConnectLocation:
             return True
         return False
 
+    def _build_partition_list(self, partition_id=None):
+        """Build a list of partitions to use for arming/disarming."""
+        if partition_id is None:
+            return self._partition_list
+
+        if partition_id not in self.partitions:
+            raise TotalConnectError(
+                f"Partition {partition_id} does not exist "
+                f"at location {self.location_id}"
+            )
+        return {"int": [partition_id]}
+
     def arm(self, arm_type, partition_id=None):
         """Arm the given partition. If no partition is given, arm all partitions."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         assert isinstance(arm_type, ArmType)
-        partition_list = []
-        if partition_id is None:
-            partition_list = self._partition_list
-        else:
-            if partition_id not in self.partitions:
-                raise TotalConnectError(
-                    f"Partition {partition_id} does not exist "
-                    f"at location {self.location_id}"
-                )
-            partition_list.append(partition_id)
+        partition_list = self._build_partition_list(partition_id)
 
         result = self.parent.request("ArmSecuritySystemPartitionsV1", (
             self.parent.token, self.location_id, self.security_device_id,
@@ -186,17 +189,8 @@ class TotalConnectLocation:
         """Disarm the system."""
         # if no partition is given, disarm all partitions
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
-        partition_list = []
-        if partition_id is None:
-            partition_list = self._partition_list
-        else:
-            if partition_id not in self.partitions:
-                raise TotalConnectError(
-                    f"Partition {partition_id} does not exist "
-                    f"at location {self.location_id}"
-                )
-            partition_list.append(partition_id)
-
+        partition_list = self._build_partition_list(partition_id)
+        
         result = self.parent.request("DisarmSecuritySystemPartitionsV1", (
             self.parent.token, self.location_id, self.security_device_id,
             self.usercode, partition_list
