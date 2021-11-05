@@ -23,6 +23,7 @@ Code | Status
 10214 | Disarmed not ready to arm - zone(s) faulted
 10218 | Armed Stay Night
 10223 | Armed custom bypass
+10226 | Armed Stay.  Suddenly reported for Lynx Touch 7000 in November 2021, which previously reported as 10203
 10307 | Arming
 10308 | Disarming
 
