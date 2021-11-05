@@ -271,6 +271,12 @@ class TotalConnectClient:
             LOGGER.info("Logout Successful")
             self.token = None
 
+    def get_number_locations(self):
+        """Return the number of locations.  Home Assistant needs a way
+        to force the locations to load inside a callable function.
+        """
+        return len(self.locations)
+
     def _make_locations(self, response):
         """Return a dict mapping LocationID to TotalConnectLocation."""
         start_time = time.time()
