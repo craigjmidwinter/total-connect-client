@@ -17,6 +17,7 @@ ZoneStatus = zone.ZoneStatus
 ZoneType = zone.ZoneType
 ArmingState = const.ArmingState
 ArmType = const.ArmType
+ResultCode = const._ResultCode
 
 __all__ = [
     'TotalConnectClient', 'ArmType', 'ArmingState', 'ArmingHelper',
