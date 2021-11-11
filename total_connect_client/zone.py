@@ -43,6 +43,7 @@ class ZoneType(Enum):
     CARBON_MONOXIDE   = 14
     PROA7_MEDICAL     = 15
     FIRE_W_VERIFICATION = 16  # must trigger twice to cause an alarm
+    LYRIC_KEYPAD = 50
     LYRIC_LOCAL_ALARM = 89
 
     # According to the VISTA docs, these can be programmed via downloader software

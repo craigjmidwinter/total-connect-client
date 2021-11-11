@@ -15,4 +15,5 @@ Zone Type # | Type | Notes
 12 | tbd | Lyric "Temperature", ProSixFlood via ProA7Plus panel
 14 | Carbon Monoxide | Lynx Touch 7000 and 5800CO sensors
 15 | Medical | ProA7Plus medical button
+50 | Keypad | Lyric Keypad
 89 | tbd | Lyric "local alarm"
