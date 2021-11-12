@@ -301,6 +301,11 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_lyric_keypad.is_type_keypad())
         self.assertFalse(self.zone_lyric_temp.is_type_keypad())
 
+    def tests_type_temperature(self):
+        """Temperature test."""
+        self.assertFalse(self.zone_lyric_keypad.is_type_temperature())
+        self.assertTrue(self.zone_lyric_temp.is_type_temperature())
+
 def test_proa7_zones():
     """Test ProA7."""
 
