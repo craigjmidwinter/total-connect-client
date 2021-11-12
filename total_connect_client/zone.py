@@ -168,6 +168,10 @@ class TotalConnectZone:
         """Return true if zone type is medical."""
         return self.zone_type_id == ZoneType.PROA7_MEDICAL
 
+    def is_type_keypad(self):
+        """Return true if zone type is keypad."""
+        return self.zone_type_id == ZoneType.LYRIC_KEYPAD
+
     def _update(self, zone):
         """Update the zone."""
         assert zone
