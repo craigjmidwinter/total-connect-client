@@ -157,8 +157,11 @@ class TotalConnectZone:
 
     def is_type_fire(self):
         """Return true if zone type is fire or smoke."""
-        # TODO: why is ZoneType.MONITOR here? it's not a fire or smoke zone type
-        return self.zone_type_id in (ZoneType.FIRE_SMOKE, ZoneType.MONITOR)
+        return self.zone_type_id == ZoneType.FIRE_SMOKE
+
+    def is_type_temperature(self):
+        """Return true if zone monitors the temperature."""
+        return self.zone_type_id == ZoneType.MONITOR
 
     def is_type_carbon_monoxide(self):
         """Return true if zone type is carbon monoxide."""
