@@ -7,6 +7,7 @@ from const import (
     ZONE_LOW_BATTERY,
     ZONE_STATUS_LYRIC_CONTACT,
     ZONE_STATUS_LYRIC_LOCAL_ALARM,
+    ZONE_STATUS_LYRIC_KEYPAD,
     ZONE_STATUS_LYRIC_MOTION,
     ZONE_STATUS_LYRIC_POLICE,
     ZONE_STATUS_LYRIC_TEMP,
@@ -110,6 +111,7 @@ class TestTotalConnectZone(unittest.TestCase):
         self.zone_lyric_motion = tcz(ZONE_STATUS_LYRIC_MOTION)
         self.zone_lyric_police = tcz(ZONE_STATUS_LYRIC_POLICE)
         self.zone_lyric_temp = tcz(ZONE_STATUS_LYRIC_TEMP)
+        self.zone_lyric_keypad = tcz(ZONE_STATUS_LYRIC_KEYPAD)
         self.zone_lyric_local_alarm = tcz(ZONE_STATUS_LYRIC_LOCAL_ALARM)
 
     def tearDown(self):
@@ -128,6 +130,7 @@ class TestTotalConnectZone(unittest.TestCase):
         self.zone_lyric_motion = None
         self.zone_lyric_police = None
         self.zone_lyric_temp = None
+        self.zone_lyric_keypad = None
         self.zone_lyric_local_alarm = None
 
     def tests_normal(self):
@@ -242,6 +245,7 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_lyric_local_alarm.is_type_button())
         self.assertFalse(self.zone_lyric_motion.is_type_button())
         self.assertFalse(self.zone_lyric_temp.is_type_button())
+        self.assertFalse(self.zone_lyric_keypad.is_type_button())
 
     def tests_type_security(self):
         """Security zone."""
@@ -254,6 +258,7 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertTrue(self.zone_lyric_motion.is_type_security())
         self.assertTrue(self.zone_lyric_police.is_type_security())
         self.assertFalse(self.zone_lyric_temp.is_type_security())
+        self.assertFalse(self.zone_lyric_keypad.is_type_security())
 
     def tests_type_fire(self):
         """Fire zone."""
@@ -265,7 +270,7 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_lyric_local_alarm.is_type_fire())
         self.assertFalse(self.zone_lyric_motion.is_type_fire())
         self.assertFalse(self.zone_lyric_police.is_type_fire())
-        self.assertTrue(self.zone_lyric_temp.is_type_fire())
+        self.assertFalse(self.zone_lyric_temp.is_type_fire())
 
     def tests_type_carbon_monoxide(self):
         """Carbon monoxide zone."""
@@ -291,6 +296,15 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_lyric_police.is_type_motion())
         self.assertFalse(self.zone_lyric_temp.is_type_motion())
 
+    def tests_type_keypad(self):
+        """Keypad test."""
+        self.assertTrue(self.zone_lyric_keypad.is_type_keypad())
+        self.assertFalse(self.zone_lyric_temp.is_type_keypad())
+
+    def tests_type_temperature(self):
+        """Temperature test."""
+        self.assertFalse(self.zone_lyric_keypad.is_type_temperature())
+        self.assertTrue(self.zone_lyric_temp.is_type_temperature())
 
 def test_proa7_zones():
     """Test ProA7."""
