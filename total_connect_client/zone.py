@@ -43,7 +43,14 @@ class ZoneType(Enum):
     CARBON_MONOXIDE   = 14
     PROA7_MEDICAL     = 15
     FIRE_W_VERIFICATION = 16  # must trigger twice to cause an alarm
+    RF_ARM_STAY = 20 # keyfob
+    RF_ARM_AWAY = 21 # keyfob
+    RF_DISARM = 22 # keyfob
+    NO_ALARM_RESPONSE = 23 # per Vista docs
+    SILENT_BURGLARY = 24 # per Vista docs
     LYRIC_KEYPAD = 50
+    KEYSWITCH = 77 # per Vista20P docs
+    AAV_MONITOR = 81 # per Vista20P docs
     LYRIC_LOCAL_ALARM = 89
 
     # According to the VISTA docs, these can be programmed via downloader software
@@ -130,6 +137,9 @@ class TotalConnectZone:
                 ZoneType.PROA7_MEDICAL,
                 ZoneType.AUDIBLE_24HR,
                 ZoneType.SILENT_24HR,
+                ZoneType.RF_ARM_STAY,
+                ZoneType.RF_ARM_AWAY,
+                ZoneType.RF_DISARM
         ):
             return True
 
