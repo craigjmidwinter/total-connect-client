@@ -18,8 +18,20 @@ Zone Type # | Type | Notes
 12 | Monitor | Lyric "Temperature", ProSixFlood via ProA7Plus panel
 14 | Carbon Monoxide | Lynx Touch 7000 and 5800CO sensors
 15 | Medical | ProA7Plus medical button
+16 | Fire with verification | Must trigger twice to cause an alarm
+20 | RF Arm Stay | Keyfob
+21 | RF Arm Away | Keyfob
+22 | RF Disarm | Keyfob
+23 | No Alarm Response | Per Vista docs
+24 | Silent Burglary | Per Vista docs
 50 | Keypad | Lyric Keypad
+77 | Keyswitch | Per Vista20P docs
+81 | AAV Monitor | Tells that audio session in progress
 89 | tbd | Lyric "local alarm"
 90-93 | Vista configurable | (not yet seen in the wild)
 
-See https://www.alarmliquidators.com/content/Vista%2021IP-%20Programming%20Guide.pdf and http://techresource.online/training/ssnw/honeywell/zone-types
+See 
+- https://www.alarmliquidators.com/content/Vista%2021IP-%20Programming%20Guide.pdf
+- http://techresource.online/training/ssnw/honeywell/zone-types
+- http://www.honeywellmanual.com/pdf/vista20p.pdf
+
