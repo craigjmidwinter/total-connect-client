@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="total_connect_client",
-    version="2021.11.3",
+    version="2021.11.4",
     description="Interact with Total Connect 2 alarm systems",
     author="Craig J. Midwinter",
     author_email="craig.j.midwinter@gmail.com",
