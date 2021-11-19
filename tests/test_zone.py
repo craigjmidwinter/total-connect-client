@@ -332,4 +332,5 @@ def test_unknown_type():
     }
 
     zone = tcz(zone_unknown)
+    assert zone.zone_type_id == 12345
     assert zone._unknown_type_reported is True
