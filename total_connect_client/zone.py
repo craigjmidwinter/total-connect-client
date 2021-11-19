@@ -49,7 +49,7 @@ class ZoneType(Enum):
     NO_ALARM_RESPONSE = 23 # per Vista docs
     SILENT_BURGLARY = 24 # per Vista docs
     LYRIC_KEYPAD = 50
-    PROA7_GARAGE_MONITOR = 53 # see #167
+    PROA7_GARAGE_MONITOR = 53 # issue #167
     KEYSWITCH = 77 # per Vista20P docs
     AAV_MONITOR = 81 # per Vista20P docs
     LYRIC_LOCAL_ALARM = 89
@@ -160,6 +160,8 @@ class TotalConnectZone:
             ZoneType.AUDIBLE_24HR,
             ZoneType.INTERIOR_DELAY,
             ZoneType.LYRIC_LOCAL_ALARM,
+            ZoneType.PROA7_GARAGE_MONITOR,
+
         )
 
     def is_type_motion(self):
@@ -231,5 +233,4 @@ class TotalConnectZone:
 
     def _mark_as_bypassed(self):
         """Set is_bypassed status."""
-        # TODO: when does this get reset to no longer bypassed?
         self.status |= ZoneStatus.BYPASSED
