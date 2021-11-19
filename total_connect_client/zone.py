@@ -82,6 +82,7 @@ class TotalConnectZone:
         self.supervision_type = None
         self.chime_state = None
         self.device_type = None
+        self._unknown_type_reported = False
         self._update(zone)
 
     def __str__(self):
@@ -204,7 +205,7 @@ class TotalConnectZone:
         try:
             self.status = ZoneStatus(zone.get("ZoneStatus"))
         except ValueError:
-            LOGGER.error(f"unknown ZoneStatus in {zone}: please report at {PROJECT_URL}/issues")
+            LOGGER.info(f"unknown ZoneStatus {zone.get('ZoneStatus')} in {zone}: please report at {PROJECT_URL}/issues")
             raise TotalConnectError(f"unknown ZoneStatus in {zone}") from None
         self.can_be_bypassed = zone.get("CanBeBypassed")
 
@@ -213,10 +214,12 @@ class TotalConnectZone:
             # TODO: if zid is None should we raise PartialResponseError?
             self.zone_type_id = None if zid is None else ZoneType(zid)
         except ValueError:
-            LOGGER.error(f"unknown ZoneType {zid} in {zone}: please report at {PROJECT_URL}/issues")
             # if we get an unknown ZoneType we do not raise an exception, because
             # we know there are more zone types than we have in our enum, and
             # having an unknown ZoneType doesn't keep us from doing our work
+            if not self._unknown_type_reported:
+                LOGGER.info(f"unknown ZoneType {zid} in {zone}: please report at {PROJECT_URL}/issues")
+                self._unknown_type_reported = True
             self.zone_type_id = zid
 
         self.battery_level = zone.get("Batterylevel", self.battery_level)
