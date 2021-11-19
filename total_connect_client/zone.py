@@ -49,6 +49,7 @@ class ZoneType(Enum):
     NO_ALARM_RESPONSE = 23 # per Vista docs
     SILENT_BURGLARY = 24 # per Vista docs
     LYRIC_KEYPAD = 50
+    PROA7_GARAGE_MONITOR = 53 # see #167
     KEYSWITCH = 77 # per Vista20P docs
     AAV_MONITOR = 81 # per Vista20P docs
     LYRIC_LOCAL_ALARM = 89
