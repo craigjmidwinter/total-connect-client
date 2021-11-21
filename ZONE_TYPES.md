@@ -25,6 +25,7 @@ Zone Type # | Type | Notes
 23 | No Alarm Response | Per Vista docs
 24 | Silent Burglary | Per Vista docs
 50 | Keypad | Lyric Keypad
+53 | Garage Monitor | reported by ProA7 with SiX C2W
 77 | Keyswitch | Per Vista20P docs
 81 | AAV Monitor | Tells that audio session in progress
 89 | tbd | Lyric "local alarm"

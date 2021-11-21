@@ -27,31 +27,32 @@ class ZoneType(Enum):
     http://techresource.online/training/ssnw/honeywell/zone-types
     """
 
-    SECURITY          = 0  # for Vista, zone type 0 is not used
-    ENTRY_EXIT1       = 1  # starts countdown timer #1
-    ENTRY_EXIT2       = 2  # like ENTRY_EXIT1 but uses timer #2
-    PERIMETER         = 3  # zone type 3 usually triggers an immediate alarm...
-    PROA7_SECURITY    = 3  # but some panels like Lynx 7000 report timed zones as 3
-    INTERIOR_FOLLOWER = 4  # inactive when armed STAY
-    TROUBLE_ALARM     = 5  # trouble by day, alarm by night
-    SILENT_24HR       = 6  # 24-hour silent alarm (often used for police/hold-up)
-    AUDIBLE_24HR      = 7  # 24-hour audible alarm (often used for police)
-    AUX_24HR          = 8  # no local siren but keypad beeps (often used for medical)
-    FIRE_SMOKE        = 9
-    INTERIOR_DELAY    = 10  # inactive when armed STAY, otherwise like ENTRY_EXIT1
-    MONITOR           = 12  # e.g. temperature or flood
-    CARBON_MONOXIDE   = 14
-    PROA7_MEDICAL     = 15
-    FIRE_W_VERIFICATION = 16  # must trigger twice to cause an alarm
-    RF_ARM_STAY = 20 # keyfob
-    RF_ARM_AWAY = 21 # keyfob
-    RF_DISARM = 22 # keyfob
-    NO_ALARM_RESPONSE = 23 # per Vista docs
-    SILENT_BURGLARY = 24 # per Vista docs
-    LYRIC_KEYPAD = 50
-    KEYSWITCH = 77 # per Vista20P docs
-    AAV_MONITOR = 81 # per Vista20P docs
-    LYRIC_LOCAL_ALARM = 89
+    SECURITY             = 0  # for Vista, zone type 0 is not used
+    ENTRY_EXIT1          = 1  # starts countdown timer #1
+    ENTRY_EXIT2          = 2  # like ENTRY_EXIT1 but uses timer #2
+    PERIMETER            = 3  # zone type 3 usually triggers an immediate alarm...
+    PROA7_SECURITY       = 3  # but some panels like Lynx 7000 report timed zones as 3
+    INTERIOR_FOLLOWER    = 4  # inactive when armed STAY
+    TROUBLE_ALARM        = 5  # trouble by day, alarm by night
+    SILENT_24HR          = 6  # 24-hour silent alarm (often used for police/hold-up)
+    AUDIBLE_24HR         = 7  # 24-hour audible alarm (often used for police)
+    AUX_24HR             = 8  # no local siren but keypad beeps (often used for medical)
+    FIRE_SMOKE           = 9
+    INTERIOR_DELAY       = 10  # inactive when armed STAY, otherwise like ENTRY_EXIT1
+    MONITOR              = 12  # e.g. temperature or flood
+    CARBON_MONOXIDE      = 14
+    PROA7_MEDICAL        = 15
+    FIRE_W_VERIFICATION  = 16  # must trigger twice to cause an alarm
+    RF_ARM_STAY          = 20  # keyfob
+    RF_ARM_AWAY          = 21  # keyfob
+    RF_DISARM            = 22  # keyfob
+    NO_ALARM_RESPONSE    = 23  # per Vista docs
+    SILENT_BURGLARY      = 24  # per Vista docs
+    LYRIC_KEYPAD         = 50
+    PROA7_GARAGE_MONITOR = 53  # issue #167
+    KEYSWITCH            = 77  # per Vista20P docs
+    AAV_MONITOR          = 81  # per Vista20P docs
+    LYRIC_LOCAL_ALARM    = 89
 
     # According to the VISTA docs, these can be programmed via downloader software
     # or from a keypad using data fields *182-*185
@@ -81,6 +82,7 @@ class TotalConnectZone:
         self.supervision_type = None
         self.chime_state = None
         self.device_type = None
+        self._unknown_type_reported = False
         self._update(zone)
 
     def __str__(self):
@@ -159,6 +161,8 @@ class TotalConnectZone:
             ZoneType.AUDIBLE_24HR,
             ZoneType.INTERIOR_DELAY,
             ZoneType.LYRIC_LOCAL_ALARM,
+            ZoneType.PROA7_GARAGE_MONITOR,
+
         )
 
     def is_type_motion(self):
@@ -201,7 +205,7 @@ class TotalConnectZone:
         try:
             self.status = ZoneStatus(zone.get("ZoneStatus"))
         except ValueError:
-            LOGGER.error(f"unknown ZoneStatus in {zone}: please report at {PROJECT_URL}/issues")
+            LOGGER.info(f"unknown ZoneStatus {zone.get('ZoneStatus')} in {zone}: please report at {PROJECT_URL}/issues")
             raise TotalConnectError(f"unknown ZoneStatus in {zone}") from None
         self.can_be_bypassed = zone.get("CanBeBypassed")
 
@@ -210,10 +214,12 @@ class TotalConnectZone:
             # TODO: if zid is None should we raise PartialResponseError?
             self.zone_type_id = None if zid is None else ZoneType(zid)
         except ValueError:
-            LOGGER.error(f"unknown ZoneType {zid} in {zone}: please report at {PROJECT_URL}/issues")
             # if we get an unknown ZoneType we do not raise an exception, because
             # we know there are more zone types than we have in our enum, and
             # having an unknown ZoneType doesn't keep us from doing our work
+            if not self._unknown_type_reported:
+                LOGGER.info(f"unknown ZoneType {zid} in {zone}: please report at {PROJECT_URL}/issues")
+                self._unknown_type_reported = True
             self.zone_type_id = zid
 
         self.battery_level = zone.get("Batterylevel", self.battery_level)
@@ -230,5 +236,4 @@ class TotalConnectZone:
 
     def _mark_as_bypassed(self):
         """Set is_bypassed status."""
-        # TODO: when does this get reset to no longer bypassed?
         self.status |= ZoneStatus.BYPASSED

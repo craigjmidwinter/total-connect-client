@@ -68,7 +68,7 @@ ZS_NORMAL = {
     "PartitionId": "1",
     "Batterylevel": "-1",
     "Signalstrength": "-1",
-    "zoneAdditionalInfo": None,
+    "zoneAdditionalInfo": {"DeviceType": "test"},
     "ZoneID": "1",
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": ZoneType.SECURITY,
