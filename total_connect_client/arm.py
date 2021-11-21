@@ -31,5 +31,7 @@ TC = TotalConnectClient(USERNAME, PASSWORD, USERCODES)
 for location_id in TC.locations:
     TC.locations[location_id].arm(arm_type)
 
+print(f"Armed: {arm_type}")
+
 sys.exit()
 
