@@ -15,6 +15,7 @@ from const import (
 
 from total_connect_client.const import _ResultCode
 from total_connect_client.client import ArmingHelper
+
 # from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"

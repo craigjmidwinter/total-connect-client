@@ -12,7 +12,10 @@ from const import (
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
-from total_connect_client.exceptions import BadResultCodeError, PartialResponseError
+from total_connect_client.exceptions import (
+    FeatureNotSupportedError,
+    PartialResponseError,
+)
 
 RESPONSE_DISARMED_NONE = {"ResultCode": 0}
 
@@ -74,5 +77,5 @@ class TestTotalConnectClient(unittest.TestCase):
             # should start disarmed
             assert self.location.arming_state.is_disarmed()
 
-            with pytest.raises(BadResultCodeError):
+            with pytest.raises(FeatureNotSupportedError):
                 self.location.get_panel_meta_data()

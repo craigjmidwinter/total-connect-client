@@ -11,7 +11,6 @@ from const import (
     RESPONSE_ARMED_STAY,
     RESPONSE_ARMED_STAY_NIGHT,
     RESPONSE_DISARMED,
-    RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
 from total_connect_client import ArmingHelper
@@ -79,44 +78,59 @@ class TestTotalConnectClient(unittest.TestCase):
 
         def runall(success_response, armit, success_armingstate):
             # first test is all good
-            run(None,
+            run(
+                None,
                 [RESPONSE_ARM_SUCCESS, success_response],
                 armit,
-                success_armingstate)
+                success_armingstate,
+            )
             for failresponse in (
-                    RESPONSE_ARM_FAILED,            # "zone faulted"
-                    RESPONSE_USER_CODE_INVALID,     # "bad usercode"
-                    RESPONSE_FEATURE_NOT_SUPPORTED,
+                RESPONSE_ARM_FAILED,  # "zone faulted"
+                RESPONSE_USER_CODE_INVALID,  # "bad usercode"
             ):
-                run(BadResultCodeError,
+                run(
+                    BadResultCodeError,
                     [failresponse, RESPONSE_DISARMED],
                     armit,
-                    ArmingState.DISARMED)
+                    ArmingState.DISARMED,
+                )
             # last test has 'unavailable' usercode
-            run(AuthenticationError,
+            run(
+                AuthenticationError,
                 [RESPONSE_USER_CODE_UNAVAILABLE, RESPONSE_DISARMED],
                 armit,
-                ArmingState.DISARMED)
+                ArmingState.DISARMED,
+            )
 
-        runall(RESPONSE_ARMED_AWAY,
-               lambda loc: ArmingHelper(loc).arm_away(),
-               ArmingState.ARMED_AWAY)
+        runall(
+            RESPONSE_ARMED_AWAY,
+            lambda loc: ArmingHelper(loc).arm_away(),
+            ArmingState.ARMED_AWAY,
+        )
         # this test claims to be testing arm away instant but uses the
         # arm away response
-        runall(RESPONSE_ARMED_AWAY,
-               lambda loc: ArmingHelper(loc).arm_away_instant(),
-               ArmingState.ARMED_AWAY)
-        runall(RESPONSE_ARMED_STAY,
-               lambda loc: ArmingHelper(loc).arm_stay(),
-               ArmingState.ARMED_STAY)
+        runall(
+            RESPONSE_ARMED_AWAY,
+            lambda loc: ArmingHelper(loc).arm_away_instant(),
+            ArmingState.ARMED_AWAY,
+        )
+        runall(
+            RESPONSE_ARMED_STAY,
+            lambda loc: ArmingHelper(loc).arm_stay(),
+            ArmingState.ARMED_STAY,
+        )
         # this test claims to be testing arm stay instant but uses the
         # arm stay response
-        runall(RESPONSE_ARMED_STAY,
-               lambda loc: ArmingHelper(loc).arm_stay_instant(),
-               ArmingState.ARMED_STAY)
-        runall(RESPONSE_ARMED_STAY_NIGHT,
-               lambda loc: ArmingHelper(loc).arm_stay_night(),
-               ArmingState.ARMED_STAY_NIGHT)
+        runall(
+            RESPONSE_ARMED_STAY,
+            lambda loc: ArmingHelper(loc).arm_stay_instant(),
+            ArmingState.ARMED_STAY,
+        )
+        runall(
+            RESPONSE_ARMED_STAY_NIGHT,
+            lambda loc: ArmingHelper(loc).arm_stay_night(),
+            ArmingState.ARMED_STAY_NIGHT,
+        )
 
     def tests_disarm(self):
         """Test disarm."""

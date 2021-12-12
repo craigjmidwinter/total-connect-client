@@ -1,9 +1,9 @@
 from distutils.core import setup
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="total_connect_client",
-    version="2021.11.5",
+    version="2021.12",
     description="Interact with Total Connect 2 alarm systems",
     author="Craig J. Midwinter",
     author_email="craig.j.midwinter@gmail.com",

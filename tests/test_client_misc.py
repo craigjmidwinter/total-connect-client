@@ -71,8 +71,7 @@ class TestTotalConnectClient(unittest.TestCase):
             # first response is SUCCESS
             self.location.get_zone_details()
             # second response is FEATURE_NOT_SUPPORTED
-            with pytest.raises(BadResultCodeError):
-                self.location.get_zone_details()
+            self.location.get_zone_details()
             # third response is UNKNOWN
             with pytest.raises(BadResultCodeError):
                 self.location.get_zone_details()

@@ -20,6 +20,7 @@ from .const import ArmType, _ResultCode
 from .exceptions import (
     AuthenticationError,
     BadResultCodeError,
+    FeatureNotSupportedError,
     InvalidSessionError,
     RetryableTotalConnectError,
     TotalConnectError,
@@ -153,6 +154,8 @@ class TotalConnectClient:
                 _ResultCode.USER_CODE_UNAVAILABLE,
         ):
             raise AuthenticationError(rc.name, response)
+        if rc == _ResultCode.FEATURE_NOT_SUPPORTED:
+            raise FeatureNotSupportedError(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
     def _send_one_request(self, operation_name, args):
