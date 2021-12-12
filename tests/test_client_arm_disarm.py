@@ -11,7 +11,6 @@ from const import (
     RESPONSE_ARMED_STAY,
     RESPONSE_ARMED_STAY_NIGHT,
     RESPONSE_DISARMED,
-    RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
 from total_connect_client import ArmingHelper
@@ -86,7 +85,6 @@ class TestTotalConnectClient(unittest.TestCase):
             for failresponse in (
                     RESPONSE_ARM_FAILED,            # "zone faulted"
                     RESPONSE_USER_CODE_INVALID,     # "bad usercode"
-                    RESPONSE_FEATURE_NOT_SUPPORTED,
             ):
                 run(BadResultCodeError,
                     [failresponse, RESPONSE_DISARMED],
