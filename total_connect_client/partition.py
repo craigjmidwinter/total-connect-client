@@ -35,7 +35,7 @@ class TotalConnectPartition:
             f"  New: {self.is_new_partition}\tNight Stay enabled: {self.is_night_stay_enabled}\n"
             f"  Exit delay: {self.exit_delay_timer}\n"
         )
-        
+
         return data
 
     def arm(self, arm_type):

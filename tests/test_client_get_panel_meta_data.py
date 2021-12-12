@@ -12,7 +12,10 @@ from const import (
     RESPONSE_FEATURE_NOT_SUPPORTED,
 )
 
-from total_connect_client.exceptions import BadResultCodeError, FeatureNotSupportedError, PartialResponseError
+from total_connect_client.exceptions import (
+    FeatureNotSupportedError,
+    PartialResponseError,
+)
 
 RESPONSE_DISARMED_NONE = {"ResultCode": 0}
 

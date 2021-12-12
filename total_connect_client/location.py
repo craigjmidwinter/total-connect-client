@@ -101,8 +101,8 @@ class TotalConnectLocation:
             self._update_zone_details(result)
         except FeatureNotSupportedError:
             LOGGER.warning(
-            "getting Zone Details is a feature not supported by "
-            "your Total Connect account or hardware"
+                "getting Zone Details is a feature not supported by "
+                "your Total Connect account or hardware"
             )
 
     def get_partition_details(self):
@@ -191,7 +191,7 @@ class TotalConnectLocation:
         # if no partition is given, disarm all partitions
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         partition_list = self._build_partition_list(partition_id)
-        
+
         result = self.parent.request("DisarmSecuritySystemPartitionsV1", (
             self.parent.token, self.location_id, self.security_device_id,
             self.usercode, partition_list

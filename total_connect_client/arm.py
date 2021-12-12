@@ -9,6 +9,7 @@ from .client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
+
 def usage():
     """Print usage instructions."""
     print("usage:  username location1=usercode1,location2=usercode2 arm_type \n")
@@ -16,7 +17,7 @@ def usage():
     for i in list(ArmType):
         print(f"  {i.name}: {i.value}")
     sys.exit()
-    
+
 
 if len(sys.argv) != 4:
     usage()
@@ -34,4 +35,3 @@ for location_id in TC.locations:
 print(f"Armed: {arm_type}")
 
 sys.exit()
-

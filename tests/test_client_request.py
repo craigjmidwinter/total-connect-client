@@ -47,9 +47,9 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_DISARMED,
         ]
 
-        with patch(
-            "zeep.Client"
-        ), patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
+        with patch("zeep.Client"), patch(
+            PATCH_EVAL, side_effect=serialize_responses
+        ) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
@@ -63,9 +63,7 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_BAD_USER_OR_PASSWORD,
         ]
 
-        with patch(
-            "zeep.Client"
-        ), patch(
+        with patch("zeep.Client"), patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
         ) as mock_request:
             with pytest.raises(AuthenticationError):
@@ -74,15 +72,13 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_init_failed_to_connect(self):
         """Test init sequence when it fails to connect."""
-        serialize_responses = [RESPONSE_FAILED_TO_CONNECT for x in range(MAX_RETRY_ATTEMPTS)]
+        serialize_responses = [
+            RESPONSE_FAILED_TO_CONNECT for x in range(MAX_RETRY_ATTEMPTS)
+        ]
 
-        with patch(
-            "zeep.Client"
-        ), patch("time.sleep", autospec=True), patch(
+        with patch("zeep.Client"), patch("time.sleep", autospec=True), patch(
             PATCH_EVAL, side_effect=serialize_responses
-        ) as mock_request, pytest.raises(
-            Exception
-        ) as exc:
+        ) as mock_request, pytest.raises(Exception) as exc:
             client = TotalConnectClient(
                 "username", "password", usercodes=None, retry_delay=0
             )
@@ -93,15 +89,13 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_connection_error(self):
         """Test a connection error."""
-        serialize_responses = [RESPONSE_CONNECTION_ERROR for x in range(MAX_RETRY_ATTEMPTS)]
+        serialize_responses = [
+            RESPONSE_CONNECTION_ERROR for x in range(MAX_RETRY_ATTEMPTS)
+        ]
 
-        with patch(
-            "zeep.Client"
-        ), patch("time.sleep", autospec=True), patch(
+        with patch("zeep.Client"), patch("time.sleep", autospec=True), patch(
             "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ) as mock_request, pytest.raises(
-            Exception
-        ) as exc:
+        ) as mock_request, pytest.raises(Exception) as exc:
             client = TotalConnectClient(
                 "username", "password", usercodes=None, retry_delay=0
             )
@@ -125,9 +119,9 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_ARMED_AWAY,
         ]
 
-        with patch(
-            "zeep.Client"
-        ), patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
+        with patch("zeep.Client"), patch(
+            PATCH_EVAL, side_effect=serialize_responses
+        ) as mock_request:
             client = TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
             if client.locations:  # force client to fetch them
@@ -142,9 +136,9 @@ class TestTotalConnectClient(unittest.TestCase):
             RESPONSE_UNKNOWN,
         ]
 
-        with patch(
-            "zeep.Client"
-        ), patch(PATCH_EVAL, side_effect=serialize_responses) as mock_request:
+        with patch("zeep.Client"), patch(
+            PATCH_EVAL, side_effect=serialize_responses
+        ) as mock_request:
             with pytest.raises(TotalConnectError):
                 TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
