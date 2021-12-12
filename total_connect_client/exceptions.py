@@ -16,6 +16,10 @@ class InvalidSessionError(AuthenticationError):
 class BadResultCodeError(TotalConnectError):
     pass
 
+class FeatureNotSupportedError(TotalConnectError):
+    """The user hardware and/or account permissions do not support
+    the requested feature.
+    """
 
 class RetryableTotalConnectError(TotalConnectError):
     """These errors are likely to resolve themselves if the action is retried.
