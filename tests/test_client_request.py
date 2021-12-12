@@ -21,7 +21,7 @@ from const import (
 )
 
 from total_connect_client.client import TotalConnectClient
-from total_connect_client.exceptions import AuthenticationError, TotalConnectError
+from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
 
 PATCH_EVAL = "total_connect_client.client.TotalConnectClient._send_one_request"
 
@@ -139,6 +139,6 @@ class TestTotalConnectClient(unittest.TestCase):
         with patch("zeep.Client"), patch(
             PATCH_EVAL, side_effect=serialize_responses
         ) as mock_request:
-            with pytest.raises(TotalConnectError):
+            with pytest.raises(BadResultCodeError):
                 TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
