@@ -4,7 +4,7 @@ from copy import deepcopy
 from unittest.mock import Mock
 
 import pytest
-from const import PARTITION_DETAILS_1, PARTITION_DISARMED
+from const import PARTITION_ARMED_STAY_10230, PARTITION_DETAILS_1, PARTITION_DISARMED
 
 from total_connect_client.client import ArmingHelper
 from total_connect_client.exceptions import PartialResponseError, TotalConnectError
@@ -77,3 +77,8 @@ def tests_arming_state():
     assert partition.arming_state.is_triggered_fire() is False
     assert partition.arming_state.is_triggered_gas() is False
     assert partition.arming_state.is_triggered() is False
+
+    # test recreates issue #173
+    partition = TotalConnectPartition(PARTITION_ARMED_STAY_10230, None)
+    assert partition.arming_state.is_armed_home() is True
+    
