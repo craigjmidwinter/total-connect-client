@@ -54,5 +54,5 @@ class TotalConnectPartition:
         try:
             self.arming_state = ArmingState(astate)
         except ValueError:
-            LOGGER.error(f"unknown ArmingState {astate} in {info}: report at {PROJECT_URL}/issues")
-            raise TotalConnectError(f"unknown ArmingState {astate} in {info}") from None
+            LOGGER.error(f"unknown partition ArmingState {astate} in {info}: report at {PROJECT_URL}/issues")
+            raise TotalConnectError(f"unknown partition ArmingState {astate} in {info}") from None

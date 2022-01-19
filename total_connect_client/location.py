@@ -277,9 +277,9 @@ class TotalConnectLocation:
             self.arming_state = ArmingState(astate)
         except ValueError:
             LOGGER.error(
-                f"unknown ArmingState {astate} in {result}: please report at {PROJECT_URL}/issues"
+                f"unknown location ArmingState {astate} in {result}: please report at {PROJECT_URL}/issues"
             )
-            raise TotalConnectError(f"unknown ArmingState {astate} in {result}") from None
+            raise TotalConnectError(f"unknown location ArmingState {astate} in {result}") from None
 
     def _update_partitions(self, result):
         """Update partition info from Partitions."""
