@@ -22,6 +22,7 @@ class ArmingState(Enum):
     ARMED_AWAY_BYPASS = 10202
     ARMED_STAY = 10203
     ARMED_STAY_OTHER = 10226
+    ARMED_STAY_10230 = 10230    # issue #173
     ARMED_STAY_BYPASS = 10204
     ARMED_AWAY_INSTANT = 10205
     ARMED_AWAY_INSTANT_BYPASS = 10206
@@ -77,6 +78,7 @@ class ArmingState(Enum):
             ArmingState.ARMED_STAY_INSTANT_BYPASS,
             ArmingState.ARMED_STAY_NIGHT,
             ArmingState.ARMED_STAY_OTHER,
+            ArmingState.ARMED_STAY_10230,
         )
 
     def is_armed_night(self):
