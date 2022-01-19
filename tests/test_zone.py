@@ -16,6 +16,7 @@ from const import (
 
 from total_connect_client.zone import ZoneStatus, ZoneType
 from total_connect_client.zone import TotalConnectZone as tcz
+from total_connect_client.exceptions import TotalConnectError
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
@@ -334,3 +335,23 @@ def test_unknown_type():
     zone = tcz(zone_unknown)
     assert zone.zone_type_id == 12345
     assert zone._unknown_type_reported is True
+
+def test_unknown_status():
+    """Test unknown ZoneStatus."""
+    zone_unknown = {
+        "ZoneDescription": "Unknown",
+        "PartitionId": "1",
+        "ZoneTypeId": 12345,
+        "CanBeBypassed": 0,
+
+    }
+
+    # invalid status (i.e. None or a string) should raise exception
+    with pytest.raises(TotalConnectError):
+        tcz(zone_unknown)
+
+    # unknown but valid status provided, should not raise
+    zone_unknown["ZoneStatus"] = 255
+    zone = tcz(zone_unknown)
+    assert zone.status == 255
+
