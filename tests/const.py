@@ -135,7 +135,7 @@ PARTITION_ARMED_AWAY = {
     "ArmingState": ArmingState.ARMED_AWAY.value,
 }
 
-PARTITION_ARMED_STAY_10230 = {
+PARTITION_ARMED_STAY_PROA7 = {
     "PartitionID": 1,
     "ArmingState": 10230,
     "PartitionName": "Test_10230",

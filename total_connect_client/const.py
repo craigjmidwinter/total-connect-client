@@ -16,19 +16,27 @@ class ArmType(Enum):
 class ArmingState(Enum):
     DISARMED = 10200
     DISARMED_BYPASS = 10211
-    DISARMED_ZONE_FAULTED = 10214  # seems to apply to location, not to partition.  See issue #144
+    DISARMED_ZONE_FAULTED = (
+        10214  # seems to apply to location, not to partition.  See issue #144
+    )
 
     ARMED_AWAY = 10201
     ARMED_AWAY_BYPASS = 10202
     ARMED_STAY = 10203
     ARMED_STAY_OTHER = 10226
-    ARMED_STAY_10230 = 10230    # issue #173
+    ARMED_STAY_PROA7 = 10230  # issue #173
+    ARMED_STAY_BYPASS_PROA7 = 10231  # issue #177
+    ARMED_STAY_INSTANT_PROA7 = 10232  # issue #177
+    ARMED_STAY_INSTANT_BYPASS_PROA7 = 10233  # issue #177
     ARMED_STAY_BYPASS = 10204
     ARMED_AWAY_INSTANT = 10205
     ARMED_AWAY_INSTANT_BYPASS = 10206
     ARMED_STAY_INSTANT = 10209
     ARMED_STAY_INSTANT_BYPASS = 10210
     ARMED_STAY_NIGHT = 10218
+    ARMED_STAY_NIGHT_BYPASS_PROA7 = 10219  # issue #177
+    ARMED_STAY_NIGHT_INSTANT_PROA7 = 10220  # issue #177
+    ARMED_STAY_NIGHT_INSTANT_BYPASS_PROA7 = 10221  # issue #177
     ARMED_CUSTOM_BYPASS = 10223
 
     ALARMING = 10207
@@ -53,7 +61,9 @@ class ArmingState(Enum):
     def is_disarmed(self):
         """Return True if the system is disarmed."""
         return self in (
-            ArmingState.DISARMED, ArmingState.DISARMED_BYPASS, ArmingState.DISARMED_ZONE_FAULTED
+            ArmingState.DISARMED,
+            ArmingState.DISARMED_BYPASS,
+            ArmingState.DISARMED_ZONE_FAULTED,
         )
 
     def is_armed_away(self):
@@ -73,23 +83,36 @@ class ArmingState(Enum):
         """Return True if the system is armed home/stay in any way."""
         return self in (
             ArmingState.ARMED_STAY,
+            ArmingState.ARMED_STAY_PROA7,
             ArmingState.ARMED_STAY_BYPASS,
+            ArmingState.ARMED_STAY_BYPASS_PROA7,
             ArmingState.ARMED_STAY_INSTANT,
+            ArmingState.ARMED_STAY_INSTANT_PROA7,
             ArmingState.ARMED_STAY_INSTANT_BYPASS,
+            ArmingState.ARMED_STAY_INSTANT_BYPASS_PROA7,
             ArmingState.ARMED_STAY_NIGHT,
+            ArmingState.ARMED_STAY_NIGHT_BYPASS_PROA7,
+            ArmingState.ARMED_STAY_NIGHT_INSTANT_PROA7,
+            ArmingState.ARMED_STAY_NIGHT_INSTANT_BYPASS_PROA7,
             ArmingState.ARMED_STAY_OTHER,
-            ArmingState.ARMED_STAY_10230,
         )
 
     def is_armed_night(self):
         """Return True if the system is armed night in any way."""
-        return self == ArmingState.ARMED_STAY_NIGHT
+        return self in (
+            ArmingState.ARMED_STAY_NIGHT,
+            ArmingState.ARMED_STAY_NIGHT_BYPASS_PROA7,
+            ArmingState.ARMED_STAY_NIGHT_INSTANT_PROA7,
+            ArmingState.ARMED_STAY_NIGHT_INSTANT_BYPASS_PROA7,
+        )
 
     def is_armed(self):
         """Return True if the system is armed in any way."""
         return (
-            self.is_armed_away() or self.is_armed_home() or  # noqa: W504
-            self.is_armed_night() or self.is_armed_custom_bypass()
+            self.is_armed_away()
+            or self.is_armed_home()
+            or self.is_armed_night()  # noqa: W504
+            or self.is_armed_custom_bypass()
         )
 
     def is_triggered_police(self):
@@ -107,7 +130,9 @@ class ArmingState(Enum):
     def is_triggered(self):
         """Return True if the system is triggered in any way."""
         return (
-            self.is_triggered_fire() or self.is_triggered_gas() or self.is_triggered_police()
+            self.is_triggered_fire()
+            or self.is_triggered_gas()
+            or self.is_triggered_police()
         )
 
 

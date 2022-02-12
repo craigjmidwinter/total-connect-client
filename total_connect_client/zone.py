@@ -14,9 +14,10 @@ class ZoneStatus(IntFlag):
     BYPASSED = 1
     FAULT = 2
     TROUBLE = 8  # is also Tampered
+    TAMPER = 16 # Tamper for ProA7, see #176
     LOW_BATTERY = 64
     TRIGGERED = 256
-    KNOWN = NORMAL | BYPASSED | FAULT | TROUBLE | LOW_BATTERY | TRIGGERED
+    KNOWN = NORMAL | BYPASSED | FAULT | TROUBLE | TAMPER | LOW_BATTERY | TRIGGERED
 
 
 class ZoneType(Enum):
@@ -115,7 +116,7 @@ class TotalConnectZone:
 
     def is_tampered(self):
         """Return true if zone is tampered."""
-        return self.status & ZoneStatus.TROUBLE > 0
+        return (self.status & ZoneStatus.TROUBLE > 0) or (self.status & ZoneStatus.TAMPER > 0)
 
     def is_low_battery(self):
         """Return true if low battery."""

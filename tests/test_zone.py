@@ -315,12 +315,13 @@ def test_proa7_zones():
         "PartitionId": "1",
         "ZoneTypeId": ZoneType.PROA7_MEDICAL,
         "CanBeBypassed": 0,
-        "ZoneStatus": ZoneStatus.NORMAL,
+        "ZoneStatus": ZoneStatus.TAMPER,
     }
 
     zone = tcz(zone_medical)
     assert zone.is_type_medical() is True
     assert zone.is_type_button() is True
+    assert zone.is_tampered() is True
 
 def test_unknown_type():
     """Test unknown ZoneType."""

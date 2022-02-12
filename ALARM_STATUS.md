@@ -22,8 +22,15 @@ Code | Status
 10213 | Alarming Carbon Monoxide
 10214 | Disarmed not ready to arm - zone(s) faulted
 10218 | Armed Stay Night
+10219 | Armed Stay Night Bypass.  Reported by ProA7 panel.
+10220 | Armed Stay Night Instant.  Reported by ProA7 panel.
+10221 | Armed Stay Night Instant Bypass.  Reported by ProA7 panel.
 10223 | Armed custom bypass
 10226 | Armed Stay.  Suddenly reported for Lynx Touch 7000 in November 2021, which previously reported as 10203
+10230 | Armed Stay.  Reported by ProA7 panel.
+10231 | Armed Stay Bypass. Reported by ProA7 panel.
+10232 | Armed Stay Instant. Reported by ProA7 panel.
+10233 | Armed Stay Instant Bypass. Reported by ProA7 panel.
 10307 | Arming
 10308 | Disarming
 
@@ -39,6 +46,7 @@ Code | Status
 2 | Fault
 8 | Trouble/Tampered
 10 | Fault + Trouble
+16 | Tamper (ProA7)
 64 | Low Battery
 65 | Low Battery + Bypassed
 72 | Trouble + Low Battery
@@ -54,7 +62,7 @@ Bit | Integer | Status
 2 | 2 | Fault
 3 | 4 | ???
 4 | 8 | Tamper/Trouble
-5 | 16 | ???
+5 | 16 | Tamper (on ProA7 see #176) 
 6 | 32 | ???
 7 | 64 | Low Battery
 8 | 128 | ???
