@@ -39,6 +39,7 @@ Code | Status
 2 | Fault
 8 | Trouble/Tampered
 10 | Fault + Trouble
+16 | 
 64 | Low Battery
 65 | Low Battery + Bypassed
 72 | Trouble + Low Battery
@@ -54,7 +55,7 @@ Bit | Integer | Status
 2 | 2 | Fault
 3 | 4 | ???
 4 | 8 | Tamper/Trouble
-5 | 16 | ???
+5 | 16 | Tamper (on ProA7 see #176) 
 6 | 32 | ???
 7 | 64 | Low Battery
 8 | 128 | ???
