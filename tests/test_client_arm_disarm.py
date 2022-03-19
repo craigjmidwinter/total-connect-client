@@ -15,7 +15,7 @@ from const import (
 
 from total_connect_client import ArmingHelper
 from total_connect_client.const import ArmingState, _ResultCode
-from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
+from total_connect_client.exceptions import AuthenticationError, BadResultCodeError, UsercodeInvalid
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 
@@ -86,7 +86,6 @@ class TestTotalConnectClient(unittest.TestCase):
             )
             for failresponse in (
                 RESPONSE_ARM_FAILED,  # "zone faulted"
-                RESPONSE_USER_CODE_INVALID,  # "bad usercode"
             ):
                 run(
                     BadResultCodeError,
@@ -195,7 +194,7 @@ class TestTotalConnectClient(unittest.TestCase):
             location.get_panel_meta_data()
             assert location.arming_state.is_armed_away()
 
-            with pytest.raises(BadResultCodeError):
+            with pytest.raises(UsercodeInvalid):
                 ArmingHelper(location).disarm()
 
             # should still be armed_away when disarming fails
