@@ -24,6 +24,7 @@ from .exceptions import (
     InvalidSessionError,
     RetryableTotalConnectError,
     TotalConnectError,
+    UsercodeInvalid,
 )
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
@@ -155,6 +156,8 @@ class TotalConnectClient:
                 _ResultCode.USER_CODE_UNAVAILABLE,
         ):
             raise AuthenticationError(rc.name, response)
+        if rc == _ResultCode.USER_CODE_INVALID:
+            raise UsercodeInvalid(rc.name, response)
         if rc == _ResultCode.FEATURE_NOT_SUPPORTED:
             raise FeatureNotSupportedError(rc.name, response)
         raise BadResultCodeError(rc.name, response)
@@ -250,13 +253,14 @@ class TotalConnectClient:
     def validate_usercode(self, device_id, usercode):
         """Return True if the usercode is valid for the device."""
         response = self.request("ValidateUserCode", (self.token, device_id, str(usercode)))
-        if _ResultCode.from_response(response) in (
-            _ResultCode.USER_CODE_INVALID,
-            _ResultCode.USER_CODE_UNAVAILABLE,
-        ):
+        try:
+            self.raise_for_resultcode(response)
+        except UsercodeInvalid:
             LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
             return False
-        self.raise_for_resultcode(response)
+        except AuthenticationError:
+            LOGGER.warning(f"usercode {usercode} unavailable for device {device_id}")
+            return False
         return True
 
     def is_logged_in(self):
