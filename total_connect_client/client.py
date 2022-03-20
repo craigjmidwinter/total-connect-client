@@ -27,6 +27,7 @@ from .exceptions import (
     ServiceUnavailable,
     TotalConnectError,
     UsercodeInvalid,
+    UsercodeUnavailable,
 )
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
@@ -153,11 +154,10 @@ class TotalConnectClient:
         ):
             return
         self._raise_for_retry(response)
-        if rc in (
-                _ResultCode.BAD_USER_OR_PASSWORD,
-                _ResultCode.USER_CODE_UNAVAILABLE,
-        ):
+        if rc == _ResultCode.BAD_USER_OR_PASSWORD:
             raise AuthenticationError(rc.name, response)
+        if rc == _ResultCode.USER_CODE_UNAVAILABLE:
+            raise UsercodeUnavailable(rc.name, response)
         if rc == _ResultCode.USER_CODE_INVALID:
             raise UsercodeInvalid(rc.name, response)
         if rc == _ResultCode.FEATURE_NOT_SUPPORTED:
@@ -265,7 +265,7 @@ class TotalConnectClient:
         except UsercodeInvalid:
             LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
             return False
-        except AuthenticationError:
+        except UsercodeUnavailable:
             LOGGER.warning(f"usercode {usercode} unavailable for device {device_id}")
             return False
         return True
