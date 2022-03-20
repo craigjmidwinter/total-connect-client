@@ -38,3 +38,8 @@ class PartialResponseError(RetryableTotalConnectError):
 
 class UsercodeInvalid(TotalConnectError):
     """The provided usercode is invalid."""
+
+
+class ServiceUnavailable(TotalConnectError):
+    """The TotalConnect service is unavailable or unreachable."""
+
