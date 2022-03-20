@@ -15,7 +15,7 @@ from const import (
 
 from total_connect_client import ArmingHelper
 from total_connect_client.const import ArmingState, _ResultCode
-from total_connect_client.exceptions import AuthenticationError, BadResultCodeError, UsercodeInvalid
+from total_connect_client.exceptions import AuthenticationError, BadResultCodeError, UsercodeInvalid, UsercodeUnavailable
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 
@@ -95,7 +95,7 @@ class TestTotalConnectClient(unittest.TestCase):
                 )
             # last test has 'unavailable' usercode
             run(
-                AuthenticationError,
+                UsercodeUnavailable,
                 [RESPONSE_USER_CODE_UNAVAILABLE, RESPONSE_DISARMED],
                 armit,
                 ArmingState.DISARMED,
