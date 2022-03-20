@@ -34,3 +34,18 @@ class PartialResponseError(RetryableTotalConnectError):
     """Raised if the response is missing a section that it is always supposed to have.
     Because the TotalConnect servers are flaky, these are rather frequent.
     """
+
+
+class UsercodeInvalid(TotalConnectError):
+    """The provided usercode is invalid."""
+
+
+class UsercodeUnavailable(TotalConnectError):
+    """The TotalConnect usercode unavailable or invalid."""
+
+
+
+class ServiceUnavailable(TotalConnectError):
+    """The TotalConnect service is unavailable or unreachable."""
+
+

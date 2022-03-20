@@ -2,6 +2,7 @@
 
 import unittest
 from unittest.mock import patch
+from zeep.exceptions import Fault as ZeepFault
 
 import pytest
 from const import (
@@ -21,7 +22,7 @@ from const import (
 )
 
 from total_connect_client.client import TotalConnectClient
-from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
+from total_connect_client.exceptions import AuthenticationError, BadResultCodeError, ServiceUnavailable
 
 PATCH_EVAL = "total_connect_client.client.TotalConnectClient._send_one_request"
 
@@ -103,6 +104,19 @@ class TestTotalConnectClient(unittest.TestCase):
             assert client.is_logged_in() is False
             expected = "total-connect-client could not execute request.  Maximum attempts tried."
             assert str(exc.value) == expected
+
+    def tests_request_zeep_error(self):
+        """Test a Zeep error."""
+
+        serialize_responses = [ZeepFault("test") for x in range(MAX_RETRY_ATTEMPTS)]
+        with patch("zeep.Client"), patch("time.sleep", autospec=True), patch(
+            "zeep.helpers.serialize_object", side_effect=serialize_responses
+        ) as mock_request, pytest.raises(ServiceUnavailable):
+            client = TotalConnectClient(
+                "username", "password", usercodes=None, retry_delay=0
+            )
+            assert mock_request.call_count == MAX_RETRY_ATTEMPTS
+            assert client.is_logged_in() is False
 
     def tests_request_invalid_session(self):
         """Test an invalid session, which is when the session times out."""

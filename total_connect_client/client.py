@@ -13,6 +13,7 @@ import time
 
 import zeep
 import zeep.cache
+from zeep.exceptions import Fault as ZeepFault
 import zeep.transports
 import requests.exceptions
 
@@ -23,7 +24,10 @@ from .exceptions import (
     FeatureNotSupportedError,
     InvalidSessionError,
     RetryableTotalConnectError,
+    ServiceUnavailable,
     TotalConnectError,
+    UsercodeInvalid,
+    UsercodeUnavailable,
 )
 from .location import TotalConnectLocation
 from .user import TotalConnectUser
@@ -150,11 +154,12 @@ class TotalConnectClient:
         ):
             return
         self._raise_for_retry(response)
-        if rc in (
-                _ResultCode.BAD_USER_OR_PASSWORD,
-                _ResultCode.USER_CODE_UNAVAILABLE,
-        ):
+        if rc == _ResultCode.BAD_USER_OR_PASSWORD:
             raise AuthenticationError(rc.name, response)
+        if rc == _ResultCode.USER_CODE_UNAVAILABLE:
+            raise UsercodeUnavailable(rc.name, response)
+        if rc == _ResultCode.USER_CODE_INVALID:
+            raise UsercodeInvalid(rc.name, response)
         if rc == _ResultCode.FEATURE_NOT_SUPPORTED:
             raise FeatureNotSupportedError(rc.name, response)
         raise BadResultCodeError(rc.name, response)
@@ -200,6 +205,11 @@ class TotalConnectClient:
                 LOGGER.info(f"{msg}: {attempts_remaining} retries remaining")
             else:
                 LOGGER.debug(f"{msg}: {attempts_remaining} retries remaining")
+            time.sleep(self.retry_delay)
+        except ZeepFault as err:
+            if attempts_remaining <= 0:
+                raise ServiceUnavailable(f"Error connecting to Total Connect service: {err}") from err
+            LOGGER.debug(f"Error connecting to Total Connect service: {attempts_remaining} retries remaining")
             time.sleep(self.retry_delay)
         except InvalidSessionError:
             if attempts_remaining <= 0:
@@ -250,13 +260,14 @@ class TotalConnectClient:
     def validate_usercode(self, device_id, usercode):
         """Return True if the usercode is valid for the device."""
         response = self.request("ValidateUserCode", (self.token, device_id, str(usercode)))
-        if _ResultCode.from_response(response) in (
-            _ResultCode.USER_CODE_INVALID,
-            _ResultCode.USER_CODE_UNAVAILABLE,
-        ):
+        try:
+            self.raise_for_resultcode(response)
+        except UsercodeInvalid:
             LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
             return False
-        self.raise_for_resultcode(response)
+        except UsercodeUnavailable:
+            LOGGER.warning(f"usercode {usercode} unavailable for device {device_id}")
+            return False
         return True
 
     def is_logged_in(self):

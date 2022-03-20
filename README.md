@@ -27,6 +27,8 @@ Create an Issue on Github and post both your problem and your system information
 
 Why do we ask for this information?  The TotalConnect API documentation provides little information on the status codes and other information it returns about your system.  We developed as best we could using the codes our own systems returned.  We have seen many times that other users with issues have different system status codes.
 
+Also consider looking at the [Total Connect system status](https://status.resideo.com/) to see if there is a system wide problem. 
+
 ## Developer Interface
 
 If you're an end user, just install Home Assistant and things should just work.
