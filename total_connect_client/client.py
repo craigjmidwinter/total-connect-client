@@ -13,6 +13,7 @@ import time
 
 import zeep
 import zeep.cache
+from zeep.exceptions import Fault as ZeepFault
 import zeep.transports
 import requests.exceptions
 
@@ -23,6 +24,7 @@ from .exceptions import (
     FeatureNotSupportedError,
     InvalidSessionError,
     RetryableTotalConnectError,
+    ServiceUnavailable,
     TotalConnectError,
     UsercodeInvalid,
 )
@@ -203,6 +205,11 @@ class TotalConnectClient:
                 LOGGER.info(f"{msg}: {attempts_remaining} retries remaining")
             else:
                 LOGGER.debug(f"{msg}: {attempts_remaining} retries remaining")
+            time.sleep(self.retry_delay)
+        except ZeepFault as err:
+            if attempts_remaining <= 0:
+                raise ServiceUnavailable(f"Error connecting to Total Connect service: {err}") from err
+            LOGGER.debug(f"Error connecting to Total Connect service: {attempts_remaining} retries remaining")
             time.sleep(self.retry_delay)
         except InvalidSessionError:
             if attempts_remaining <= 0:
