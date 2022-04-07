@@ -44,8 +44,5 @@ class UsercodeUnavailable(TotalConnectError):
     """The TotalConnect usercode unavailable or invalid."""
 
 
-
 class ServiceUnavailable(TotalConnectError):
     """The TotalConnect service is unavailable or unreachable."""
-
-
