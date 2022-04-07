@@ -140,6 +140,9 @@ class TotalConnectClient:
             raise RetryableTotalConnectError("failed to connect with panel", response)
         if rc == _ResultCode.AUTHENTICATION_FAILED:
             raise RetryableTotalConnectError("temporary authentication failure", response)
+        if rc == _ResultCode.BAD_OBJECT_REFERENCE:
+            raise RetryableTotalConnectError("bad object reference", response)
+
 
     def raise_for_resultcode(self, response):
         """If response.ResultCode indicates success, return and do nothing.
