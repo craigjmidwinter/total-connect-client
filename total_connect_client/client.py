@@ -214,9 +214,9 @@ class TotalConnectClient:
                 raise ServiceUnavailable(f"Error connecting to Total Connect service: {err}") from err
             LOGGER.debug(f"Error connecting to Total Connect service: {attempts_remaining} retries remaining")
             time.sleep(self.retry_delay)
-        except InvalidSessionError:
+        except InvalidSessionError as err:
             if attempts_remaining <= 0:
-                raise
+                raise ServiceUnavailable(f"Invalid Session after multiple retries: {err}") from err
             LOGGER.info(f"reauthenticating {self.username}: {attempts_remaining} retries remaining")
             self.token = None
             self.authenticate()
