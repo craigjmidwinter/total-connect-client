@@ -307,6 +307,7 @@ class TestTotalConnectZone(unittest.TestCase):
         self.assertFalse(self.zone_lyric_keypad.is_type_temperature())
         self.assertTrue(self.zone_lyric_temp.is_type_temperature())
 
+
 def test_proa7_zones():
     """Test ProA7."""
 
@@ -323,6 +324,7 @@ def test_proa7_zones():
     assert zone.is_type_button() is True
     assert zone.is_tampered() is True
 
+
 def test_unknown_type():
     """Test unknown ZoneType."""
     zone_unknown = {
@@ -337,6 +339,7 @@ def test_unknown_type():
     assert zone.zone_type_id == 12345
     assert zone._unknown_type_reported is True
 
+
 def test_unknown_status():
     """Test unknown ZoneStatus."""
     zone_unknown = {
@@ -344,7 +347,6 @@ def test_unknown_status():
         "PartitionId": "1",
         "ZoneTypeId": 12345,
         "CanBeBypassed": 0,
-
     }
 
     # invalid status (i.e. None or a string) should raise exception
@@ -355,4 +357,3 @@ def test_unknown_status():
     zone_unknown["ZoneStatus"] = 255
     zone = tcz(zone_unknown)
     assert zone.status == 255
-

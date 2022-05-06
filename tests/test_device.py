@@ -13,4 +13,4 @@ def tests_init():
     # test with missing flags
     del DEVICE_INFO_BASIC_1["DeviceFlags"]
     test_device = TotalConnectDevice(DEVICE_INFO_BASIC_1)
-    assert test_device.flags == {}
+    assert not test_device.flags
