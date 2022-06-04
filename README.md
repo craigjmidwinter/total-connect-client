@@ -13,7 +13,17 @@ The code currently supports:
 
 ## Troubleshooting
 
-If you're having trouble with your system, or find an error message, we may ask you to submit information about your alarm system.  To do that from the command line do the following steps (assuming you are running from within Home Assistant):
+If you're having trouble with your system, or find an error message, we may ask you to submit information about your alarm system.  
+
+### From Home Assistant
+
+- Go to https://<your_home_assistant>/config/integrations
+- Find the TotalConnect integration card and click on the three dots in the bottom right corner
+- Click on Download Diagnostics
+
+### From the command line
+
+Do the following steps:
  
 `python3 -m total_connect_client username`
  
