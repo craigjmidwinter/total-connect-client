@@ -218,8 +218,10 @@ class TotalConnectClient:
             if attempts_remaining <= 0:
                 raise ServiceUnavailable(f"Invalid Session after multiple retries: {err}") from err
             LOGGER.info(f"reauthenticating {self.username}: {attempts_remaining} retries remaining")
+            old_token = self.token
             self.token = None
             self.authenticate()
+            args = [self.token if old_token == arg else arg for arg in args]
         return self.request(operation_name, args, attempts_remaining)
 
     def authenticate(self):
