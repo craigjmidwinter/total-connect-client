@@ -212,11 +212,13 @@ RESPONSE_ARMED_AWAY = {
 RESPONSE_AUTHENTICATE = {
     "ResultCode": 0,
     "ResultData": "Success",
-    "SessionID": 1,
+    "SessionID": "12345",
     "Locations": LOCATIONS,
     "ModuleFlags": MODULE_FLAGS,
     "UserInfo": USER,
 }
+
+
 
 RESPONSE_AUTHENTICATE_EMPTY = RESPONSE_AUTHENTICATE.copy()
 RESPONSE_AUTHENTICATE_EMPTY["Locations"] = None
@@ -245,6 +247,7 @@ RESPONSE_CONNECTION_ERROR = {
 RESPONSE_SESSION_INITIATED = {
     "ResultCode": _ResultCode.SESSION_INITIATED.value,
     "ResultData": "testing session initiated",
+    "SessionID": "54321",
 }
 
 RESPONSE_FEATURE_NOT_SUPPORTED = {

@@ -21,6 +21,7 @@ from const import (
     RESPONSE_UNKNOWN,
 )
 
+from total_connect_client.const import ArmType
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError, BadResultCodeError, ServiceUnavailable
 
@@ -120,7 +121,7 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_invalid_session(self):
         """Test an invalid session, which is when the session times out."""
-        # First three responses set up 'normal' session
+        # First four responses set up 'normal' session
         # Call to client.arm_away() will first get an invalid session,
         # which will trigger client.authenticate() before completing the arm_away()
         serialize_responses = [
@@ -142,7 +143,14 @@ class TestTotalConnectClient(unittest.TestCase):
                 pass
             assert mock_request.call_count == 4
             assert client.is_logged_in() is True
-            assert mock_request.call_count == 4
+
+            assert client.token == RESPONSE_AUTHENTICATE["SessionID"]
+            # now try to arm away
+            # the invalid session will trigger a new authenticate()...
+            # which should result in a new token
+            client.locations[LOCATION_INFO_BASIC_NORMAL["LocationID"]].arm(ArmType.AWAY)
+            assert mock_request.call_count == 7
+            assert client.token == RESPONSE_SESSION_INITIATED["SessionID"]
 
     def tests_request_unknown_result_code(self):
         """Test an unknown result code."""
