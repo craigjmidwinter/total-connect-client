@@ -47,9 +47,11 @@ Code | Status
 8 | Trouble/Tampered
 10 | Fault + Trouble
 16 | Tamper (ProA7)
+32 | Communications Failure (see #191)
 64 | Low Battery
 65 | Low Battery + Bypassed
 72 | Trouble + Low Battery
+96 | Communications Failure + Low Battery (see #191)
 256 | Alarm/Triggered
 
 Fault is only returned when "Sensor Events" are enabled for a specific zone in Total Connect, otherwise Normal is returned.
@@ -63,7 +65,7 @@ Bit | Integer | Status
 3 | 4 | ???
 4 | 8 | Tamper/Trouble
 5 | 16 | Tamper (on ProA7 see #176) 
-6 | 32 | ???
+6 | 32 | Communications Failure (see #191)
 7 | 64 | Low Battery
 8 | 128 | ???
 9 | 256 | Triggered
