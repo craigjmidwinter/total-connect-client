@@ -60,35 +60,12 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=print-statement,
-        parameter-unpacking,
-        unpacking-in-except,
-        long-suffix,
-        import-star-module-level,
-        use-symbolic-message-instead,
-        # coerce-method,
-        # delslice-method,
-        # getslice-method,
-        # setslice-method,
-        # nonzero-method,
-        # cmp-method,
-        next-method-defined,
-        no-absolute-import,
-        next-method-called,
-        metaclass-assignment,
-        indexing-exception,
-        exception-message-attribute,
-        sys-max-int,
-        xreadlines-attribute,
-        exception-escape,
-        comprehension-escape,
+disable=use-symbolic-message-instead,
 
         # These warnings may make sense in huge projects but pylint
         # is simply not smart enough to know when these are actually bad.
         too-few-public-methods,
         duplicate-code,
-        no-self-use,
-
         too-many-instance-attributes,  # not appropriate for this project
         logging-fstring-interpolation,  # we don't need high-performance log messages
         missing-function-docstring,  # flake8 has more granularity
@@ -198,13 +175,6 @@ max-line-length=100
 
 # Maximum number of lines in a module.
 max-module-lines=1000
-
-# List of optional constructs for which whitespace checking is disabled. `dict-
-# separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
-# `trailing-comma` allows a space between comma and closing bracket: (a, ).
-# `empty-line` allows space-only lines.
-no-space-check=trailing-comma,
-               dict-separator
 
 # Allow the body of a class to be on the same line as the declaration if body
 # contains single statement.
