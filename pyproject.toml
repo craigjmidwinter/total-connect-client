@@ -25,6 +25,11 @@ dependencies=["zeep>=4.1.0"]
 "Homepage" = "https://github.com/craigjmidwinter/total-connect-client"
 "Bug Tracker" = "https://github.com/craigjmidwinter/total-connect-client/issues"
 
+[tool.coverage.run]
+omit = [
+    "total_connect_client/live*.py"
+]
+
 [tool.pylint."messages control"]
 disable = ["use-symbolic-message-instead", "too-few-public-methods", "too-many-instance-attributes", "logging-fstring-interpolation", "missing-function-docstring", "missing-class-docstring", "protected-access", "line-too-long", "duplicate-code"]
 
