@@ -1,0 +1,105 @@
+# total_connect_client packaging file
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[project]
+name="total_connect_client"
+version="2022.12"
+authors = [
+  { name="Craig J. Midwinter", email="craig.j.midwinter@gmail.com" },
+]
+description="Interact with Total Connect 2 alarm systems"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords=["alarm", "TotalConnect"]
+dependencies=["zeep>=4.1.0"]
+
+[project.urls]
+"Homepage" = "https://github.com/craigjmidwinter/total-connect-client"
+"Bug Tracker" = "https://github.com/craigjmidwinter/total-connect-client/issues"
+
+[tool.coverage.run]
+omit = [
+    "total_connect_client/live*.py"
+]
+
+[tool.pylint."messages control"]
+disable = ["use-symbolic-message-instead", "too-few-public-methods", "too-many-instance-attributes", "logging-fstring-interpolation", "missing-function-docstring", "missing-class-docstring", "protected-access", "line-too-long", "duplicate-code"]
+
+[tool.tox]
+legacy_tox_ini = """
+
+   [tox]
+    env_list = 
+        build
+        lint
+        py311
+        py310
+        py39
+
+    #skip_missing_interpreters = True
+
+    [testenv]
+    setenv =
+        LANG=en_US.UTF-8
+        PYTHONPATH = {toxinidir}
+    commands = 
+        pytest --timeout=30 --cov=total_connect_client --cov-report term-missing -p no:sugar {posargs}
+    deps = 
+        -r{toxinidir}/requirements.txt
+        -r{toxinidir}/requirements_test.txt
+
+    [testenv:lint]
+    deps = 
+        -r{toxinidir}/requirements.txt
+        -r{toxinidir}/requirements_test.txt
+    ignore_errors = True
+    commands = 
+        - pylint total_connect_client tests
+        - flake8 total_connect_client tests
+        # commented out because output is mainly pointless
+        #- pydocstyle total_connect_client tests
+
+    [flake8]
+    # It accomplishes nothing to create docstrings that say only what is obvious
+    # from the method name and argument names, but that's what happens when
+    # an automated tool complains blindly about missing docstrings.
+    # D101: missing docstring in public class
+    # D102: missing docstring in public method
+    # D107: missing docstring in __init__
+    # D202: blank lines after function docstring
+    # D205: blank line between summary and description
+    # D400: first line ending with period
+    # D401: first line imperative
+    # E201: whitespace after {
+    # E202: whitespace before }
+    # F541: f-string missing placeholders (redundant with pylint)
+    ignore = D101, D102, D107, D202, D205, D400, D401, E201, E202, F541
+    max-line-length = 100
+    per-file-ignores =
+        total_connect_client/zone.py:E221, E222
+
+    [testenv:build]
+    recreate = True
+    skip_install = True
+    allowlist_externals =
+        /bin/sh
+        /bin/rm
+    deps =
+        -r{toxinidir}/requirements.txt
+        -r{toxinidir}/requirements_test.txt
+    commands = 
+        /bin/rm -rf dist
+        python3 -m build
+        /bin/sh -c "pip install --quiet --upgrade pip"
+        /bin/sh -c "pip install --upgrade dist/*.whl | grep -v 'Requirement already satisfied'"
+
+
+"""

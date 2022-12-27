@@ -1,14 +1,11 @@
 {
-	"name": "Python 3",
+	"name": "Total Connect Client Dev",
 	"build": {
 		"dockerfile": "Dockerfile",
 		"context": "..",
 		"args": { 
 			// Update 'VARIANT' to pick a Python version: 3, 3.6, 3.7, 3.8 
 			"VARIANT": "3",
-			// Options
-			"INSTALL_NODE": "false",
-			"NODE_VERSION": "lts/*"
 		}
 	},
 
@@ -31,11 +28,11 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-python.python"
+		"ms-python.python",
+		"ms-python.vscode-pylance",
+		"visualstudioexptteam.vscodeintellicode",
+		"GitHub.vscode-pull-request-github"
 	]
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "pip3 install --user -r requirements.txt",
