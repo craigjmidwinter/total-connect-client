@@ -9,13 +9,15 @@ for location in client.locations:
 """
 
 import logging
+import ssl
 import time
 
 import zeep
 import zeep.cache
 from zeep.exceptions import Fault as ZeepFault
 import zeep.transports
-import requests.exceptions
+import requests
+import urllib3.poolmanager
 
 from .const import ArmType, _ResultCode
 from .exceptions import (
@@ -35,6 +37,18 @@ from .user import TotalConnectUser
 DEFAULT_USERCODE = "-1"
 
 LOGGER = logging.getLogger(__name__)
+
+
+class _SslContextAdapter(requests.adapters.HTTPAdapter):
+    """Makes Zeep use our ssl_context."""
+    def __init__(self, ssl_context, **kwargs):
+        self.ssl_context = ssl_context
+        super().__init__(**kwargs)
+
+    def init_poolmanager(self, num_pools, maxsize, block=False):
+        self.poolmanager = urllib3.poolmanager.PoolManager(
+            num_pools=num_pools, maxsize=maxsize,
+            block=block, ssl_context=self.ssl_context)
 
 
 class TotalConnectClient:
@@ -183,7 +197,15 @@ class TotalConnectClient:
         is_first_request = attempts_remaining == 5
         attempts_remaining -= 1
         if not self.soap_client:
+            # the server doesn't support RFC 5746 secure renegotiation, which
+            # causes OpenSSL to fail by default. here we override the default.
+            # if they fix their server, we should revert this change to ctx.options
+            session = requests.Session()
+            ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            ctx.options |= 0x04  # ssl.OP_LEGACY_SERVER_CONNECT once that exists
+            session.mount('https://', _SslContextAdapter(ctx))
             transport = zeep.transports.Transport(
+                session=session,
                 cache=zeep.cache.InMemoryCache(timeout=3600),
                 timeout=self.TIMEOUT,  # for loading WSDL and xsd documents
                 operation_timeout=self.TIMEOUT,  # for operations (POST/GET)
