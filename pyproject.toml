@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name="total_connect_client"
-version="2023.1"
+version="2023.2"
 authors = [
   { name="Craig J. Midwinter", email="craig.j.midwinter@gmail.com" },
 ]
