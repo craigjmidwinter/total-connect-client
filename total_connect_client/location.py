@@ -324,5 +324,5 @@ class TotalConnectLocation:
                 zone = TotalConnectZone(zonedata)
                 self.zones[zid] = zone
 
-            if zone.is_low_battery() and self.auto_bypass_low_battery:
+            if zone.is_low_battery() and zone.can_be_bypassed and self.auto_bypass_low_battery:
                 self.zone_bypass(zid)
