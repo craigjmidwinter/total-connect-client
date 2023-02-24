@@ -1,10 +1,12 @@
 """Total Connect Location."""
 
 import logging
+import typing
 
-from .const import ArmingState, ArmType, _ResultCode, PROJECT_URL
+from .const import PROJECT_URL, ArmingState, ArmType, _ResultCode
 from .device import TotalConnectDevice
-from .exceptions import FeatureNotSupportedError, PartialResponseError, TotalConnectError
+from .exceptions import (FeatureNotSupportedError, PartialResponseError,
+                         TotalConnectError)
 from .partition import TotalConnectPartition
 from .zone import TotalConnectZone
 
@@ -199,7 +201,7 @@ class TotalConnectLocation:
         self.parent.raise_for_resultcode(result)
         LOGGER.info(f"DISARMED partitions {partition_list} at {self.location_id}")
 
-    def zone_bypass(self, zone_id):
+    def zone_bypass(self, zone_id: int):
         """Bypass a zone."""
         result = self.parent.request("Bypass", (
             self.parent.token, self.location_id, self.security_device_id, zone_id, self.usercode
@@ -208,14 +210,14 @@ class TotalConnectLocation:
         LOGGER.info(f"BYPASSED {zone_id} at {self.location_id}")
         self.zones[zone_id]._mark_as_bypassed()
 
-    def zone_status(self, zone_id):
+    def zone_status(self, zone_id: int):
         """Get status of a zone."""
         zone = self.zones.get(zone_id)
         if not zone:
             raise TotalConnectError(f"zone {zone_id} does not exist")
         return zone.status
 
-    def arm_custom(self, arm_type):
+    def arm_custom(self, arm_type: int):
         """NOT OPERATIONAL YET.
         Arm custom the system.  Return true if successful.
         """
