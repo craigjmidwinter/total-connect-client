@@ -8,7 +8,7 @@ from common import create_client
 from const import LOCATION_INFO_BASIC_NORMAL
 
 from total_connect_client.const import _ResultCode
-from total_connect_client.exceptions import BadResultCodeError
+from total_connect_client.exceptions import FailedToBypassZone
 
 RESPONSE_ZONE_BYPASS_SUCCESS = {
     "ResultCode": _ResultCode.SUCCESS.value,
@@ -17,7 +17,7 @@ RESPONSE_ZONE_BYPASS_SUCCESS = {
 
 # guessing on the response...don't know for sure
 RESPONSE_ZONE_BYPASS_FAILURE = {
-    "ResultCode": _ResultCode.COMMAND_FAILED.value,
+    "ResultCode": _ResultCode.FAILED_TO_BYPASS_ZONE.value,
     "ResultData": "None",
 }
 
@@ -65,7 +65,7 @@ class TestTotalConnectClient(unittest.TestCase):
             assert zone.is_bypassed() is False
 
             # try to bypass the zone
-            with pytest.raises(BadResultCodeError):
+            with pytest.raises(FailedToBypassZone):
                 location.zone_bypass("1")
 
             # should not be bypassed

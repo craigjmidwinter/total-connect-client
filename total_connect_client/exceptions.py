@@ -46,3 +46,7 @@ class UsercodeUnavailable(TotalConnectError):
 
 class ServiceUnavailable(TotalConnectError):
     """The TotalConnect service is unavailable or unreachable."""
+
+
+class FailedToBypassZone(TotalConnectError):
+    """Failed to bypass zone because it is non-existent or it cannot be bypassed."""

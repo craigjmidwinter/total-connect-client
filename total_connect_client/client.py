@@ -23,6 +23,7 @@ from .const import ArmType, _ResultCode
 from .exceptions import (
     AuthenticationError,
     BadResultCodeError,
+    FailedToBypassZone,
     FeatureNotSupportedError,
     InvalidSessionError,
     RetryableTotalConnectError,
@@ -179,6 +180,8 @@ class TotalConnectClient:
             raise UsercodeInvalid(rc.name, response)
         if rc == _ResultCode.FEATURE_NOT_SUPPORTED:
             raise FeatureNotSupportedError(rc.name, response)
+        if rc == _ResultCode.FAILED_TO_BYPASS_ZONE:
+            raise FailedToBypassZone(rc.name, response)            
         raise BadResultCodeError(rc.name, response)
 
     def _send_one_request(self, operation_name, args):

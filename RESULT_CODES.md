@@ -19,7 +19,7 @@ ResultCode | ResultData | Notes
 -4104 | Failed to Connect with Security System | 
 -4106 | Invalid user code. Please try again. | When disarming.  https://github.com/craigjmidwinter/total-connect-client/issues/85
 -4114 | System User Code not available/invalid in Database | https://github.com/craigjmidwinter/total-connect-client/issues/36 Also happens attempting a code for an incorrect location/device.
--4504 | Failed to Bypass Zone | Happens when requesting to bypass a non-existent zone.
+-4504 | Failed to Bypass Zone | Happens when requesting to bypass a non-existent zone, or when trying to bypass a zone than cannot be bypassed (i.e. smoke detector).
 -9001 | Authorization Failed to Perform Notification Configuration | Received when trying getAllSensorsMaskStatus
 -10026 | Unable to load your scenes, please try syncing your panel in the Locations menu.  If your panel is still not connecting, please contact your Security Dealer for support | 
 -12104 | Automation - We are unable to load your automation devices, please try again or contact your security dealer for support | GetAutomationDeviceStatus with location module flag Automation = 0
