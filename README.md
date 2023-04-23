@@ -1,5 +1,5 @@
 # Total-Connect-Client
-Total-Connect-Client is a python client for interacting with the TotalConnect2 alarm system.
+Total-Connect-Client is a python client for interacting with the [TotalConnect2](https://totalconnect2.com) alarm system.
 
 Started by @craigjmidwinter to add alarm support for his personal HomeAssistant set-up, with later contributions from others.
 
@@ -139,6 +139,6 @@ similar methods on the values of self.locations.
 * Previously if the usercodes dictionary was invalid, the DEFAULT_USERCODE
 was silently used. In a future release, we will raise an exception on an invalid dictionary.
 
-If there's something about the interface you don't understand, check out the [Home Assistant integration](https://github.com/home-assistant/core/blob/dev/homeassistant/components/totalconnect/) that uses this package, or [submit an issue](/issues).
+If there's something about the interface you don't understand, check out the [Home Assistant integration](https://github.com/home-assistant/core/blob/dev/homeassistant/components/totalconnect/) that uses this package, or [submit an issue](https://github.com/craigjmidwinter/total-connect-client/issues).
 
-During development, if you discover new status codes or other information not handled, please submit an issue to let us know, or even better submit a pull request.
+During development, if you discover new status codes or other information not handled, please [submit an issue](https://github.com/craigjmidwinter/total-connect-client/issues) to let us know, or even better submit a [pull request](https://github.com/craigjmidwinter/total-connect-client/pulls).
