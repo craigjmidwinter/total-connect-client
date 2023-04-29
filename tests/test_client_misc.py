@@ -77,5 +77,4 @@ class TestTotalConnectClient(unittest.TestCase):
                 self.location.get_zone_details()
             # third response is SUCCESS but with empty ZoneStatus
             # ...which we've seen before in the wild
-            with pytest.raises(PartialResponseError):
-                self.location.get_zone_details()
+            self.location.get_zone_details()

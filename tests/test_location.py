@@ -106,20 +106,23 @@ class TestTotalConnectLocation(unittest.TestCase):
 
     def tests_set_zone_details(self):
         """Test set_zone_details with normal data passed in."""
-        self.location_normal._update_zone_details(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
+        location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, None)
+        location._update_zone_details(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
+        assert len(location.zones) == 1
 
-        # "Zones" is None
+        location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, None)
+        # "Zones" is None, as seen in #112 and #205
         response = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
         response["ZoneStatus"]["Zones"] = None
-        with pytest.raises(PartialResponseError):
-            self.location_normal._update_zone_details(response)
+        location._update_zone_details(response)
+        assert len(location.zones) == 0
 
         # "ZoneStatusInfoWithPartitionId" is None
+        location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, None)
         response = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
         response["ZoneStatus"]["Zones"] = {"ZoneStatusInfoWithPartitionId": None}
-        # now test with "ZoneInfo" is none
-        with pytest.raises(PartialResponseError):
-            self.location_normal._update_zone_details(response)
+        location._update_zone_details(response)
+        assert len(location.zones) == 0
 
     def tests_auto_bypass_low_battery(self):
         """Test auto bypass of low battery zones."""
