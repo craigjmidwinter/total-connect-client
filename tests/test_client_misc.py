@@ -21,7 +21,6 @@ from total_connect_client.zone import ZoneStatus
 
 from total_connect_client.exceptions import (
     BadResultCodeError,
-    PartialResponseError,
     TotalConnectError,
 )
 
