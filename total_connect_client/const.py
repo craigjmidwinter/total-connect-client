@@ -162,6 +162,10 @@ class _ResultCode(Enum):
     USER_CODE_UNAVAILABLE = -4114
     USER_CODE_INVALID = -4106
     FAILED_TO_CONNECT = -4104
+
+    # Invalid Parameter returned when requesting SyncPanelStatus using non-existant JobID.
+    INVALID_PARAMETER = -501
+
     BAD_OBJECT_REFERENCE = -400
     FEATURE_NOT_SUPPORTED = -120
     INVALID_SESSION = -102
