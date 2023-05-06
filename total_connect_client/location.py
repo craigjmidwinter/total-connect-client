@@ -255,10 +255,11 @@ class TotalConnectLocation:
             "ZoneStatusInfoWithPartitionId"
         )
         if not zone_info:
-            raise PartialResponseError("no ZoneStatusInfoWithPartitionId", result)
-
-        for zonedata in zone_info:
-            self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
+            LOGGER.warning("No zones found when starting TotalConnect. Try to sync your panel using the TotalConnect app or website.")
+            LOGGER.debug(f"_update_zone_details result: {result}")
+        else:
+            for zonedata in zone_info:
+                self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
 
     def _update_status(self, result):
         """Update from result."""
