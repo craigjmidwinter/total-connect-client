@@ -69,9 +69,10 @@ class ZoneType(Enum):
 class TotalConnectZone:
     """Do not create instances of this class yourself."""
 
-    def __init__(self, zone):
+    def __init__(self, zone, parent_location):
         """Initialize."""
         self.zoneid = zone.get("ZoneID")
+        self._parent_location = parent_location
         self.partition = None
         self.status = None
         self.zone_type_id = None
@@ -251,3 +252,8 @@ class TotalConnectZone:
     def _mark_as_bypassed(self):
         """Set is_bypassed status."""
         self.status |= ZoneStatus.BYPASSED
+
+    def bypass(self):
+        """Bypass the zone."""
+        if self.can_be_bypassed:
+            self._parent_location.zone_bypass(self.zoneid)
