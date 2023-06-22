@@ -39,6 +39,8 @@ class TotalConnectLocation:
         self.zones = {}
         self.usercode = DEFAULT_USERCODE
         self.auto_bypass_low_battery = False
+        self._sync_job_id = None
+        self._sync_job_state = None
 
         dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
         tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
@@ -329,3 +331,35 @@ class TotalConnectLocation:
 
             if zone.is_low_battery() and zone.can_be_bypassed and self.auto_bypass_low_battery:
                 self.zone_bypass(zid)
+
+    def sync_panel(self):
+        """Syncronize the panel with the TotalConnect server."""
+        result = self.parent.request(
+            "SynchronizeSecurityPanel",
+            (self.parent.token, None, self.usercode, self.location_id, False)
+        )
+        self.parent.raise_for_resultcode(result)
+        self._sync_job_id = result.get("JobID")
+        # Successful request so assume state is in progress
+        self._sync_job_state = 1
+        LOGGER.info(f"Started sync of panel for location {self.location_id}")
+
+    def get_sync_status(self):
+        """Get panel sync status from the TotalConnect server."""
+        result = self.parent.request(
+            "GetSyncJobStatus", 
+            (self.parent.token, self._sync_job_id, self.location_id)
+        )
+
+        try:
+            self.parent.raise_for_resultcode(result)
+            job_state = result.get("JobState")
+            if job_state == 1:
+                LOGGER.info(f"Panel sync for location {self.location_id} in progress")
+            elif job_state == 2:
+                LOGGER.info(f"Panel sync for location {self.location_id} complete")
+            else:
+                LOGGER.warning(f"Unknown panel sync status for location {self.location_id}")
+        except TotalConnectError:
+            LOGGER.error(f"Could not get status of Sync Job with ID {self._sync_job_id}")
+        
