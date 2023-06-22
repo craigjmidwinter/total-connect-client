@@ -261,7 +261,7 @@ class TotalConnectLocation:
             LOGGER.debug(f"_update_zone_details result: {result}")
         else:
             for zonedata in zone_info:
-                self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata)
+                self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata, self)
 
     def _update_status(self, result):
         """Update from result."""
@@ -326,7 +326,7 @@ class TotalConnectLocation:
             if zone:
                 zone._update(zonedata)
             else:
-                zone = TotalConnectZone(zonedata)
+                zone = TotalConnectZone(zonedata, self)
                 self.zones[zid] = zone
 
             if zone.is_low_battery() and zone.can_be_bypassed and self.auto_bypass_low_battery:

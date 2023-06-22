@@ -1,6 +1,7 @@
 """Test total_connect_client."""
 
 import unittest
+from unittest.mock import Mock
 
 import pytest
 from const import (
@@ -97,23 +98,23 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def setUp(self):
         """Test setup."""
-        self.zone_normal = tcz(ZS_NORMAL)
-        self.zone_bypassed = tcz(ZONE_BYPASSED)
-        self.zone_faulted = tcz(ZONE_FAULTED)
-        self.zone_tampered = tcz(ZONE_TAMPERED)
-        self.zone_low_battery = tcz(ZONE_LOW_BATTERY)
-        self.zone_bypassed_low_battery = tcz(ZONE_BYPASSED_LOW_BATTERY)
-        self.zone_trouble_low_battery = tcz(ZONE_TROUBLE_LOW_BATTERY)
-        self.zone_triggered = tcz(ZONE_TRIGGERED)
-        self.zone_button = tcz(ZONE_BUTTON)
-        self.zone_smoke = tcz(ZONE_SMOKE)
-        self.zone_gas = tcz(ZONE_GAS)
-        self.zone_lyric_contact = tcz(ZONE_STATUS_LYRIC_CONTACT)
-        self.zone_lyric_motion = tcz(ZONE_STATUS_LYRIC_MOTION)
-        self.zone_lyric_police = tcz(ZONE_STATUS_LYRIC_POLICE)
-        self.zone_lyric_temp = tcz(ZONE_STATUS_LYRIC_TEMP)
-        self.zone_lyric_keypad = tcz(ZONE_STATUS_LYRIC_KEYPAD)
-        self.zone_lyric_local_alarm = tcz(ZONE_STATUS_LYRIC_LOCAL_ALARM)
+        self.zone_normal = tcz(ZS_NORMAL, None)
+        self.zone_bypassed = tcz(ZONE_BYPASSED, None)
+        self.zone_faulted = tcz(ZONE_FAULTED, None)
+        self.zone_tampered = tcz(ZONE_TAMPERED, None)
+        self.zone_low_battery = tcz(ZONE_LOW_BATTERY, None)
+        self.zone_bypassed_low_battery = tcz(ZONE_BYPASSED_LOW_BATTERY, None)
+        self.zone_trouble_low_battery = tcz(ZONE_TROUBLE_LOW_BATTERY, None)
+        self.zone_triggered = tcz(ZONE_TRIGGERED, None)
+        self.zone_button = tcz(ZONE_BUTTON, None)
+        self.zone_smoke = tcz(ZONE_SMOKE, None)
+        self.zone_gas = tcz(ZONE_GAS, None)
+        self.zone_lyric_contact = tcz(ZONE_STATUS_LYRIC_CONTACT, None)
+        self.zone_lyric_motion = tcz(ZONE_STATUS_LYRIC_MOTION, None)
+        self.zone_lyric_police = tcz(ZONE_STATUS_LYRIC_POLICE, None)
+        self.zone_lyric_temp = tcz(ZONE_STATUS_LYRIC_TEMP, None)
+        self.zone_lyric_keypad = tcz(ZONE_STATUS_LYRIC_KEYPAD, None)
+        self.zone_lyric_local_alarm = tcz(ZONE_STATUS_LYRIC_LOCAL_ALARM, None)
 
     def tearDown(self):
         """Tear down."""
@@ -136,7 +137,7 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def tests_normal(self):
         """Normal zone."""
-        zone = tcz(ZS_NORMAL)
+        zone = tcz(ZS_NORMAL, None)
         assert zone.partition == "1"
         assert zone.is_bypassed() is False
         assert zone.is_faulted() is False
@@ -319,7 +320,7 @@ def test_proa7_zones():
         "ZoneStatus": ZoneStatus.TAMPER,
     }
 
-    zone = tcz(zone_medical)
+    zone = tcz(zone_medical, None)
     assert zone.is_type_medical() is True
     assert zone.is_type_button() is True
     assert zone.is_tampered() is True
@@ -335,7 +336,7 @@ def test_unknown_type():
         "ZoneStatus": ZoneStatus.NORMAL,
     }
 
-    zone = tcz(zone_unknown)
+    zone = tcz(zone_unknown, None)
     assert zone.zone_type_id == 12345
     assert zone._unknown_type_reported is True
 
@@ -351,9 +352,32 @@ def test_unknown_status():
 
     # invalid status (i.e. None or a string) should raise exception
     with pytest.raises(TotalConnectError):
-        tcz(zone_unknown)
+        tcz(zone_unknown, None)
 
     # unknown but valid status provided, should not raise
     zone_unknown["ZoneStatus"] = 255
-    zone = tcz(zone_unknown)
+    zone = tcz(zone_unknown, None)
     assert zone.status == 255
+
+def test_bypass():
+    """Test bypassing a zone."""
+    location = Mock()
+    zone_data = {
+        "ZoneDescription": "MyZone",
+        "PartitionId": "1",
+        "ZoneTypeId": ZoneType.SECURITY,
+        "CanBeBypassed": 0,
+        "ZoneStatus": ZoneStatus.NORMAL,
+    }
+
+    # should do nothing if zone cannot be bypassed
+    zone = tcz(zone_data, location)
+    zone.bypass()
+    location.zone_bypass.assert_not_called()
+
+    # now make zone bypassable
+    zone_data["CanBeBypassed"] = 1
+    zone = tcz(zone_data, location)
+    zone.bypass()
+    location.zone_bypass.assert_called_once()
+
