@@ -212,6 +212,26 @@ class TotalConnectLocation:
         LOGGER.info(f"BYPASSED {zone_id} at {self.location_id}")
         self.zones[zone_id]._mark_as_bypassed()
 
+    def zone_bypass_all(self):
+        """Bypass all faulted zones."""
+        faulted_zones = []
+        for zone_id, zone in self.zones.items():
+            if zone.is_faulted():
+                faulted_zones.append(zone_id)
+
+        if faulted_zones:
+            zone_list = {"int": faulted_zones}
+
+            result = self.parent.request("BypassAll", (
+                self.parent.token, self.location_id, self.security_device_id, zone_list, self.usercode
+            ))
+            self.parent.raise_for_resultcode(result)
+            LOGGER.info(f"BYPASSED all zones at location {self.location_id}")          
+
+    def clear_bypass(self):
+        """Clear all bypassed zones."""
+        self.disarm()
+
     def zone_status(self, zone_id: int):
         """Get status of a zone."""
         zone = self.zones.get(zone_id)
