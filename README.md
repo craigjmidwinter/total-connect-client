@@ -3,13 +3,19 @@ Total-Connect-Client is a python client for interacting with the [TotalConnect2]
 
 Started by @craigjmidwinter to add alarm support for his personal HomeAssistant set-up, with later contributions from others.
 
-The package can be downloaded at [PyPI](https://pypi.org/project/total-connect-client/).
+To use with Home Assistant, follow the instructions to set up [Total Connect](https://www.home-assistant.io/integrations/totalconnect/).
+
+For command line or other uses, the package can be downloaded at [PyPI](https://pypi.org/project/total-connect-client/).
 
 The code currently supports:
  - Arming (away, stay, night)
  - Disarming
  - Getting panel status (armed, bypassed, etc)
  - Getting zone status (normal, fault, trouble, low battery, etc)
+
+## Zone Status
+
+To see zones that are faulted (open), your Total Connect account must have “Sensor Activities” enabled. Your alarm monitoring company may charge an extra fee to enable this. If available, these can be found in the Total Connect 2 web portal at **Notifications -> Sensor Activities**. Alternately, they can be found in the Total Connect mobile app at **More -> Settings -> Notifications -> Sensor Activities**. 
 
 ## Troubleshooting
 
