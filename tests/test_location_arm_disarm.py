@@ -6,6 +6,7 @@ from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
+    TCC_REQUEST_METHOD,
     # these are tested in test_client_arm_disarm for now
     # RESPONSE_ARMED_STAY,
     # RESPONSE_ARMED_STAY_NIGHT,
@@ -18,15 +19,10 @@ from total_connect_client.client import ArmingHelper
 
 # from total_connect_client.exceptions import AuthenticationError, BadResultCodeError
 
-TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 
 RESPONSE_ARM_SUCCESS = {
     "ResultCode": _ResultCode.ARM_SUCCESS.value,
     "ResultData": "testing arm success",
-}
-RESPONSE_DISARM_SUCCESS = {
-    "ResultCode": _ResultCode.DISARM_SUCCESS.value,
-    "ResultData": "testing disarm success",
 }
 
 # returned when a zone is faulted

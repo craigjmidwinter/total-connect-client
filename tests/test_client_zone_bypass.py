@@ -5,10 +5,11 @@ from unittest.mock import patch
 
 import pytest
 from common import create_client
-from const import LOCATION_INFO_BASIC_NORMAL
+from const import LOCATION_INFO_BASIC_NORMAL, RESPONSE_DISARM_SUCCESS, TCC_REQUEST_METHOD
 
 from total_connect_client.const import _ResultCode
 from total_connect_client.exceptions import FailedToBypassZone
+from total_connect_client.zone import ZoneStatus
 
 RESPONSE_ZONE_BYPASS_SUCCESS = {
     "ResultCode": _ResultCode.SUCCESS.value,
@@ -70,3 +71,39 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # should not be bypassed
             assert zone.is_bypassed() is False
+
+def tests_bypass_all():
+    """Test bypass_all."""
+    client = create_client()
+    location = client.locations[LOCATION_INFO_BASIC_NORMAL["LocationID"]]
+    zone = location.zones["1"]
+
+
+
+    responses = [RESPONSE_DISARM_SUCCESS]
+    with patch(TCC_REQUEST_METHOD, side_effect=responses) as mock_request:
+
+        # no zones are faulted so should not bypass anything
+        location.zone_bypass_all()
+        assert mock_request.call_count == 0    
+
+        # mark the zone as faulted, now should bypass
+        zone.status = ZoneStatus.FAULT
+        location.zone_bypass_all()
+        assert mock_request.call_count == 1    
+
+
+
+
+def tests_clear_bypass():
+    """Test clear bypass, which is basically disarm()."""
+    client = create_client()
+    location = client.locations[LOCATION_INFO_BASIC_NORMAL["LocationID"]]
+
+    responses = [RESPONSE_DISARM_SUCCESS]
+    with patch(TCC_REQUEST_METHOD, side_effect=responses) as mock_request:
+
+        # then clear bypass
+        location.clear_bypass()
+
+        assert mock_request.call_count == 1
