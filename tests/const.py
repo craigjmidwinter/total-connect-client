@@ -228,6 +228,11 @@ RESPONSE_BAD_USER_OR_PASSWORD = {
     "ResultData": "testing bad user or password",
 }
 
+RESPONSE_DISARM_SUCCESS = {
+    "ResultCode": _ResultCode.DISARM_SUCCESS.value,
+    "ResultData": "testing disarm success",
+}
+
 RESPONSE_INVALID_SESSION = {
     "ResultCode": _ResultCode.INVALID_SESSION.value,
     "ResultData": "testing invalid session",
@@ -286,3 +291,5 @@ RESPONSE_PARTITION_DETAILS_TWO = {
     "ResultData": "testing partition details",
     "PartitionsInfoList": PARTITION_DETAILS_TWO,
 }
+
+TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
