@@ -24,24 +24,37 @@ LOCATION = sys.argv[6]
 TC = TotalConnectClient(USERNAME, PASSWORD)
 
 print("\n\n\nGetAutomationDeviceStatus\n\n\n")
-result = TC.request(f"GetAutomationDeviceStatus(self.token, {AUTOMATION_DEVICE})")
+try:
+    result = TC.request(
+        "GetAutomationDeviceStatus", 
+        (TC.token, AUTOMATION_DEVICE)
+    )
+    pprint(result)
+except Exception as err:
+    print(err)
 
-pprint(result)
 
 
 print("\n\n\nGetAutomationDeviceStatusExV1\n\n\n")
-result = TC.request(f"GetAutomationDeviceStatusExV1(self.token, {AUTOMATION_DEVICE})")
-
-pprint(result)
+try:
+    result = TC.request(
+        "GetAutomationDeviceStatusExV1",
+        (TC.token, AUTOMATION_DEVICE)
+    )
+    pprint(result)
+except Exception as err:
+    print(err)
 
 
 print("\n\n\nGetAllAutomationDeviceStatusExV1\n\n\n")
-result = TC.request(
-    f"GetAllAutomationDeviceStatusExV1(self.token, {AUTOMATION_DEVICE})"
-)
-
-pprint(result)
-
+try:
+    result = TC.request(
+        "GetAllAutomationDeviceStatusExV1",
+        (TC.token, AUTOMATION_DEVICE)
+    )
+    pprint(result)
+except Exception as err:
+    print(err)
 
 print("\n\n\nGetDeviceStatus\n\n\n")
 
@@ -51,10 +64,23 @@ a.append(TYPE)
 b = []
 b.append(a)
 
-result = TC.request(f"GetDeviceStatus(self.token, {LOCATION}, {b})")
-
+try:
+    result = TC.request(
+        "GetDeviceStatus",
+        (TC.token, LOCATION, b)
+    )
+    pprint(result)
+except Exception as err:
+    print(err)
 
 print("\n\n\nGetAutomationLocks\n\n\n")
-result = TC.request(f"GetAutomationLocks(self.token, {AUTOMATION_DEVICE}, {DEVICE_ID})")
 
-pprint(result)
+try:
+    result = TC.request(
+        "GetAutomationLocks",
+        (TC.token, AUTOMATION_DEVICE, DEVICE_ID)
+    )
+    pprint(result)
+except Exception as err:
+    print(err)
+
