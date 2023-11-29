@@ -43,11 +43,15 @@ def request_device(request_name, device_id):
         print(err)
 
 
-print("Looping through locations to try random API calls")
+print("GetDoorBellClientID")
+try:
+    result = TC.request("GetDoorBellClientID", (TC.token,))
+    pprint(result)
+except Exception as err:
+    print(err)
+
 for location_id, location in TC.locations.items():
-    print(
-        f"Loop through devices for location {location_id} ({location.location_name}) and try random API calls"
-    )
+    print(f"{location}")
 
     # camera
     request_location("GetAllRSIDeviceStatus", location_id)
@@ -87,24 +91,10 @@ for location_id, location in TC.locations.items():
         print(err)
 
     for device_id, device in location.devices.items():
-        print(f"Device {device_id} ({device.name})")
+        print(f"{device}")
 
         request_device("GetAutomationDeviceStatus", device_id)
         request_device("GetAutomationDeviceStatusExV1", device_id)
         request_device("GetAllAutomationDeviceStatusExV1", device_id)
         request_device("GetSceneList", device_id)
         request_device("GetDeviceStatus", device_id)
-        """
-        print(f"\n\nGetDeviceStatus: {device_id}")
-        a = []
-        a.append(device_id)
-        a.append(device.class_id)
-        b = []
-        b.append(a)
-
-        try:
-            result = TC.request("GetDeviceStatus", (TC.token, location_id, b))
-            pprint(result)
-        except Exception as err:
-            print(err)
-        """
