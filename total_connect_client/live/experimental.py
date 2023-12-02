@@ -25,7 +25,7 @@ TC = TotalConnectClient(USERNAME, PASSWORD)
 
 def request_location(request_name, location_id):
     """Request with just location and token."""
-    print(f"\n\n{request_name}: {location_id}")
+    print(f"\n{request_name}: {location_id}")
     try:
         result = TC.request(request_name, (TC.token, location_id))
         pprint(result)
@@ -35,7 +35,7 @@ def request_location(request_name, location_id):
 
 def request_device(request_name, device_id):
     """Request with just device and token."""
-    print(f"\n\n{request_name}: {device_id}")
+    print(f"\n{request_name}: {device_id}")
     try:
         result = TC.request(request_name, (TC.token, device_id))
         pprint(result)
@@ -54,17 +54,10 @@ for location_id, location in TC.locations.items():
     print(f"{location}")
 
     # camera
+    location.get_cameras()
+    location.get_video()
     request_location("GetAllRSIDeviceStatus", location_id)
-    request_location("GetLocationAllCameraList", location_id)
-    request_location("GetLocationAllCameraListEx", location_id)
-    request_location("GetLocationCameraList", location_id)
     request_location("GetPartnerCameraStatus", location_id)
-    request_location("GetVideoPIRLocationDeviceList", location_id)
-
-    # doorbell
-    request_location("GetWiFiDoorBellDeviceDetails", location_id)
-    request_location("GetWiFiDoorBellDeviceDiagnosticDetails", location_id)
-    request_location("GetWiFiDoorBellSettings", location_id)
 
     # thermostat
     request_location("GetWiFiThermostatLocations", location_id)
@@ -93,8 +86,43 @@ for location_id, location in TC.locations.items():
     for device_id, device in location.devices.items():
         print(f"{device}")
 
-        request_device("GetAutomationDeviceStatus", device_id)
-        request_device("GetAutomationDeviceStatusExV1", device_id)
+        # request_device("GetAutomationDeviceStatus", device_id)
+        # request_device("GetAutomationDeviceStatusExV1", device_id)
         request_device("GetAllAutomationDeviceStatusExV1", device_id)
         request_device("GetSceneList", device_id)
-        request_device("GetDeviceStatus", device_id)
+
+        if device.is_doorbell():
+            print(
+                f"\n\nGetWiFiDoorBellDeviceDetailsEx: location {location_id} device {device_id}"
+            )
+            try:
+                result = TC.request(
+                    "GetWiFiDoorBellDeviceDetailsEx", (TC.token, location_id, device_id)
+                )
+                pprint(result)
+            except Exception as err:
+                print(err)
+
+            print(
+                f"\n\nGetWiFiDoorBellDeviceDiagnosticDetailsEx: location {location_id} device {device_id}"
+            )
+            try:
+                result = TC.request(
+                    "GetWiFiDoorBellDeviceDiagnosticDetailsEx",
+                    (TC.token, location_id, device_id),
+                )
+                pprint(result)
+            except Exception as err:
+                print(err)
+
+            print(
+                f"\n\nGetWiFiDoorBellSettings: location {location_id} device {device._doorbell_info['PartnerDeviceID']}"
+            )
+            try:
+                result = TC.request(
+                    "GetWiFiDoorBellSettings",
+                    (TC.token, location_id, device._doorbell_info["PartnerDeviceID"]),
+                )
+                pprint(result)
+            except Exception as err:
+                print(err)
