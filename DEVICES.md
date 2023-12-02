@@ -25,9 +25,14 @@ Skybell HD | -4004 | -4004 | -4004 | 0 | 0 | @austinmroczek
 ProA7Plus Built-In Camera | -4004 | -4004 | -4004 | 0 | 0 | @austinmroczek
 ProA7Plus | -12104 |  -12104 | -12104 | 0 | 0 | @austinmroczek
 
+"GetDeviceStatus" always returns success but DeviceInfo = None
+
 ## Camera stuff
 
 Device | GetAllRSIDeviceStatus | GetLocationAllCameraList | GetLocationAllCameraListEx | GetLocationCameraList | GetPartnerCameraStatus | GetVideoPIRLocationDeviceList
 ------------ | - | - | - | - | - | -
 Skybell HD | No | WiFiDoorbellList | WifiDoorbellList | No | wifidoorbellinfo | No
 ProA7Plus builtin | No | No | No | No | No | VideoPIRInfo
+
+GetLocationCameraList doesn't return anything
+GetLocationAllCameraList returns same as GetLocationAllCameraListEx

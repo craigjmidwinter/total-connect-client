@@ -24,6 +24,7 @@ ResultCode | ResultData | Notes
 -4504 | Failed to Bypass Zone | Happens when requesting to bypass a non-existent zone, or when trying to bypass a zone than cannot be bypassed (i.e. smoke detector).
 -7606 | Input Failure | [#213](https://github.com/craigjmidwinter/total-connect-client/issues/213)
 -7625 | Your email address or password is invalid. Please try again | [#213](https://github.com/craigjmidwinter/total-connect-client/issues/213)
+-8029 | Your SkyBell HD is offline or not connected to the internet. Please check your SkyBell and try again
 -9001 | Authorization Failed to Perform Notification Configuration | Received when trying getAllSensorsMaskStatus
 -10026 | Unable to load your scenes, please try syncing your panel in the Locations menu.  If your panel is still not connecting, please contact your Security Dealer for support | 
 -12104 | Automation - We are unable to load your automation devices, please try again or contact your security dealer for support | GetAutomationDeviceStatus with location module flag Automation = 0
