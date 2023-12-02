@@ -5,8 +5,11 @@ import typing
 
 from .const import PROJECT_URL, ArmingState, ArmType, _ResultCode
 from .device import TotalConnectDevice
-from .exceptions import (FeatureNotSupportedError, PartialResponseError,
-                         TotalConnectError)
+from .exceptions import (
+    FeatureNotSupportedError,
+    PartialResponseError,
+    TotalConnectError,
+)
 from .partition import TotalConnectPartition
 from .zone import TotalConnectZone
 
@@ -81,12 +84,19 @@ class TotalConnectLocation:
     def get_panel_meta_data(self):
         """Get all meta data about the alarm panel."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPanelMetaDataAndFullStatus
-        result = self.parent.request("GetPanelMetaDataAndFullStatusEx_V2", (
-            # to speed this up we could replace the first zero with
-            # the most recent ConfigurationSequenceNumber and the
-            # second with LastUpdatedTimestampTicks
-            self.parent.token, self.location_id, 0, 0, self._partition_list
-        ))
+        result = self.parent.request(
+            "GetPanelMetaDataAndFullStatusEx_V2",
+            (
+                # to speed this up we could replace the first zero with
+                # the most recent ConfigurationSequenceNumber and the
+                # second with LastUpdatedTimestampTicks
+                self.parent.token,
+                self.location_id,
+                0,
+                0,
+                self._partition_list,
+            ),
+        )
         self.parent.raise_for_resultcode(result)
 
         self._update_status(result)
@@ -95,10 +105,16 @@ class TotalConnectLocation:
 
     def get_zone_details(self):
         """Get Zone details."""
-        result = self.parent.request("GetZonesListInStateEx_V1", (
-            # 0 is the ListIdentifierID, whatever that might be
-            self.parent.token, self.location_id, self._partition_list, 0
-        ))
+        result = self.parent.request(
+            "GetZonesListInStateEx_V1",
+            (
+                # 0 is the ListIdentifierID, whatever that might be
+                self.parent.token,
+                self.location_id,
+                self._partition_list,
+                0,
+            ),
+        )
 
         try:
             self.parent.raise_for_resultcode(result)
@@ -113,9 +129,10 @@ class TotalConnectLocation:
         """Get partition details for this location."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPartitionsDetails
 
-        result = self.parent.request("GetPartitionsDetails", (
-            self.parent.token, self.location_id, self.security_device_id
-        ))
+        result = self.parent.request(
+            "GetPartitionsDetails",
+            (self.parent.token, self.location_id, self.security_device_id),
+        )
         try:
             self.parent.raise_for_resultcode(result)
         except TotalConnectError:
@@ -179,10 +196,17 @@ class TotalConnectLocation:
         assert isinstance(arm_type, ArmType)
         partition_list = self._build_partition_list(partition_id)
 
-        result = self.parent.request("ArmSecuritySystemPartitionsV1", (
-            self.parent.token, self.location_id, self.security_device_id,
-            arm_type.value, self.usercode, partition_list
-        ))
+        result = self.parent.request(
+            "ArmSecuritySystemPartitionsV1",
+            (
+                self.parent.token,
+                self.location_id,
+                self.security_device_id,
+                arm_type.value,
+                self.usercode,
+                partition_list,
+            ),
+        )
         if _ResultCode.from_response(result) == _ResultCode.COMMAND_FAILED:
             LOGGER.warning("could not arm system; is a zone faulted?")
         self.parent.raise_for_resultcode(result)
@@ -196,18 +220,31 @@ class TotalConnectLocation:
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         partition_list = self._build_partition_list(partition_id)
 
-        result = self.parent.request("DisarmSecuritySystemPartitionsV1", (
-            self.parent.token, self.location_id, self.security_device_id,
-            self.usercode, partition_list
-        ))
+        result = self.parent.request(
+            "DisarmSecuritySystemPartitionsV1",
+            (
+                self.parent.token,
+                self.location_id,
+                self.security_device_id,
+                self.usercode,
+                partition_list,
+            ),
+        )
         self.parent.raise_for_resultcode(result)
         LOGGER.info(f"DISARMED partitions {partition_list} at {self.location_id}")
 
     def zone_bypass(self, zone_id: int):
         """Bypass a zone."""
-        result = self.parent.request("Bypass", (
-            self.parent.token, self.location_id, self.security_device_id, zone_id, self.usercode
-        ))
+        result = self.parent.request(
+            "Bypass",
+            (
+                self.parent.token,
+                self.location_id,
+                self.security_device_id,
+                zone_id,
+                self.usercode,
+            ),
+        )
         self.parent.raise_for_resultcode(result)
         LOGGER.info(f"BYPASSED {zone_id} at {self.location_id}")
         self.zones[zone_id]._mark_as_bypassed()
@@ -222,11 +259,18 @@ class TotalConnectLocation:
         if faulted_zones:
             zone_list = {"int": faulted_zones}
 
-            result = self.parent.request("BypassAll", (
-                self.parent.token, self.location_id, self.security_device_id, zone_list, self.usercode
-            ))
+            result = self.parent.request(
+                "BypassAll",
+                (
+                    self.parent.token,
+                    self.location_id,
+                    self.security_device_id,
+                    zone_list,
+                    self.usercode,
+                ),
+            )
             self.parent.raise_for_resultcode(result)
-            LOGGER.info(f"BYPASSED all zones at location {self.location_id}")          
+            LOGGER.info(f"BYPASSED all zones at location {self.location_id}")
 
     def clear_bypass(self):
         """Clear all bypassed zones."""
@@ -247,10 +291,17 @@ class TotalConnectLocation:
         zones_list[0] = {"ZoneID": "12", "ByPass": False, "ZoneStatus": 0}
         settings = {"ArmMode": "1", "ArmDelay": "5", "ZonesList": zones_list}
 
-        result = self.parent.request("CustomArmSecuritySystem", (
-            self.parent.token, self.location_id, self.security_device_id,
-            arm_type.value, self.usercode, settings
-        ))
+        result = self.parent.request(
+            "CustomArmSecuritySystem",
+            (
+                self.parent.token,
+                self.location_id,
+                self.security_device_id,
+                arm_type.value,
+                self.usercode,
+                settings,
+            ),
+        )
         self.parent.raise_for_resultcode(result)
         # TODO: returning the raw result is not right
         return result
@@ -259,9 +310,10 @@ class TotalConnectLocation:
         """NOT OPERATIONAL YET.
         Get custom arm settings.
         """
-        result = self.parent.request("GetCustomArmSettings", (
-            self.parent.token, self.location_id, self.security_device_id
-        ))
+        result = self.parent.request(
+            "GetCustomArmSettings",
+            (self.parent.token, self.location_id, self.security_device_id),
+        )
         self.parent.raise_for_resultcode(result)
         # TODO: returning the raw result is not right
         return result
@@ -277,7 +329,9 @@ class TotalConnectLocation:
             "ZoneStatusInfoWithPartitionId"
         )
         if not zone_info:
-            LOGGER.warning("No zones found when starting TotalConnect. Try to sync your panel using the TotalConnect app or website.")
+            LOGGER.warning(
+                "No zones found when starting TotalConnect. Try to sync your panel using the TotalConnect app or website."
+            )
             LOGGER.debug(f"_update_zone_details result: {result}")
         else:
             for zonedata in zone_info:
@@ -304,13 +358,15 @@ class TotalConnectLocation:
             LOGGER.error(
                 f"unknown location ArmingState {astate} in {result}: please report at {PROJECT_URL}/issues"
             )
-            raise TotalConnectError(f"unknown location ArmingState {astate} in {result}") from None
+            raise TotalConnectError(
+                f"unknown location ArmingState {astate} in {result}"
+            ) from None
 
     def _update_partitions(self, result):
         """Update partition info from Partitions."""
-        pinfo = ((result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}).get(
-            "PartitionInfo"
-        )
+        pinfo = (
+            (result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}
+        ).get("PartitionInfo")
         if not pinfo:
             raise PartialResponseError("no PartitionInfo", result)
 
@@ -330,7 +386,9 @@ class TotalConnectLocation:
 
         data = (result.get("PanelMetadataAndStatus") or {}).get("Zones")
         if not data:
-            LOGGER.error("no zones found: sync your panel using TotalConnect app or website")
+            LOGGER.error(
+                "no zones found: sync your panel using TotalConnect app or website"
+            )
             # PartialResponseError would mean this is retryable without fixing
             # anything, and this needs fixing
             raise TotalConnectError("no zones found: panel sync required")
@@ -349,14 +407,18 @@ class TotalConnectLocation:
                 zone = TotalConnectZone(zonedata, self)
                 self.zones[zid] = zone
 
-            if zone.is_low_battery() and zone.can_be_bypassed and self.auto_bypass_low_battery:
+            if (
+                zone.is_low_battery()
+                and zone.can_be_bypassed
+                and self.auto_bypass_low_battery
+            ):
                 self.zone_bypass(zid)
 
     def sync_panel(self):
         """Syncronize the panel with the TotalConnect server."""
         result = self.parent.request(
             "SynchronizeSecurityPanel",
-            (self.parent.token, None, self.usercode, self.location_id, False)
+            (self.parent.token, None, self.usercode, self.location_id, False),
         )
         self.parent.raise_for_resultcode(result)
         self._sync_job_id = result.get("JobID")
@@ -367,8 +429,7 @@ class TotalConnectLocation:
     def get_sync_status(self):
         """Get panel sync status from the TotalConnect server."""
         result = self.parent.request(
-            "GetSyncJobStatus", 
-            (self.parent.token, self._sync_job_id, self.location_id)
+            "GetSyncJobStatus", (self.parent.token, self._sync_job_id, self.location_id)
         )
 
         try:
@@ -379,7 +440,50 @@ class TotalConnectLocation:
             elif job_state == 2:
                 LOGGER.info(f"Panel sync for location {self.location_id} complete")
             else:
-                LOGGER.warning(f"Unknown panel sync status for location {self.location_id}")
+                LOGGER.warning(
+                    f"Unknown panel sync status for location {self.location_id}"
+                )
         except TotalConnectError:
-            LOGGER.error(f"Could not get status of Sync Job with ID {self._sync_job_id}")
-        
+            LOGGER.error(
+                f"Could not get status of Sync Job with ID {self._sync_job_id}"
+            )
+
+    def get_cameras(self):
+        """Get cameras for the location."""
+        result = self.parent.request(
+            "GetLocationAllCameraListEx", (self.parent.token, self.location_id)
+        )
+        self.parent.raise_for_resultcode(result)
+
+        if "AccountAllCameraList" not in result:
+            LOGGER.info(f"No cameras found for location {self.location_id}")
+            return
+
+        camera_list = result["AccountAllCameraList"]
+
+        try:
+            doorbell_list = camera_list["WiFiDoorbellList"]["WiFiDoorbellsList"][
+                "WiFiDoorBellInfo"
+            ]
+            for doorbell in doorbell_list:
+                id = doorbell["DeviceID"]
+                if id in self.devices:
+                    self.devices[id].doorbell_info = doorbell
+        except KeyError as error:
+            print(error)
+
+    def get_video(self):
+        """Get video for the location."""
+        result = self.parent.request(
+            "GetVideoPIRLocationDeviceList", (self.parent.token, self.location_id)
+        )
+        self.parent.raise_for_resultcode(result)
+
+        try:
+            video_list = result["VideoPIRList"]["VideoPIRInfo"]
+            for video in video_list:
+                id = video["DeviceID"]
+                if id in self.devices:
+                    self.devices[id].video_info = video
+        except KeyError as error:
+            print(error)
