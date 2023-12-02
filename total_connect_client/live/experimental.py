@@ -60,15 +60,15 @@ for location_id, location in TC.locations.items():
     request_location("GetPartnerCameraStatus", location_id)
 
     # thermostat
-    request_location("GetWiFiThermostatLocations", location_id)
+    # request_location("GetWiFiThermostatLocations", location_id)
 
     # lock
-    request_location("GetWiFiLockLocations", location_id)
+    # request_location("GetWiFiLockLocations", location_id)
 
     # automation / scenes
-    request_location("GetSmartActionConfiguration", location_id)
-    request_location("GetSmartSceneConfiguration", location_id)
-    request_location("GetSmartSceneList", location_id)
+    # request_location("GetSmartActionConfiguration", location_id)
+    # request_location("GetSmartSceneConfiguration", location_id)
+    # request_location("GetSmartSceneList", location_id)
 
     print(f"\n\nGetSmartActionList: {location_id} with no array")
     try:
@@ -89,7 +89,8 @@ for location_id, location in TC.locations.items():
         # request_device("GetAutomationDeviceStatus", device_id)
         # request_device("GetAutomationDeviceStatusExV1", device_id)
         request_device("GetAllAutomationDeviceStatusExV1", device_id)
-        request_device("GetSceneList", device_id)
+        # hide scene stuff for now
+        # request_device("GetSceneList", device_id)
 
         if device.is_doorbell():
             print(
@@ -103,6 +104,7 @@ for location_id, location in TC.locations.items():
             except Exception as err:
                 print(err)
 
+            """
             print(
                 f"\n\nGetWiFiDoorBellDeviceDiagnosticDetailsEx: location {location_id} device {device_id}"
             )
@@ -126,3 +128,4 @@ for location_id, location in TC.locations.items():
                 pprint(result)
             except Exception as err:
                 print(err)
+            """

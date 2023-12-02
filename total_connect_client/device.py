@@ -14,6 +14,7 @@ class TotalConnectDevice:
         self.serial_text = info.get("DeviceSerialText")
         self._doorbell_info = {}
         self._video_info = {}
+        self._unicorn_info = {}
 
         flags = info.get("DeviceFlags")
         if flags is None:
@@ -43,6 +44,10 @@ class TotalConnectDevice:
         for key, value in self._video_info.items():
             data = data + f"    {key}: {value}\n"
 
+        data = data + "  UnicornInfo:\n"
+        for key, value in self._unicorn_info.items():
+            data = data + f"    {key}: {value}\n"
+
         return data
 
     @property
@@ -60,6 +65,13 @@ class TotalConnectDevice:
         """Return true if a doorbell."""
         if self._doorbell_info and self._doorbell_info["IsExistingDoorBellUser"] == 1:
             return True
+
+        if (
+            self._unicorn_info
+            and self._unicorn_info["DeviceVariant"] == "home.dv.doorbell"
+        ):
+            return True
+
         return False
 
     @property
@@ -72,3 +84,14 @@ class TotalConnectDevice:
         """Set values based on VideoPIRInfo object."""
         if data:
             self._video_info = data
+
+    @property
+    def unicorn_info(self):
+        """Unicorn info."""
+        return self._video_info
+
+    @unicorn_info.setter
+    def unicorn_info(self, data):
+        """Set values based on UnicornInfo object."""
+        if data:
+            self._unicorn_info = data

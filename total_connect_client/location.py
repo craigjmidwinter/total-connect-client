@@ -461,16 +461,41 @@ class TotalConnectLocation:
 
         camera_list = result["AccountAllCameraList"]
 
-        try:
-            doorbell_list = camera_list["WiFiDoorbellList"]["WiFiDoorbellsList"][
-                "WiFiDoorBellInfo"
-            ]
-            for doorbell in doorbell_list:
-                id = doorbell["DeviceID"]
-                if id in self.devices:
-                    self.devices[id].doorbell_info = doorbell
-        except KeyError as error:
-            print(error)
+        if "WiFiDoorbellList" in camera_list:
+            self._get_doorbell(camera_list["WiFiDoorbellList"])
+
+        if "UnicornList" in camera_list:
+            self._get_unicorn(camera_list["UnicornList"])
+
+    def _get_doorbell(self, data):
+        """Find doorbell info."""
+        if not data or "WiFiDoorbellsList" not in data:
+            return
+
+        doorbells = data["WiFiDoorbellsList"]
+        if "WiFiDoorBellInfo" not in doorbells:
+            return
+
+        doorbell_list = doorbells["WiFiDoorBellInfo"]
+        for doorbell in doorbell_list:
+            id = doorbell["DeviceID"]
+            if id in self.devices:
+                self.devices[id].doorbell_info = doorbell
+
+    def _get_unicorn(self, data):
+        """Find uniforn info."""
+        if not data or "UnicornList" not in data:
+            return
+
+        unicorns = data["UnicornsList"]
+        if "UnicornInfo" not in unicorns:
+            return
+
+        unicorn_list = unicorns["UnicornInfo"]
+        for unicorn in unicorn_list:
+            id = unicorn["DeviceID"]
+            if id in self.devices:
+                self.devices[id].unicorn_info = unicorn
 
     def get_video(self):
         """Get video for the location."""
@@ -479,11 +504,14 @@ class TotalConnectLocation:
         )
         self.parent.raise_for_resultcode(result)
 
-        try:
-            video_list = result["VideoPIRList"]["VideoPIRInfo"]
-            for video in video_list:
-                id = video["DeviceID"]
-                if id in self.devices:
-                    self.devices[id].video_info = video
-        except KeyError as error:
-            print(error)
+        if "VideoPIRList" not in result:
+            return
+
+        if "VideoPIRInfo" not in result["VideoPIRList"]:
+            return
+
+        video_list = result["VideoPIRList"]["VideoPIRInfo"]
+        for video in video_list:
+            id = video["DeviceID"]
+            if id in self.devices:
+                self.devices[id].video_info = video
