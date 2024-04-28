@@ -191,5 +191,5 @@ def tests_update_status():
 
     # unknown arming state should produce an error
     with pytest.raises(TotalConnectError):
-        response["ArmingState"] = 10215
+        response["ArmingState"] = 99999
         location._update_status(response)
