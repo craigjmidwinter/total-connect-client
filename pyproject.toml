@@ -40,6 +40,7 @@ legacy_tox_ini = """
     env_list = 
         build
         lint
+        py312
         py311
         py310
         py39
