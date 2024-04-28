@@ -7,11 +7,13 @@ from unittest.mock import Mock, patch
 import pytest
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
+    METADATA_DISARMED,
     METADATA_DISARMED_LOW_BATTERY,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
 )
 
+from total_connect_client.const import ArmingState
 from total_connect_client.exceptions import PartialResponseError, TotalConnectError
 from total_connect_client.location import DEFAULT_USERCODE, TotalConnectLocation
 
@@ -173,3 +175,21 @@ class TestTotalConnectLocation(unittest.TestCase):
         assert loc.set_usercode("1234") is True
         assert loc.usercode == "1234"
         assert mock_client.validate_usercode.call_count == 2
+
+
+def tests_update_status():
+    """Test location._update_status()."""
+    location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, Mock())
+
+    # known arming state should not produce an error
+    response = {
+        "PanelMetadataAndStatus": METADATA_DISARMED,
+        "ArmingState": ArmingState.DISARMED,
+    }
+    location._update_status(response)
+    assert location.arming_state == ArmingState.DISARMED
+
+    # unknown arming state should produce an error
+    with pytest.raises(TotalConnectError):
+        response["ArmingState"] = 99999
+        location._update_status(response)

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name="total_connect_client"
-version="2023.12.1"
+version="2024.4"
 authors = [
   { name="Craig J. Midwinter", email="craig.j.midwinter@gmail.com" },
 ]
@@ -19,7 +19,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords=["alarm", "TotalConnect"]
-dependencies=["zeep>=4.1.0"]
+dependencies=["zeep>=4.2.1"]
 
 [project.urls]
 "Homepage" = "https://github.com/craigjmidwinter/total-connect-client"
@@ -37,12 +37,14 @@ disable = ["use-symbolic-message-instead", "too-few-public-methods", "too-many-i
 legacy_tox_ini = """
 
    [tox]
+    requires = 
+      tox>=4
+      virtualenv>=20.26
+
     env_list = 
         build
         lint
-        py311
-        py310
-        py39
+        py{39,310,311,312}
 
     #skip_missing_interpreters = True
 
@@ -50,11 +52,11 @@ legacy_tox_ini = """
     setenv =
         LANG=en_US.UTF-8
         PYTHONPATH = {toxinidir}
-    commands = 
-        pytest --timeout=30 --cov=total_connect_client --cov-report term-missing -p no:sugar {posargs}
     deps = 
         -r{toxinidir}/requirements.txt
         -r{toxinidir}/requirements_test.txt
+    commands = 
+        pytest tests --timeout=30 --cov=total_connect_client --cov-report term-missing -p no:sugar {posargs}
 
     [testenv:lint]
     deps = 

@@ -42,6 +42,7 @@ class ArmingState(Enum):
     ALARMING = 10207
     ALARMING_FIRE_SMOKE = 10212
     ALARMING_CARBON_MONOXIDE = 10213
+    ALARMING_CARBON_MONOXIDE_PROA7 = 10215
 
     ARMING = 10307
     DISARMING = 10308
@@ -125,7 +126,10 @@ class ArmingState(Enum):
 
     def is_triggered_gas(self):
         """Return True if the system is triggered for carbon monoxide."""
-        return self == ArmingState.ALARMING_CARBON_MONOXIDE
+        return self in (
+            ArmingState.ALARMING_CARBON_MONOXIDE,
+            ArmingState.ALARMING_CARBON_MONOXIDE_PROA7,
+        )
 
     def is_triggered(self):
         """Return True if the system is triggered in any way."""
