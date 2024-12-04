@@ -164,3 +164,10 @@ class TestTotalConnectClient(unittest.TestCase):
             with pytest.raises(BadResultCodeError):
                 TotalConnectClient("username", "password", usercodes=None)
             assert mock_request.call_count == 1
+
+    def tests_empty_response_code(self):
+        """Test an empty response code."""
+        # see issue #228
+        from total_connect_client.const import _ResultCode
+        with pytest.raises(ServiceUnavailable):
+            _ResultCode.from_response(None)

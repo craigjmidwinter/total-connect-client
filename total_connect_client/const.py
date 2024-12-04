@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from .exceptions import BadResultCodeError
+from .exceptions import BadResultCodeError, ServiceUnavailable
 
 
 class ArmType(Enum):
@@ -149,6 +149,9 @@ class _ResultCode(Enum):
     def from_response(response_dict):
         try:
             return _ResultCode(response_dict["ResultCode"])
+        except TypeError:
+            # sometimes when there are server issues, it returns empty responses - see issue #228
+            raise ServiceUnavailable(f"Server returned empty response, check server status at {STATUS_URL}") from None
         except ValueError:
             raise BadResultCodeError(
                 f"unknown result code {response_dict['ResultCode']}", response_dict
@@ -178,3 +181,5 @@ class _ResultCode(Enum):
 
 
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
+
+STATUS_URL = "https://status.resideo.com/"
