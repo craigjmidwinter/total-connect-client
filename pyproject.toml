@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta:__legacy__"
 
 [project]
 name="total_connect_client"
-version="2024.5"
+version="2024.12"
 authors = [
   { name="Craig J. Midwinter", email="craig.j.midwinter@gmail.com" },
 ]
@@ -19,7 +19,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 keywords=["alarm", "TotalConnect"]
-dependencies=["zeep>=4.2.1"]
+dependencies=["zeep>=4.3.1"]
 
 [project.urls]
 "Homepage" = "https://github.com/craigjmidwinter/total-connect-client"
