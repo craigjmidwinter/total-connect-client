@@ -178,6 +178,7 @@ class _ResultCode(Enum):
     INVALID_SESSION = -102
     AUTHENTICATION_FAILED = -100
     CONNECTION_ERROR = 4101
+    ACCOUNT_LOCKED = -123
 
 
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
