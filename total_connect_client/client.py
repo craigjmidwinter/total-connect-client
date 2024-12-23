@@ -179,9 +179,7 @@ class TotalConnectClient:
         ):
             return
         self._raise_for_retry(response)
-        if rc == _ResultCode.BAD_USER_OR_PASSWORD:
-            raise AuthenticationError(rc.name, response)
-        if rc == _ResultCode.AUTHENTICATION_FAILED:
+        if rc in (_ResultCode.BAD_USER_OR_PASSWORD, _ResultCode.AUTHENTICATION_FAILED, _ResultCode.ACCOUNT_LOCKED):
             raise AuthenticationError(rc.name, response)
         if rc == _ResultCode.USER_CODE_UNAVAILABLE:
             raise UsercodeUnavailable(rc.name, response)
