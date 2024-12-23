@@ -163,10 +163,6 @@ class TotalConnectClient:
             raise RetryableTotalConnectError("connection error", response)
         if rc == _ResultCode.FAILED_TO_CONNECT:
             raise RetryableTotalConnectError("failed to connect with panel", response)
-        if rc == _ResultCode.AUTHENTICATION_FAILED:
-            raise RetryableTotalConnectError(
-                "temporary authentication failure", response
-            )
         if rc == _ResultCode.BAD_OBJECT_REFERENCE:
             raise RetryableTotalConnectError("bad object reference", response)
 
@@ -184,6 +180,8 @@ class TotalConnectClient:
             return
         self._raise_for_retry(response)
         if rc == _ResultCode.BAD_USER_OR_PASSWORD:
+            raise AuthenticationError(rc.name, response)
+        if rc == _ResultCode.AUTHENTICATION_FAILED:
             raise AuthenticationError(rc.name, response)
         if rc == _ResultCode.USER_CODE_UNAVAILABLE:
             raise UsercodeUnavailable(rc.name, response)
