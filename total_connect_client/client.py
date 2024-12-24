@@ -200,7 +200,7 @@ class TotalConnectClient:
     API_APP_ID = "14588"
     API_APP_VERSION = "1.0.34"
 
-    def request(self, operation_name, args, attempts_remaining=5):
+    def request(self, operation_name, args, attempts_remaining: int=5):
         """Send a SOAP request. args is a list or tuple defining the
         parameters to the operation.
         """
@@ -313,7 +313,7 @@ class TotalConnectClient:
         LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
         self.times["authenticate()"] = time.time() - start_time
 
-    def validate_usercode(self, device_id, usercode):
+    def validate_usercode(self, device_id, usercode:str)-> bool:
         """Return True if the usercode is valid for the device."""
         response = self.request(
             "ValidateUserCode", (self.token, device_id, str(usercode))
@@ -328,7 +328,7 @@ class TotalConnectClient:
             return False
         return True
 
-    def is_logged_in(self):
+    def is_logged_in(self)->bool:
         """Return true if the client is logged into the Total Connect service
         with valid credentials.
         """
@@ -344,7 +344,7 @@ class TotalConnectClient:
             LOGGER.info("Logout Successful")
             self.token = None
 
-    def get_number_locations(self):
+    def get_number_locations(self)->int:
         """Return the number of locations.  Home Assistant needs a way
         to force the locations to load inside a callable function.
         """

@@ -4,7 +4,7 @@
 class TotalConnectDevice:
     """Device class for Total Connect."""
 
-    def __init__(self, info):
+    def __init__(self, info: dict):
         """Initialize device based on DeviceInfoBasic."""
         self.deviceid = info.get("DeviceID")
         self.name = info.get("DeviceName")
@@ -61,7 +61,7 @@ class TotalConnectDevice:
         if data:
             self._doorbell_info = data
 
-    def is_doorbell(self):
+    def is_doorbell(self) -> bool:
         """Return true if a doorbell."""
         if self._doorbell_info and self._doorbell_info["IsExistingDoorBellUser"] == 1:
             return True
