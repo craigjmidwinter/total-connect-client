@@ -6,6 +6,8 @@ from .exceptions import BadResultCodeError, ServiceUnavailable
 
 
 class ArmType(Enum):
+    """Represent ArmingType."""
+
     AWAY = 0
     STAY = 1
     STAY_INSTANT = 2
@@ -14,6 +16,8 @@ class ArmType(Enum):
 
 
 class ArmingState(Enum):
+    """Represent ArmingState."""
+
     DISARMED = 10200
     DISARMED_BYPASS = 10211
     DISARMED_ZONE_FAULTED = (
@@ -141,7 +145,9 @@ class ArmingState(Enum):
 
 
 class _ResultCode(Enum):
-    """As suggested by the leading underscore, this class is not used by
+    """Represent ResultCode.
+
+    As suggested by the leading underscore, this class is not used by
     callers of the API.
     """
 
@@ -150,8 +156,11 @@ class _ResultCode(Enum):
         try:
             return _ResultCode(response_dict["ResultCode"])
         except TypeError:
-            # sometimes when there are server issues, it returns empty responses - see issue #228
-            raise ServiceUnavailable(f"Server returned empty response, check server status at {STATUS_URL}") from None
+            # sometimes when there are server issues,
+            # it returns empty responses - see issue #228
+            raise ServiceUnavailable(
+                f"Server returned empty response, check server status at {STATUS_URL}"
+            ) from None
         except ValueError:
             raise BadResultCodeError(
                 f"unknown result code {response_dict['ResultCode']}", response_dict
@@ -170,7 +179,8 @@ class _ResultCode(Enum):
     USER_CODE_INVALID = -4106
     FAILED_TO_CONNECT = -4104
 
-    # Invalid Parameter returned when requesting SyncPanelStatus using non-existant JobID.
+    # Invalid Parameter returned when requesting SyncPanelStatus
+    # using non-existant JobID.
     INVALID_PARAMETER = -501
 
     BAD_OBJECT_REFERENCE = -400

@@ -27,7 +27,7 @@ class TotalConnectUser:
                 "with minimal permissions."
             )
 
-    def security_problem(self):
+    def security_problem(self)-> bool:
         """Run security checks. Return true if problem."""
         problem = False
 

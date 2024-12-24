@@ -38,7 +38,7 @@ class TotalConnectPartition:
 
         return data
 
-    def arm(self, arm_type):
+    def arm(self, arm_type: int):
         """Arm the partition."""
         self.parent.arm(arm_type, self.partitionid)
 
@@ -46,7 +46,7 @@ class TotalConnectPartition:
         """Disarm the partition."""
         self.parent.disarm(self.partitionid)
 
-    def _update(self, info):
+    def _update(self, info: dict):
         """Update partition based on PartitionInfo."""
         astate = (info or {}).get("ArmingState")
         if astate is None:

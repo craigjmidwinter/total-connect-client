@@ -190,7 +190,7 @@ class TotalConnectLocation:
             )
         return {"int": [partition_id]}
 
-    def arm(self, arm_type, partition_id=None):
+    def arm(self, arm_type: int, partition_id=None):
         """Arm the given partition. If no partition is given, arm all partitions."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         assert isinstance(arm_type, ArmType)
