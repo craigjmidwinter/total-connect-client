@@ -10,6 +10,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ZoneStatus(IntFlag):
+    """Class to represent ZoneStatus."""
+
     NORMAL = 0
     BYPASSED = 1
     FAULT = 2
@@ -66,8 +68,8 @@ class ZoneType(Enum):
     AAV_MONITOR = 81  # per Vista20P docs
     LYRIC_LOCAL_ALARM = 89
 
-    # According to the VISTA docs, these can be programmed via downloader software
-    # or from a keypad using data fields *182-*185
+    # According to the VISTA docs, these can be programmed via downloader
+    # software or from a keypad using data fields *182-*185
 
     VISTA_CONFIGURABLE_90 = 90
     VISTA_CONFIGURABLE_91 = 91
@@ -145,8 +147,8 @@ class TotalConnectZone:
 
     def is_type_button(self) -> bool:
         """Return true if zone is a button."""
-
-        # as seen so far, any security zone that cannot be bypassed is a button on a panel
+        # as seen so far, any security zone that cannot be bypassed
+        # is a button on a panel
         if self.is_type_security() and not self.can_be_bypassed:
             return True
 
@@ -164,7 +166,6 @@ class TotalConnectZone:
 
     def is_type_security(self) -> bool:
         """Return true if zone type is security."""
-
         return self.zone_type_id in (
             ZoneType.SECURITY,
             ZoneType.ENTRY_EXIT1,
@@ -210,7 +211,8 @@ class TotalConnectZone:
         assert self.zoneid == zid, (self.zoneid, zid)
 
         self.description = zone.get("ZoneDescription")
-        # ZoneInfo gives 'PartitionID' but ZoneStatusInfoWithPartitionId gives 'PartitionId'
+        # ZoneInfo gives 'PartitionID' but
+        # ZoneStatusInfoWithPartitionId gives 'PartitionId'
         if "PartitionId" in zone:
             # ...and PartitionId gives an int instead of a string
             self.partition = str(zone["PartitionId"])
