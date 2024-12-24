@@ -14,11 +14,20 @@ class ZoneStatus(IntFlag):
     BYPASSED = 1
     FAULT = 2
     TROUBLE = 8  # is also Tampered
-    TAMPER = 16 # Tamper for ProA7, see #176
-    COMMUNICATION_FAILURE = 32 # see #191
+    TAMPER = 16  # Tamper for ProA7, see #176
+    COMMUNICATION_FAILURE = 32  # see #191
     LOW_BATTERY = 64
     TRIGGERED = 256
-    KNOWN = NORMAL | BYPASSED | FAULT | TROUBLE | TAMPER | COMMUNICATION_FAILURE | LOW_BATTERY | TRIGGERED
+    KNOWN = (
+        NORMAL
+        | BYPASSED
+        | FAULT
+        | TROUBLE
+        | TAMPER
+        | COMMUNICATION_FAILURE
+        | LOW_BATTERY
+        | TRIGGERED
+    )
 
 
 class ZoneType(Enum):
@@ -108,31 +117,33 @@ class TotalConnectZone:
             f"Device Type: {self.device_type}\n\n"
         )
 
-    def is_bypassed(self):
+    def is_bypassed(self) -> bool:
         """Return true if the zone is bypassed."""
         return self.status & ZoneStatus.BYPASSED > 0
 
-    def is_faulted(self):
+    def is_faulted(self) -> bool:
         """Return true if the zone is faulted."""
         return self.status & ZoneStatus.FAULT > 0
 
-    def is_tampered(self):
+    def is_tampered(self) -> bool:
         """Return true if zone is tampered."""
-        return (self.status & ZoneStatus.TROUBLE > 0) or (self.status & ZoneStatus.TAMPER > 0)
+        return (self.status & ZoneStatus.TROUBLE > 0) or (
+            self.status & ZoneStatus.TAMPER > 0
+        )
 
-    def is_low_battery(self):
+    def is_low_battery(self) -> bool:
         """Return true if low battery."""
         return self.status & ZoneStatus.LOW_BATTERY > 0
 
-    def is_troubled(self):
+    def is_troubled(self) -> bool:
         """Return true if zone is troubled."""
         return self.status & ZoneStatus.TROUBLE > 0
 
-    def is_triggered(self):
+    def is_triggered(self) -> bool:
         """Return true if zone is triggered."""
         return self.status & ZoneStatus.TRIGGERED > 0
 
-    def is_type_button(self):
+    def is_type_button(self) -> bool:
         """Return true if zone is a button."""
 
         # as seen so far, any security zone that cannot be bypassed is a button on a panel
@@ -151,7 +162,7 @@ class TotalConnectZone:
 
         return False
 
-    def is_type_security(self):
+    def is_type_security(self) -> bool:
         """Return true if zone type is security."""
 
         return self.zone_type_id in (
@@ -168,27 +179,27 @@ class TotalConnectZone:
             ZoneType.PROA7_GARAGE_MONITOR,
         )
 
-    def is_type_motion(self):
+    def is_type_motion(self) -> bool:
         """Return true if zone type is motion."""
         return self.zone_type_id == ZoneType.INTERIOR_FOLLOWER
 
-    def is_type_fire(self):
+    def is_type_fire(self) -> bool:
         """Return true if zone type is fire or smoke."""
         return self.zone_type_id == ZoneType.FIRE_SMOKE
 
-    def is_type_temperature(self):
+    def is_type_temperature(self) -> bool:
         """Return true if zone monitors the temperature."""
         return self.zone_type_id == ZoneType.MONITOR
 
-    def is_type_carbon_monoxide(self):
+    def is_type_carbon_monoxide(self) -> bool:
         """Return true if zone type is carbon monoxide."""
         return self.zone_type_id == ZoneType.CARBON_MONOXIDE
 
-    def is_type_medical(self):
+    def is_type_medical(self) -> bool:
         """Return true if zone type is medical."""
         return self.zone_type_id == ZoneType.PROA7_MEDICAL
 
-    def is_type_keypad(self):
+    def is_type_keypad(self) -> bool:
         """Return true if zone type is keypad."""
         return self.zone_type_id == ZoneType.LYRIC_KEYPAD
 
