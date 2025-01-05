@@ -2,7 +2,7 @@
 
 import logging
 from enum import Enum, IntFlag
-
+from typing import Dict, Any
 from .const import PROJECT_URL
 from .exceptions import TotalConnectError
 
@@ -80,7 +80,7 @@ class ZoneType(Enum):
 class TotalConnectZone:
     """Do not create instances of this class yourself."""
 
-    def __init__(self, zone, parent_location):
+    def __init__(self, zone: Dict[str, Any], parent_location) -> None:
         """Initialize."""
         self.zoneid = zone.get("ZoneID")
         self._parent_location = parent_location
@@ -100,7 +100,7 @@ class TotalConnectZone:
         self._unknown_type_reported = False
         self._update(zone)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a string that is printable."""
         return (
             f"Zone {self.zoneid} - {self.description}\n"
@@ -204,7 +204,7 @@ class TotalConnectZone:
         """Return true if zone type is keypad."""
         return self.zone_type_id == ZoneType.LYRIC_KEYPAD
 
-    def _update(self, zone):
+    def _update(self, zone: Dict[str, Any]) -> None:
         """Update the zone."""
         assert zone
         zid = zone.get("ZoneID")
@@ -262,11 +262,11 @@ class TotalConnectZone:
             self.chime_state = info.get("ChimeState")
             self.device_type = info.get("DeviceType")
 
-    def _mark_as_bypassed(self):
+    def _mark_as_bypassed(self) -> None:
         """Set is_bypassed status."""
         self.status |= ZoneStatus.BYPASSED
 
-    def bypass(self):
+    def bypass(self) -> None:
         """Bypass the zone."""
         if self.can_be_bypassed:
             self._parent_location.zone_bypass(self.zoneid)
