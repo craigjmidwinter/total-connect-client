@@ -1,6 +1,8 @@
 """Total Connect User."""
 
 import logging
+from typing import Dict, Any
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -8,7 +10,7 @@ LOGGER = logging.getLogger(__name__)
 class TotalConnectUser:
     """User for Total Connect."""
 
-    def __init__(self, user_info):
+    def __init__(self, user_info: Dict[str, Any]) -> None:
         """Initialize based on UserInfo from LoginAndGetSessionDetails."""
         self._user_id = user_info["UserID"]
         self._username = user_info["Username"]
@@ -27,7 +29,7 @@ class TotalConnectUser:
                 "with minimal permissions."
             )
 
-    def security_problem(self)-> bool:
+    def security_problem(self) -> bool:
         """Run security checks. Return true if problem."""
         problem = False
 
@@ -47,7 +49,7 @@ class TotalConnectUser:
 
         return problem
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a string that is printable."""
         data = (
             f"Username: {self._username}\n"
