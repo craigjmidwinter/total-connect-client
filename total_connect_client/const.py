@@ -51,6 +51,8 @@ class ArmingState(Enum):
     ARMING = 10307
     DISARMING = 10308
 
+    UNKNOWN = 0
+
     def is_arming(self) -> bool:
         """Return true if the system is in the process of arming."""
         return self == ArmingState.ARMING

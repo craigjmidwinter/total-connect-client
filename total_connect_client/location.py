@@ -36,7 +36,7 @@ class TotalConnectLocation:
         self.cover_tampered = None
         self.last_updated_timestamp_ticks = None
         self.configuration_sequence_number = None
-        self.arming_state = None
+        self.arming_state: ArmingState = ArmingState.UNKNOWN
         self.partitions: Dict[Any, TotalConnectPartition] = {}
         self._partition_list: Dict[str, list[Any]] = {"int": []}
         self.zones: Dict[Any, TotalConnectZone] = {}

@@ -2,7 +2,7 @@
 
 import logging
 from typing import Dict, Any
-from .const import ArmingState, PROJECT_URL
+from .const import ArmingState, PROJECT_URL, ArmType
 from .exceptions import PartialResponseError, TotalConnectError
 
 
@@ -39,7 +39,7 @@ class TotalConnectPartition:
 
         return data
 
-    def arm(self, arm_type: int) -> None:
+    def arm(self, arm_type: ArmType) -> None:
         """Arm the partition."""
         self.parent.arm(arm_type, self.partitionid)
 
