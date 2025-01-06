@@ -11,7 +11,7 @@ from .exceptions import (
     TotalConnectError,
 )
 from .partition import TotalConnectPartition
-from .zone import TotalConnectZone
+from .zone import TotalConnectZone, ZoneStatus
 
 DEFAULT_USERCODE = "-1"
 
@@ -38,7 +38,7 @@ class TotalConnectLocation:
         self.configuration_sequence_number = None
         self.arming_state = None
         self.partitions: Dict[Any, TotalConnectPartition] = {}
-        self._partition_list = None
+        self._partition_list: Dict[str, list[Any]] = {"int": []}
         self.zones: Dict[Any, TotalConnectZone] = {}
         self.usercode = DEFAULT_USERCODE
         self.auto_bypass_low_battery = False
@@ -178,7 +178,7 @@ class TotalConnectLocation:
             return True
         return False
 
-    def _build_partition_list(self, partition_id=None) -> Dict[str, list]:
+    def _build_partition_list(self, partition_id=None) -> Dict[str, list[Any]]:
         """Build a list of partitions to use for arming/disarming."""
         if partition_id is None:
             return self._partition_list
@@ -276,14 +276,14 @@ class TotalConnectLocation:
         """Clear all bypassed zones."""
         self.disarm()
 
-    def zone_status(self, zone_id: int):
+    def zone_status(self, zone_id: int)->ZoneStatus:
         """Get status of a zone."""
         zone = self.zones.get(zone_id)
         if not zone:
             raise TotalConnectError(f"zone {zone_id} does not exist")
         return zone.status
 
-    def arm_custom(self, arm_type: int) -> Dict[str, Any]:
+    def arm_custom(self, arm_type: ArmType) -> Dict[str, Any]:
         """NOT OPERATIONAL YET.
         Arm custom the system.  Return true if successful.
         """

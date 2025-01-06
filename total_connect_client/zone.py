@@ -84,8 +84,8 @@ class TotalConnectZone:
         """Initialize."""
         self.zoneid = zone.get("ZoneID")
         self._parent_location = parent_location
-        self.partition = None
-        self.status = None
+        self.partition: str = ""
+        self.status: ZoneStatus = ZoneStatus.NORMAL
         self.zone_type_id = None
         self.can_be_bypassed = None
         self.battery_level = None
