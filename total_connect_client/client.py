@@ -69,19 +69,19 @@ class TotalConnectClient:
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        username,
-        password,
+        username: str,
+        password: str,
         usercodes=None,
-        auto_bypass_battery=False,
-        retry_delay=6,  # seconds between retries
+        auto_bypass_battery: bool=False,
+        retry_delay:int=6,  # seconds between retries
     ) -> None:
         """Initialize."""
         self.times = {}
         self.time_start = time.time()
         self.soap_client = None
 
-        self.username = username
-        self.password = password
+        self.username: str = username
+        self.password: str = password
         self.usercodes = usercodes or {}
         self.auto_bypass_low_battery = auto_bypass_battery
         self.retry_delay = retry_delay
@@ -89,7 +89,7 @@ class TotalConnectClient:
         self.token = None
         self._invalid_credentials = False
         self._module_flags: Dict[str, str] = {}
-        self._user = None
+        self._user: TotalConnectUser | None = None
         self._locations: Dict[Any, TotalConnectLocation] = {}
         self._locations_unfetched: Dict[Any, TotalConnectLocation] = {}
 
@@ -195,7 +195,7 @@ class TotalConnectClient:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
-    def _send_one_request(self, operation_name, args) -> Dict[str, Any]:
+    def _send_one_request(self, operation_name:str, args) -> Dict[str, Any]:
         LOGGER.debug(f"sending API request {operation_name}{args}")
         operation_proxy = self.soap_client.service[operation_name]
         return zeep.helpers.serialize_object(operation_proxy(*args))
@@ -205,7 +205,7 @@ class TotalConnectClient:
     API_APP_VERSION = "1.0.34"
 
     def request(
-        self, operation_name, args, attempts_remaining: int = 5
+        self, operation_name:str, args: list[Any] | tuple[Any], attempts_remaining: int = 5
     ) -> Dict[str, Any]:
         """Send a SOAP request. args is a list or tuple defining the
         parameters to the operation.
@@ -319,10 +319,10 @@ class TotalConnectClient:
         LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
         self.times["authenticate()"] = time.time() - start_time
 
-    def validate_usercode(self, device_id, usercode: str) -> bool:
+    def validate_usercode(self, device_id:str, usercode: str) -> bool:
         """Return True if the usercode is valid for the device."""
         response = self.request(
-            "ValidateUserCode", (self.token, device_id, str(usercode))
+            "ValidateUserCode", (self.token, device_id, usercode)
         )
         try:
             self.raise_for_resultcode(response)

@@ -29,7 +29,7 @@ class TotalConnectLocation:
         self._module_flags = dict(
             x.split("=") for x in location_info_basic["LocationModuleFlags"].split(",")
         )
-        self.security_device_id = location_info_basic["SecurityDeviceID"]
+        self.security_device_id:str = location_info_basic["SecurityDeviceID"]
         self.parent = parent
         self.ac_loss = None
         self.low_battery = None
@@ -171,10 +171,10 @@ class TotalConnectLocation:
         """Return true if cover is tampered."""
         return self.cover_tampered is True
 
-    def set_usercode(self, usercode) -> bool:
+    def set_usercode(self, usercode:str) -> bool:
         """Set the usercode. Return true if successful."""
         if self.parent.validate_usercode(self.security_device_id, usercode):
-            self.usercode = str(usercode)
+            self.usercode = usercode
             return True
         return False
 
