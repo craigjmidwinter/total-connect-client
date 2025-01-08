@@ -1,6 +1,7 @@
 """Total Connect Client constants."""
 
 from enum import Enum
+from typing import Dict, Any
 
 from .exceptions import BadResultCodeError, ServiceUnavailable
 
@@ -154,7 +155,7 @@ class _ResultCode(Enum):
     """
 
     @staticmethod
-    def from_response(response_dict):
+    def from_response(response_dict:Dict[str, Any]):
         try:
             return _ResultCode(response_dict["ResultCode"])
         except TypeError:

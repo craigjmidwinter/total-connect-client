@@ -53,7 +53,7 @@ class _SslContextAdapter(requests.adapters.HTTPAdapter):
         self.ssl_context = ssl_context
         super().__init__(**kwargs)
 
-    def init_poolmanager(self, num_pools: int, maxsize, block: bool = False) -> None:
+    def init_poolmanager(self, num_pools: int, maxsize:int, block: bool = False) -> None:
         self.poolmanager = urllib3.poolmanager.PoolManager(
             num_pools=num_pools,
             maxsize=maxsize,
@@ -71,9 +71,9 @@ class TotalConnectClient:
         self,
         username: str,
         password: str,
-        usercodes=None,
-        auto_bypass_battery: bool=False,
-        retry_delay:int=6,  # seconds between retries
+        usercodes: Dict[str,str] | None=None,
+        auto_bypass_battery: bool = False,
+        retry_delay: int = 6,  # seconds between retries
     ) -> None:
         """Initialize."""
         self.times = {}
@@ -195,7 +195,7 @@ class TotalConnectClient:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
-    def _send_one_request(self, operation_name:str, args) -> Dict[str, Any]:
+    def _send_one_request(self, operation_name: str, args:list[Any] | tuple[Any, ...]) -> Dict[str, Any]:
         LOGGER.debug(f"sending API request {operation_name}{args}")
         operation_proxy = self.soap_client.service[operation_name]
         return zeep.helpers.serialize_object(operation_proxy(*args))
@@ -205,7 +205,10 @@ class TotalConnectClient:
     API_APP_VERSION = "1.0.34"
 
     def request(
-        self, operation_name:str, args: list[Any] | tuple[Any], attempts_remaining: int = 5
+        self,
+        operation_name: str,
+        args: list[Any] | tuple[Any, ...],
+        attempts_remaining: int = 5,
     ) -> Dict[str, Any]:
         """Send a SOAP request. args is a list or tuple defining the
         parameters to the operation.
@@ -319,11 +322,9 @@ class TotalConnectClient:
         LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
         self.times["authenticate()"] = time.time() - start_time
 
-    def validate_usercode(self, device_id:str, usercode: str) -> bool:
+    def validate_usercode(self, device_id: str, usercode: str) -> bool:
         """Return True if the usercode is valid for the device."""
-        response = self.request(
-            "ValidateUserCode", (self.token, device_id, usercode)
-        )
+        response = self.request("ValidateUserCode", (self.token, device_id, usercode))
         try:
             self.raise_for_resultcode(response)
         except UsercodeInvalid:

@@ -40,10 +40,10 @@ class TotalConnectLocation:
         self.partitions: Dict[Any, TotalConnectPartition] = {}
         self._partition_list: Dict[str, list[Any]] = {"int": []}
         self.zones: Dict[Any, TotalConnectZone] = {}
-        self.usercode = DEFAULT_USERCODE
-        self.auto_bypass_low_battery = False
+        self.usercode:str = DEFAULT_USERCODE
+        self.auto_bypass_low_battery:bool = False
         self._sync_job_id = None
-        self._sync_job_state = None
+        self._sync_job_state:int = 0
 
         dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
         tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
