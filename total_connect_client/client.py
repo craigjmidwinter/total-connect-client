@@ -1,4 +1,5 @@
 """TotalConnectClient() in this file is the primary class of this package.
+
 Instantiate it like this:
 
 usercodes = { 'default': '1234' }
@@ -10,6 +11,7 @@ for location in client.locations:
 
 import logging
 import ssl
+from ssl import SSLContext
 import time
 from importlib import resources as impresources
 from typing import Dict, Any
@@ -49,11 +51,13 @@ LOGGER = logging.getLogger(__name__)
 class _SslContextAdapter(requests.adapters.HTTPAdapter):
     """Makes Zeep use our ssl_context."""
 
-    def __init__(self, ssl_context, **kwargs) -> None:
+    def __init__(self, ssl_context: SSLContext, **kwargs) -> None:
         self.ssl_context = ssl_context
         super().__init__(**kwargs)
 
-    def init_poolmanager(self, num_pools: int, maxsize:int, block: bool = False) -> None:
+    def init_poolmanager(
+        self, num_pools: int, maxsize: int, block: bool = False
+    ) -> None:
         self.poolmanager = urllib3.poolmanager.PoolManager(
             num_pools=num_pools,
             maxsize=maxsize,
@@ -71,7 +75,7 @@ class TotalConnectClient:
         self,
         username: str,
         password: str,
-        usercodes: Dict[str,str] | None=None,
+        usercodes: Dict[str, str] | None = None,
         auto_bypass_battery: bool = False,
         retry_delay: int = 6,  # seconds between retries
     ) -> None:
@@ -151,9 +155,7 @@ class TotalConnectClient:
         return msg
 
     def _raise_for_retry(self, response: Dict[str, Any]) -> None:
-        """Used internally to determine which responses should be retried in
-        request().
-        """
+        """Determine which responses should be retried in request()."""
         rc = _ResultCode.from_response(response)
         if rc == _ResultCode.INVALID_SESSION:
             raise InvalidSessionError("invalid session", response)
@@ -168,6 +170,7 @@ class TotalConnectClient:
 
     def raise_for_resultcode(self, response: Dict[str, Any]) -> None:
         """If response.ResultCode indicates success, return and do nothing.
+
         If it indicates an authentication error, raise AuthenticationError.
         """
         rc = _ResultCode.from_response(response)
@@ -195,7 +198,9 @@ class TotalConnectClient:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
-    def _send_one_request(self, operation_name: str, args:list[Any] | tuple[Any, ...]) -> Dict[str, Any]:
+    def _send_one_request(
+        self, operation_name: str, args: list[Any] | tuple[Any, ...]
+    ) -> Dict[str, Any]:
         LOGGER.debug(f"sending API request {operation_name}{args}")
         operation_proxy = self.soap_client.service[operation_name]
         return zeep.helpers.serialize_object(operation_proxy(*args))
@@ -210,8 +215,9 @@ class TotalConnectClient:
         args: list[Any] | tuple[Any, ...],
         attempts_remaining: int = 5,
     ) -> Dict[str, Any]:
-        """Send a SOAP request. args is a list or tuple defining the
-        parameters to the operation.
+        """Send a SOAP request.
+
+        args is a list or tuple defining the parameters to the operation.
         """
         is_first_request = attempts_remaining == 5
         attempts_remaining -= 1
@@ -284,7 +290,9 @@ class TotalConnectClient:
         return self.request(operation_name, args, attempts_remaining)
 
     def authenticate(self) -> None:
-        """Login to the system. Upon success, self.token is a valid credential
+        """Login to the system.
+
+        Upon success, self.token is a valid credential
         for further API calls, and self._user and self.locations are valid.
         self.locations will not be refreshed if it was non-empty on entry.
         """
@@ -336,14 +344,13 @@ class TotalConnectClient:
         return True
 
     def is_logged_in(self) -> bool:
-        """Return true if the client is logged into the Total Connect service
-        with valid credentials.
-        """
+        """Return true if the client is logged in to Total Connect."""
         return self.token is not None
 
     def log_out(self) -> None:
-        """Upon return, we are logged out. Raises TotalConnectError if we
-        still might be logged in.
+        """Upon return, we are logged out.
+
+        Raises TotalConnectError if we still might be logged in.
         """
         if self.is_logged_in():
             response = self.request("Logout", (self.token,))
@@ -352,8 +359,10 @@ class TotalConnectClient:
             self.token = None
 
     def get_number_locations(self) -> int:
-        """Return the number of locations.  Home Assistant needs a way
-        to force the locations to load inside a callable function.
+        """Return the number of locations.
+
+        Home Assistant needs a way to force the locations to load
+        inside a callable function.
         """
         return len(self.locations)
 
@@ -390,13 +399,15 @@ class TotalConnectClient:
 class ArmingHelper:
     """
     For a partition or location, you can call its arm() or disarm() method directly.
-       Example: partition.arm(ArmType.AWAY)
+
+    Example: partition.arm(ArmType.AWAY)
 
     Alternatively, you can use ArmingHelper.
        Example: ArmingHelper(partition).arm_away()
     """
 
     def __init__(self, partition_or_location) -> None:
+        """Initialize ArmingHelper."""
         self.armable = partition_or_location
 
     def arm_away(self) -> None:
@@ -420,4 +431,5 @@ class ArmingHelper:
         self.armable.arm(ArmType.STAY_NIGHT)
 
     def disarm(self) -> None:
+        """Disarm the system."""
         self.armable.disarm()
