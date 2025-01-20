@@ -410,26 +410,26 @@ class ArmingHelper:
         """Initialize ArmingHelper."""
         self.armable = partition_or_location
 
-    def arm_away(self) -> None:
+    def arm_away(self, usercode: str = "") -> None:
         """Arm the system (Away)."""
-        self.armable.arm(ArmType.AWAY)
+        self.armable.arm(arm_type=ArmType.AWAY, usercode=usercode)
 
-    def arm_stay(self) -> None:
+    def arm_stay(self, usercode: str = "") -> None:
         """Arm the system (Stay)."""
-        self.armable.arm(ArmType.STAY)
+        self.armable.arm(arm_type=ArmType.STAY, usercode=usercode)
 
-    def arm_stay_instant(self) -> None:
+    def arm_stay_instant(self, usercode: str = "") -> None:
         """Arm the system (Stay - Instant)."""
-        self.armable.arm(ArmType.STAY_INSTANT)
+        self.armable.arm(arm_type=ArmType.STAY_INSTANT, usercode=usercode)
 
-    def arm_away_instant(self) -> None:
+    def arm_away_instant(self, usercode: str = "") -> None:
         """Arm the system (Away - Instant)."""
-        self.armable.arm(ArmType.AWAY_INSTANT)
+        self.armable.arm(arm_type=ArmType.AWAY_INSTANT, usercode=usercode)
 
-    def arm_stay_night(self) -> None:
+    def arm_stay_night(self, usercode: str = "") -> None:
         """Arm the system (Stay - Night)."""
-        self.armable.arm(ArmType.STAY_NIGHT)
+        self.armable.arm(arm_type=ArmType.STAY_NIGHT, usercode=usercode)
 
-    def disarm(self) -> None:
+    def disarm(self, usercode: str = "") -> None:
         """Disarm the system."""
-        self.armable.disarm()
+        self.armable.disarm(usercode=usercode)
