@@ -1,6 +1,7 @@
 """Total Connect Client constants."""
 
 from enum import Enum
+from typing import Dict, Any
 
 from .exceptions import BadResultCodeError, ServiceUnavailable
 
@@ -51,19 +52,21 @@ class ArmingState(Enum):
     ARMING = 10307
     DISARMING = 10308
 
-    def is_arming(self):
+    UNKNOWN = 0
+
+    def is_arming(self) -> bool:
         """Return true if the system is in the process of arming."""
         return self == ArmingState.ARMING
 
-    def is_disarming(self):
+    def is_disarming(self) -> bool:
         """Return true if the system is in the process of disarming."""
         return self == ArmingState.DISARMING
 
-    def is_pending(self):
+    def is_pending(self) -> bool:
         """Return true if the system is pending an action."""
         return self.is_disarming() or self.is_arming()
 
-    def is_disarmed(self):
+    def is_disarmed(self) -> bool:
         """Return True if the system is disarmed."""
         return self in (
             ArmingState.DISARMED,
@@ -71,7 +74,7 @@ class ArmingState(Enum):
             ArmingState.DISARMED_ZONE_FAULTED,
         )
 
-    def is_armed_away(self):
+    def is_armed_away(self) -> bool:
         """Return True if the system is armed away in any way."""
         return self in (
             ArmingState.ARMED_AWAY,
@@ -80,11 +83,11 @@ class ArmingState(Enum):
             ArmingState.ARMED_AWAY_INSTANT_BYPASS,
         )
 
-    def is_armed_custom_bypass(self):
+    def is_armed_custom_bypass(self) -> bool:
         """Return True if the system is armed custom bypass in any way."""
         return self == ArmingState.ARMED_CUSTOM_BYPASS
 
-    def is_armed_home(self):
+    def is_armed_home(self) -> bool:
         """Return True if the system is armed home/stay in any way."""
         return self in (
             ArmingState.ARMED_STAY,
@@ -102,7 +105,7 @@ class ArmingState(Enum):
             ArmingState.ARMED_STAY_OTHER,
         )
 
-    def is_armed_night(self):
+    def is_armed_night(self) -> bool:
         """Return True if the system is armed night in any way."""
         return self in (
             ArmingState.ARMED_STAY_NIGHT,
@@ -111,7 +114,7 @@ class ArmingState(Enum):
             ArmingState.ARMED_STAY_NIGHT_INSTANT_BYPASS_PROA7,
         )
 
-    def is_armed(self):
+    def is_armed(self) -> bool:
         """Return True if the system is armed in any way."""
         return (
             self.is_armed_away()
@@ -120,22 +123,22 @@ class ArmingState(Enum):
             or self.is_armed_custom_bypass()
         )
 
-    def is_triggered_police(self):
+    def is_triggered_police(self) -> bool:
         """Return True if the system is triggered for police or medical."""
         return self == ArmingState.ALARMING
 
-    def is_triggered_fire(self):
+    def is_triggered_fire(self) -> bool:
         """Return True if the system is triggered for fire or smoke."""
         return self == ArmingState.ALARMING_FIRE_SMOKE
 
-    def is_triggered_gas(self):
+    def is_triggered_gas(self) -> bool:
         """Return True if the system is triggered for carbon monoxide."""
         return self in (
             ArmingState.ALARMING_CARBON_MONOXIDE,
             ArmingState.ALARMING_CARBON_MONOXIDE_PROA7,
         )
 
-    def is_triggered(self):
+    def is_triggered(self) -> bool:
         """Return True if the system is triggered in any way."""
         return (
             self.is_triggered_fire()
@@ -152,7 +155,7 @@ class _ResultCode(Enum):
     """
 
     @staticmethod
-    def from_response(response_dict):
+    def from_response(response_dict:Dict[str, Any]):
         try:
             return _ResultCode(response_dict["ResultCode"])
         except TypeError:

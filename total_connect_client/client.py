@@ -1,4 +1,5 @@
 """TotalConnectClient() in this file is the primary class of this package.
+
 Instantiate it like this:
 
 usercodes = { 'default': '1234' }
@@ -10,9 +11,10 @@ for location in client.locations:
 
 import logging
 import ssl
+from ssl import SSLContext
 import time
 from importlib import resources as impresources
-
+from typing import Dict, Any
 import requests
 import urllib3.poolmanager
 import zeep
@@ -49,11 +51,13 @@ LOGGER = logging.getLogger(__name__)
 class _SslContextAdapter(requests.adapters.HTTPAdapter):
     """Makes Zeep use our ssl_context."""
 
-    def __init__(self, ssl_context, **kwargs):
+    def __init__(self, ssl_context: SSLContext, **kwargs) -> None:
         self.ssl_context = ssl_context
         super().__init__(**kwargs)
 
-    def init_poolmanager(self, num_pools, maxsize, block=False):
+    def init_poolmanager(
+        self, num_pools: int, maxsize: int, block: bool = False
+    ) -> None:
         self.poolmanager = urllib3.poolmanager.PoolManager(
             num_pools=num_pools,
             maxsize=maxsize,
@@ -69,36 +73,36 @@ class TotalConnectClient:
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        username,
-        password,
-        usercodes=None,
-        auto_bypass_battery=False,
-        retry_delay=6,  # seconds between retries
-    ):
+        username: str,
+        password: str,
+        usercodes: Dict[str, str] | None = None,
+        auto_bypass_battery: bool = False,
+        retry_delay: int = 6,  # seconds between retries
+    ) -> None:
         """Initialize."""
         self.times = {}
         self.time_start = time.time()
         self.soap_client = None
 
-        self.username = username
-        self.password = password
+        self.username: str = username
+        self.password: str = password
         self.usercodes = usercodes or {}
         self.auto_bypass_low_battery = auto_bypass_battery
         self.retry_delay = retry_delay
 
         self.token = None
         self._invalid_credentials = False
-        self._module_flags = None
-        self._user = None
-        self._locations = {}
-        self._locations_unfetched = {}
+        self._module_flags: Dict[str, str] = {}
+        self._user: TotalConnectUser | None = None
+        self._locations: Dict[Any, TotalConnectLocation] = {}
+        self._locations_unfetched: Dict[Any, TotalConnectLocation] = {}
 
         self.authenticate()
 
         self.times["__init__"] = time.time() - self.time_start
 
     @property
-    def locations(self):
+    def locations(self) -> Dict[Any, TotalConnectLocation]:
         """Raises an exception if the panel cannot be reached to retrieve
         metadata or details. This can be retried later and will succeed
         if/when the panel becomes reachable.
@@ -118,7 +122,7 @@ class TotalConnectClient:
         assert not self._locations_unfetched
         return self._locations
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a text string that is printable."""
         data = (
             f"CLIENT\n\n"
@@ -141,7 +145,7 @@ class TotalConnectClient:
 
         return data + locations
 
-    def times_as_string(self):
+    def times_as_string(self) -> str:
         """Return a string with times."""
         self.times["total running time"] = time.time() - self.time_start
         msg = "total-connect-client time info (seconds):\n"
@@ -150,10 +154,8 @@ class TotalConnectClient:
 
         return msg
 
-    def _raise_for_retry(self, response):
-        """Used internally to determine which responses should be retried in
-        request().
-        """
+    def _raise_for_retry(self, response: Dict[str, Any]) -> None:
+        """Determine which responses should be retried in request()."""
         rc = _ResultCode.from_response(response)
         if rc == _ResultCode.INVALID_SESSION:
             raise InvalidSessionError("invalid session", response)
@@ -166,8 +168,9 @@ class TotalConnectClient:
         if rc == _ResultCode.BAD_OBJECT_REFERENCE:
             raise RetryableTotalConnectError("bad object reference", response)
 
-    def raise_for_resultcode(self, response):
+    def raise_for_resultcode(self, response: Dict[str, Any]) -> None:
         """If response.ResultCode indicates success, return and do nothing.
+
         If it indicates an authentication error, raise AuthenticationError.
         """
         rc = _ResultCode.from_response(response)
@@ -179,7 +182,11 @@ class TotalConnectClient:
         ):
             return
         self._raise_for_retry(response)
-        if rc in (_ResultCode.BAD_USER_OR_PASSWORD, _ResultCode.AUTHENTICATION_FAILED, _ResultCode.ACCOUNT_LOCKED):
+        if rc in (
+            _ResultCode.BAD_USER_OR_PASSWORD,
+            _ResultCode.AUTHENTICATION_FAILED,
+            _ResultCode.ACCOUNT_LOCKED,
+        ):
             raise AuthenticationError(rc.name, response)
         if rc == _ResultCode.USER_CODE_UNAVAILABLE:
             raise UsercodeUnavailable(rc.name, response)
@@ -191,7 +198,9 @@ class TotalConnectClient:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
-    def _send_one_request(self, operation_name, args):
+    def _send_one_request(
+        self, operation_name: str, args: list[Any] | tuple[Any, ...]
+    ) -> Dict[str, Any]:
         LOGGER.debug(f"sending API request {operation_name}{args}")
         operation_proxy = self.soap_client.service[operation_name]
         return zeep.helpers.serialize_object(operation_proxy(*args))
@@ -200,9 +209,15 @@ class TotalConnectClient:
     API_APP_ID = "14588"
     API_APP_VERSION = "1.0.34"
 
-    def request(self, operation_name, args, attempts_remaining: int=5):
-        """Send a SOAP request. args is a list or tuple defining the
-        parameters to the operation.
+    def request(
+        self,
+        operation_name: str,
+        args: list[Any] | tuple[Any, ...],
+        attempts_remaining: int = 5,
+    ) -> Dict[str, Any]:
+        """Send a SOAP request.
+
+        args is a list or tuple defining the parameters to the operation.
         """
         is_first_request = attempts_remaining == 5
         attempts_remaining -= 1
@@ -274,8 +289,10 @@ class TotalConnectClient:
             args = [self.token if old_token == arg else arg for arg in args]
         return self.request(operation_name, args, attempts_remaining)
 
-    def authenticate(self):
-        """Login to the system. Upon success, self.token is a valid credential
+    def authenticate(self) -> None:
+        """Login to the system.
+
+        Upon success, self.token is a valid credential
         for further API calls, and self._user and self.locations are valid.
         self.locations will not be refreshed if it was non-empty on entry.
         """
@@ -313,11 +330,9 @@ class TotalConnectClient:
         LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
         self.times["authenticate()"] = time.time() - start_time
 
-    def validate_usercode(self, device_id, usercode:str)-> bool:
+    def validate_usercode(self, device_id: str, usercode: str) -> bool:
         """Return True if the usercode is valid for the device."""
-        response = self.request(
-            "ValidateUserCode", (self.token, device_id, str(usercode))
-        )
+        response = self.request("ValidateUserCode", (self.token, device_id, usercode))
         try:
             self.raise_for_resultcode(response)
         except UsercodeInvalid:
@@ -328,15 +343,14 @@ class TotalConnectClient:
             return False
         return True
 
-    def is_logged_in(self)->bool:
-        """Return true if the client is logged into the Total Connect service
-        with valid credentials.
-        """
+    def is_logged_in(self) -> bool:
+        """Return true if the client is logged in to Total Connect."""
         return self.token is not None
 
-    def log_out(self):
-        """Upon return, we are logged out. Raises TotalConnectError if we
-        still might be logged in.
+    def log_out(self) -> None:
+        """Upon return, we are logged out.
+
+        Raises TotalConnectError if we still might be logged in.
         """
         if self.is_logged_in():
             response = self.request("Logout", (self.token,))
@@ -344,13 +358,17 @@ class TotalConnectClient:
             LOGGER.info("Logout Successful")
             self.token = None
 
-    def get_number_locations(self)->int:
-        """Return the number of locations.  Home Assistant needs a way
-        to force the locations to load inside a callable function.
+    def get_number_locations(self) -> int:
+        """Return the number of locations.
+
+        Home Assistant needs a way to force the locations to load
+        inside a callable function.
         """
         return len(self.locations)
 
-    def _make_locations(self, response):
+    def _make_locations(
+        self, response: Dict[str, Any]
+    ) -> Dict[Any, TotalConnectLocation]:
         """Return a dict mapping LocationID to TotalConnectLocation."""
         start_time = time.time()
         new_locations = {}
@@ -381,34 +399,37 @@ class TotalConnectClient:
 class ArmingHelper:
     """
     For a partition or location, you can call its arm() or disarm() method directly.
-       Example: partition.arm(ArmType.AWAY)
+
+    Example: partition.arm(ArmType.AWAY)
 
     Alternatively, you can use ArmingHelper.
        Example: ArmingHelper(partition).arm_away()
     """
 
-    def __init__(self, partition_or_location):
+    def __init__(self, partition_or_location) -> None:
+        """Initialize ArmingHelper."""
         self.armable = partition_or_location
 
-    def arm_away(self):
+    def arm_away(self) -> None:
         """Arm the system (Away)."""
         self.armable.arm(ArmType.AWAY)
 
-    def arm_stay(self):
+    def arm_stay(self) -> None:
         """Arm the system (Stay)."""
         self.armable.arm(ArmType.STAY)
 
-    def arm_stay_instant(self):
+    def arm_stay_instant(self) -> None:
         """Arm the system (Stay - Instant)."""
         self.armable.arm(ArmType.STAY_INSTANT)
 
-    def arm_away_instant(self):
+    def arm_away_instant(self) -> None:
         """Arm the system (Away - Instant)."""
         self.armable.arm(ArmType.AWAY_INSTANT)
 
-    def arm_stay_night(self):
+    def arm_stay_night(self) -> None:
         """Arm the system (Stay - Night)."""
         self.armable.arm(ArmType.STAY_NIGHT)
 
-    def disarm(self):
+    def disarm(self) -> None:
+        """Disarm the system."""
         self.armable.disarm()

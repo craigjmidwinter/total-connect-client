@@ -1,7 +1,7 @@
 """Total Connect Location."""
 
 import logging
-import typing
+from typing import Dict, Any
 
 from .const import PROJECT_URL, ArmingState, ArmType, _ResultCode
 from .device import TotalConnectDevice
@@ -11,7 +11,7 @@ from .exceptions import (
     TotalConnectError,
 )
 from .partition import TotalConnectPartition
-from .zone import TotalConnectZone
+from .zone import TotalConnectZone, ZoneStatus
 
 DEFAULT_USERCODE = "-1"
 
@@ -21,35 +21,35 @@ LOGGER = logging.getLogger(__name__)
 class TotalConnectLocation:
     """TotalConnectLocation class."""
 
-    def __init__(self, location_info_basic, parent):
+    def __init__(self, location_info_basic: Dict[str, Any], parent) -> None:
         """Initialize based on a 'LocationInfoBasic'."""
         self.location_id = location_info_basic["LocationID"]
-        self.location_name = location_info_basic["LocationName"]
-        self._photo_url = location_info_basic["PhotoURL"]
+        self.location_name: str = location_info_basic["LocationName"]
+        self._photo_url: str = location_info_basic["PhotoURL"]
         self._module_flags = dict(
             x.split("=") for x in location_info_basic["LocationModuleFlags"].split(",")
         )
-        self.security_device_id = location_info_basic["SecurityDeviceID"]
+        self.security_device_id:str = location_info_basic["SecurityDeviceID"]
         self.parent = parent
         self.ac_loss = None
         self.low_battery = None
         self.cover_tampered = None
         self.last_updated_timestamp_ticks = None
         self.configuration_sequence_number = None
-        self.arming_state = None
-        self.partitions = {}
-        self._partition_list = None
-        self.zones = {}
-        self.usercode = DEFAULT_USERCODE
-        self.auto_bypass_low_battery = False
+        self.arming_state: ArmingState = ArmingState.UNKNOWN
+        self.partitions: Dict[Any, TotalConnectPartition] = {}
+        self._partition_list: Dict[str, list[Any]] = {"int": []}
+        self.zones: Dict[Any, TotalConnectZone] = {}
+        self.usercode:str = DEFAULT_USERCODE
+        self.auto_bypass_low_battery:bool = False
         self._sync_job_id = None
-        self._sync_job_state = None
+        self._sync_job_state:int = 0
 
         dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
         tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
         self.devices = {tcdev.deviceid: tcdev for tcdev in tcdevs}
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a text string that is printable."""
         data = (
             f"LOCATION {self.location_id} - {self.location_name}\n\n"
@@ -81,7 +81,7 @@ class TotalConnectLocation:
 
         return data + devices + partitions + zones
 
-    def get_panel_meta_data(self):
+    def get_panel_meta_data(self) -> None:
         """Get all meta data about the alarm panel."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPanelMetaDataAndFullStatus
         result = self.parent.request(
@@ -103,7 +103,7 @@ class TotalConnectLocation:
         self._update_partitions(result)
         self._update_zones(result)
 
-    def get_zone_details(self):
+    def get_zone_details(self) -> None:
         """Get Zone details."""
         result = self.parent.request(
             "GetZonesListInStateEx_V1",
@@ -125,7 +125,7 @@ class TotalConnectLocation:
                 "your Total Connect account or hardware"
             )
 
-    def get_partition_details(self):
+    def get_partition_details(self) -> None:
         """Get partition details for this location."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=GetPartitionsDetails
 
@@ -159,26 +159,26 @@ class TotalConnectLocation:
 
         self._partition_list = {"int": new_partition_list}
 
-    def is_low_battery(self):
+    def is_low_battery(self) -> bool:
         """Return true if low battery."""
         return self.low_battery is True
 
-    def is_ac_loss(self):
+    def is_ac_loss(self) -> bool:
         """Return true if AC loss."""
         return self.ac_loss is True
 
-    def is_cover_tampered(self):
+    def is_cover_tampered(self) -> bool:
         """Return true if cover is tampered."""
         return self.cover_tampered is True
 
-    def set_usercode(self, usercode):
+    def set_usercode(self, usercode:str) -> bool:
         """Set the usercode. Return true if successful."""
         if self.parent.validate_usercode(self.security_device_id, usercode):
-            self.usercode = str(usercode)
+            self.usercode = usercode
             return True
         return False
 
-    def _build_partition_list(self, partition_id=None):
+    def _build_partition_list(self, partition_id=None) -> Dict[str, list[Any]]:
         """Build a list of partitions to use for arming/disarming."""
         if partition_id is None:
             return self._partition_list
@@ -190,7 +190,7 @@ class TotalConnectLocation:
             )
         return {"int": [partition_id]}
 
-    def arm(self, arm_type: int, partition_id=None):
+    def arm(self, arm_type: ArmType, partition_id=None) -> None:
         """Arm the given partition. If no partition is given, arm all partitions."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         assert isinstance(arm_type, ArmType)
@@ -214,7 +214,7 @@ class TotalConnectLocation:
             f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}"
         )
 
-    def disarm(self, partition_id=None):
+    def disarm(self, partition_id=None) -> None:
         """Disarm the system."""
         # if no partition is given, disarm all partitions
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
@@ -233,7 +233,7 @@ class TotalConnectLocation:
         self.parent.raise_for_resultcode(result)
         LOGGER.info(f"DISARMED partitions {partition_list} at {self.location_id}")
 
-    def zone_bypass(self, zone_id: int):
+    def zone_bypass(self, zone_id: int) -> None:
         """Bypass a zone."""
         result = self.parent.request(
             "Bypass",
@@ -249,7 +249,7 @@ class TotalConnectLocation:
         LOGGER.info(f"BYPASSED {zone_id} at {self.location_id}")
         self.zones[zone_id]._mark_as_bypassed()
 
-    def zone_bypass_all(self):
+    def zone_bypass_all(self) -> None:
         """Bypass all faulted zones."""
         faulted_zones = []
         for zone_id, zone in self.zones.items():
@@ -272,18 +272,18 @@ class TotalConnectLocation:
             self.parent.raise_for_resultcode(result)
             LOGGER.info(f"BYPASSED all zones at location {self.location_id}")
 
-    def clear_bypass(self):
+    def clear_bypass(self) -> None:
         """Clear all bypassed zones."""
         self.disarm()
 
-    def zone_status(self, zone_id: int):
+    def zone_status(self, zone_id: int)->ZoneStatus:
         """Get status of a zone."""
         zone = self.zones.get(zone_id)
         if not zone:
             raise TotalConnectError(f"zone {zone_id} does not exist")
         return zone.status
 
-    def arm_custom(self, arm_type: int):
+    def arm_custom(self, arm_type: ArmType) -> Dict[str, Any]:
         """NOT OPERATIONAL YET.
         Arm custom the system.  Return true if successful.
         """
@@ -306,7 +306,7 @@ class TotalConnectLocation:
         # TODO: returning the raw result is not right
         return result
 
-    def get_custom_arm_settings(self):
+    def get_custom_arm_settings(self) -> Dict[str, Any]:
         """NOT OPERATIONAL YET.
         Get custom arm settings.
         """
@@ -318,7 +318,7 @@ class TotalConnectLocation:
         # TODO: returning the raw result is not right
         return result
 
-    def _update_zone_details(self, result):
+    def _update_zone_details(self, result: Dict[str, Any]) -> None:
         """
         Update from GetZonesListInStateEx_V1.
 
@@ -337,7 +337,7 @@ class TotalConnectLocation:
             for zonedata in zone_info:
                 self.zones[zonedata["ZoneID"]] = TotalConnectZone(zonedata, self)
 
-    def _update_status(self, result):
+    def _update_status(self, result: Dict[str, Any]) -> None:
         """Update from result."""
         data = (result or {}).get("PanelMetadataAndStatus")
         if not data:
@@ -362,7 +362,7 @@ class TotalConnectLocation:
                 f"unknown location ArmingState {astate} in {result}"
             ) from None
 
-    def _update_partitions(self, result):
+    def _update_partitions(self, result: Dict[str, Any]) -> None:
         """Update partition info from Partitions."""
         pinfo = (
             (result.get("PanelMetadataAndStatus") or {}).get("Partitions") or {}
@@ -381,7 +381,7 @@ class TotalConnectLocation:
             else:
                 LOGGER.warning(f"Update provided for unknown partion {partition_id}")
 
-    def _update_zones(self, result):
+    def _update_zones(self, result: Dict[str, Any]) -> None:
         """Update zone info from ZoneInfo or ZoneInfoEx."""
 
         data = (result.get("PanelMetadataAndStatus") or {}).get("Zones")
@@ -414,7 +414,7 @@ class TotalConnectLocation:
             ):
                 self.zone_bypass(zid)
 
-    def sync_panel(self):
+    def sync_panel(self) -> None:
         """Syncronize the panel with the TotalConnect server."""
         result = self.parent.request(
             "SynchronizeSecurityPanel",
@@ -426,7 +426,7 @@ class TotalConnectLocation:
         self._sync_job_state = 1
         LOGGER.info(f"Started sync of panel for location {self.location_id}")
 
-    def get_sync_status(self):
+    def get_sync_status(self) -> None:
         """Get panel sync status from the TotalConnect server."""
         result = self.parent.request(
             "GetSyncJobStatus", (self.parent.token, self._sync_job_id, self.location_id)
@@ -448,7 +448,7 @@ class TotalConnectLocation:
                 f"Could not get status of Sync Job with ID {self._sync_job_id}"
             )
 
-    def get_cameras(self):
+    def get_cameras(self) -> None:
         """Get cameras for the location."""
         result = self.parent.request(
             "GetLocationAllCameraListEx", (self.parent.token, self.location_id)
@@ -467,7 +467,7 @@ class TotalConnectLocation:
         if "UnicornList" in camera_list:
             self._get_unicorn(camera_list["UnicornList"])
 
-    def _get_doorbell(self, data):
+    def _get_doorbell(self, data: Dict[str, Any]) -> None:
         """Find doorbell info."""
         if not data or "WiFiDoorbellsList" not in data:
             return
@@ -482,7 +482,7 @@ class TotalConnectLocation:
             if id in self.devices:
                 self.devices[id].doorbell_info = doorbell
 
-    def _get_unicorn(self, data):
+    def _get_unicorn(self, data: Dict[str, Any]) -> None:
         """Find uniforn info."""
         if not data or "UnicornList" not in data:
             return
@@ -497,7 +497,7 @@ class TotalConnectLocation:
             if id in self.devices:
                 self.devices[id].unicorn_info = unicorn
 
-    def get_video(self):
+    def get_video(self) -> None:
         """Get video for the location."""
         result = self.parent.request(
             "GetVideoPIRLocationDeviceList", (self.parent.token, self.location_id)

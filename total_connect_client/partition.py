@@ -1,8 +1,8 @@
 """Total Connect Partition."""
 
 import logging
-
-from .const import ArmingState, PROJECT_URL
+from typing import Dict, Any
+from .const import ArmingState, PROJECT_URL, ArmType
 from .exceptions import PartialResponseError, TotalConnectError
 
 
@@ -12,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 class TotalConnectPartition:
     """Partition class for Total Connect."""
 
-    def __init__(self, details, parent):
+    def __init__(self, details: Dict[str, Any], parent):
         """Initialize Partition based on PartitionDetails."""
         self.parent = parent
         self.partitionid = details.get("PartitionID")
@@ -26,10 +26,11 @@ class TotalConnectPartition:
         self.exit_delay_timer = details.get("ExitDelayTimer")
         self._update(details)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return a string that is printable."""
         data = (
-            f"PARTITION {self.partitionid} - {self.name}\n" f"  {self.arming_state}\n"
+            f"PARTITION {self.partitionid} - {self.name}\n"
+            f"  {self.arming_state}\n"
             f"  Stay armed: {self.is_stay_armed}\tFire enabled: {self.is_fire_enabled}\n"
             f"  Common enabled: {self.is_common_enabled}\tLocked: {self.is_locked}\n"
             f"  New: {self.is_new_partition}\tNight Stay enabled: {self.is_night_stay_enabled}\n"
@@ -38,15 +39,15 @@ class TotalConnectPartition:
 
         return data
 
-    def arm(self, arm_type: int):
+    def arm(self, arm_type: ArmType) -> None:
         """Arm the partition."""
         self.parent.arm(arm_type, self.partitionid)
 
-    def disarm(self):
+    def disarm(self) -> None:
         """Disarm the partition."""
         self.parent.disarm(self.partitionid)
 
-    def _update(self, info: dict):
+    def _update(self, info: Dict[str, Any]) -> None:
         """Update partition based on PartitionInfo."""
         astate = (info or {}).get("ArmingState")
         if astate is None:
@@ -54,5 +55,9 @@ class TotalConnectPartition:
         try:
             self.arming_state = ArmingState(astate)
         except ValueError:
-            LOGGER.error(f"unknown partition ArmingState {astate} in {info}: report at {PROJECT_URL}/issues")
-            raise TotalConnectError(f"unknown partition ArmingState {astate} in {info}") from None
+            LOGGER.error(
+                f"unknown partition ArmingState {astate} in {info}: report at {PROJECT_URL}/issues"
+            )
+            raise TotalConnectError(
+                f"unknown partition ArmingState {astate} in {info}"
+            ) from None
