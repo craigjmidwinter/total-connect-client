@@ -266,7 +266,7 @@ RESPONSE_UNKNOWN = {
 }
 
 PARTITION_DETAILS_1 = {
-    "PartitionID": 1,
+    "PartitionID": "1",
     "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test1",
 }
