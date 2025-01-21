@@ -39,13 +39,13 @@ class TotalConnectPartition:
 
         return data
 
-    def arm(self, arm_type: ArmType) -> None:
+    def arm(self, arm_type: ArmType, usercode: str = "") -> None:
         """Arm the partition."""
-        self.parent.arm(arm_type, self.partitionid)
+        self.parent.arm(arm_type, self.partitionid, usercode)
 
-    def disarm(self) -> None:
+    def disarm(self, usercode: str = "") -> None:
         """Disarm the partition."""
-        self.parent.disarm(self.partitionid)
+        self.parent.disarm(self.partitionid, usercode)
 
     def _update(self, info: Dict[str, Any]) -> None:
         """Update partition based on PartitionInfo."""

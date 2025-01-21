@@ -29,7 +29,7 @@ class TotalConnectLocation:
         self._module_flags = dict(
             x.split("=") for x in location_info_basic["LocationModuleFlags"].split(",")
         )
-        self.security_device_id:str = location_info_basic["SecurityDeviceID"]
+        self.security_device_id: str = location_info_basic["SecurityDeviceID"]
         self.parent = parent
         self.ac_loss = None
         self.low_battery = None
@@ -40,10 +40,10 @@ class TotalConnectLocation:
         self.partitions: Dict[Any, TotalConnectPartition] = {}
         self._partition_list: Dict[str, list[Any]] = {"int": []}
         self.zones: Dict[Any, TotalConnectZone] = {}
-        self.usercode:str = DEFAULT_USERCODE
-        self.auto_bypass_low_battery:bool = False
+        self.usercode: str = DEFAULT_USERCODE
+        self.auto_bypass_low_battery: bool = False
         self._sync_job_id = None
-        self._sync_job_state:int = 0
+        self._sync_job_state: int = 0
 
         dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
         tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
@@ -171,7 +171,7 @@ class TotalConnectLocation:
         """Return true if cover is tampered."""
         return self.cover_tampered is True
 
-    def set_usercode(self, usercode:str) -> bool:
+    def set_usercode(self, usercode: str) -> bool:
         """Set the usercode. Return true if successful."""
         if self.parent.validate_usercode(self.security_device_id, usercode):
             self.usercode = usercode
@@ -190,11 +190,15 @@ class TotalConnectLocation:
             )
         return {"int": [partition_id]}
 
-    def arm(self, arm_type: ArmType, partition_id=None) -> None:
-        """Arm the given partition. If no partition is given, arm all partitions."""
+    def arm(self, arm_type: ArmType, partition_id=None, usercode: str = "") -> None:
+        """Arm the given partition.
+
+        If no partition is given, arm all partitions.
+        If no usercode given, use stored value."""
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         assert isinstance(arm_type, ArmType)
         partition_list = self._build_partition_list(partition_id)
+        usercode = usercode or self.usercode
 
         result = self.parent.request(
             "ArmSecuritySystemPartitionsV1",
@@ -203,7 +207,7 @@ class TotalConnectLocation:
                 self.location_id,
                 self.security_device_id,
                 arm_type.value,
-                self.usercode,
+                usercode,
                 partition_list,
             ),
         )
@@ -214,11 +218,12 @@ class TotalConnectLocation:
             f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}"
         )
 
-    def disarm(self, partition_id=None) -> None:
+    def disarm(self, partition_id=None, usercode: str = "") -> None:
         """Disarm the system."""
         # if no partition is given, disarm all partitions
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
         partition_list = self._build_partition_list(partition_id)
+        usercode = usercode or self.usercode
 
         result = self.parent.request(
             "DisarmSecuritySystemPartitionsV1",
@@ -226,7 +231,7 @@ class TotalConnectLocation:
                 self.parent.token,
                 self.location_id,
                 self.security_device_id,
-                self.usercode,
+                usercode,
                 partition_list,
             ),
         )
@@ -276,7 +281,7 @@ class TotalConnectLocation:
         """Clear all bypassed zones."""
         self.disarm()
 
-    def zone_status(self, zone_id: int)->ZoneStatus:
+    def zone_status(self, zone_id: int) -> ZoneStatus:
         """Get status of a zone."""
         zone = self.zones.get(zone_id)
         if not zone:
