@@ -66,4 +66,4 @@ def tests_arm_away():
         # confirm armed_away
         location.get_panel_meta_data()
         assert location.arming_state.is_armed_away()
-        assert location.partitions[1].arming_state.is_armed_away()
+        assert location.partitions["1"].arming_state.is_armed_away()
