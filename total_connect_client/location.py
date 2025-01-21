@@ -380,7 +380,7 @@ class TotalConnectLocation:
         for partition in pinfo:
             if "PartitionID" not in partition:
                 raise PartialResponseError("no PartitionID", result)
-            partition_id = partition["PartitionID"]
+            partition_id = str(partition["PartitionID"])
             if partition_id in self.partitions:
                 self.partitions[partition_id]._update(partition)
             else:
