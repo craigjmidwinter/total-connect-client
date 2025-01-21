@@ -178,9 +178,9 @@ class TotalConnectLocation:
             return True
         return False
 
-    def _build_partition_list(self, partition_id=None) -> Dict[str, list[Any]]:
+    def _build_partition_list(self, partition_id:str="") -> Dict[str, list[Any]]:
         """Build a list of partitions to use for arming/disarming."""
-        if partition_id is None:
+        if not partition_id:
             return self._partition_list
 
         if partition_id not in self.partitions:
@@ -190,7 +190,7 @@ class TotalConnectLocation:
             )
         return {"int": [partition_id]}
 
-    def arm(self, arm_type: ArmType, partition_id=None, usercode: str = "") -> None:
+    def arm(self, arm_type: ArmType, partition_id:str="", usercode: str = "") -> None:
         """Arm the given partition.
 
         If no partition is given, arm all partitions.
@@ -218,7 +218,7 @@ class TotalConnectLocation:
             f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}"
         )
 
-    def disarm(self, partition_id=None, usercode: str = "") -> None:
+    def disarm(self, partition_id:str="", usercode: str = "") -> None:
         """Disarm the system."""
         # if no partition is given, disarm all partitions
         # see https://rs.alarmnet.com/TC21api/tc2.asmx?op=ArmSecuritySystemPartitionsV1
@@ -380,7 +380,7 @@ class TotalConnectLocation:
         for partition in pinfo:
             if "PartitionID" not in partition:
                 raise PartialResponseError("no PartitionID", result)
-            partition_id = int(partition["PartitionID"])
+            partition_id = partition["PartitionID"]
             if partition_id in self.partitions:
                 self.partitions[partition_id]._update(partition)
             else:
