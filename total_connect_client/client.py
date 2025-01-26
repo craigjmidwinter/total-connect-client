@@ -21,6 +21,10 @@ import zeep
 import zeep.cache
 import zeep.transports
 from zeep.exceptions import Fault as ZeepFault
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import  PKCS1_v1_5
+import base64
+import jwt
 
 from . import cache as cache_folder
 from .const import ArmType, _ResultCode
@@ -206,8 +210,8 @@ class TotalConnectClient:
         return zeep.helpers.serialize_object(operation_proxy(*args))
 
     API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
-    API_APP_ID = "14588"
-    API_APP_VERSION = "1.0.34"
+    CONFIG_ENDPOINT = "https://totalconnect2.com/application.config.json"
+    TOKEN_ENDPOINT = "https://rs.alarmnet.com/TC2API.Auth/token"
 
     def request(
         self,
@@ -289,6 +293,19 @@ class TotalConnectClient:
             args = [self.token if old_token == arg else arg for arg in args]
         return self.request(operation_name, args, attempts_remaining)
 
+    def _encrypt_credential(self, credential: str, key_pem: str) -> str:
+        # Load the key from the PEM file
+        key = RSA.importKey(key_pem)
+
+        # Create a cipher object using PKCS1_OAEP padding
+        cipher = PKCS1_v1_5.new(key)
+
+        # Encrypt the message
+        encrypted_message = cipher.encrypt(credential.encode())
+
+        # Encode the encrypted message in base64 for safe transmission
+        return base64.b64encode(encrypted_message).decode()
+
     def authenticate(self) -> None:
         """Login to the system.
 
@@ -302,23 +319,53 @@ class TotalConnectClient:
                 f"not authenticating: password already failed for user {self.username}"
             )
 
-        # LoginAndGetSessionDetails is very slow, so only use it when necessary
-        operation_name = (
-            "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
+        # Retrieve application configuration for TotalConnect web app, this is needed for the
+        # encryption key and various IDs.
+        response = requests.get(self.CONFIG_ENDPOINT)
+        if not response.ok:
+            raise ServiceUnavailable(
+                f"Service configuration is not available at {self.CONFIG_ENDPOINT}"
+            )
+        config = response.json()
+        key = config["AppConfig"][0]["tc2APIKey"]
+        client_id = config["AppConfig"][0]["tc2ClientId"]
+        locale = 'en-US'
+        app_id = next(
+            info for info in config["brandInfo"] if info["BrandName"] == "totalconnect"
+        )["AppID"]
+        app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
+
+        # Encrypt username and password and log in to get a JWT with a session ID.
+        key_pem = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
+        data = {
+            'username': self._encrypt_credential(self.username, key_pem),
+            'password': self._encrypt_credential(self.password, key_pem),
+            'grant_type': 'password',
+            'client_id': client_id,
+            'locale': locale,
+        }
+        response = requests.post(
+            url=self.TOKEN_ENDPOINT,
+            data=data
         )
-        response = self.request(
-            operation_name,
-            (self.username, self.password, self.API_APP_ID, self.API_APP_VERSION),
-        )
-        try:
-            self.raise_for_resultcode(response)
-        except AuthenticationError:
+        if not response.ok:
             self._invalid_credentials = True
             self.token = None
-            raise
+            raise AuthenticationError("Failed to authenticate using username/password")
+        response_json = response.json()
+        jwt_token = jwt.decode(
+            response_json['access_token'],
+            algorithms="HS256",
+            options={"verify_signature": False}
+        )
+        self.token = jwt_token["ids"].split(';', 1)[0]
 
-        self.token = response["SessionID"]
+        # Retrieve user and location information.
         if not self._locations:
+            response = self.request(
+                "GetSessionDetails",
+                (self.token, app_id, app_version)
+            )
             self._module_flags = dict(
                 x.split("=") for x in response["ModuleFlags"].split(",")
             )

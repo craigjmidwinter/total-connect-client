@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 import pytest
 from const import (
-    RESPONSE_AUTHENTICATE,
-    RESPONSE_AUTHENTICATE_EMPTY,
+    RESPONSE_SESSION_DETAILS,
+    RESPONSE_SESSION_DETAILS_EMPTY,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_PARTITION_DETAILS,
@@ -19,7 +19,7 @@ from total_connect_client.exceptions import TotalConnectError
 def tests_init_usercodes_none():
     """Test init with usercodes == None."""
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
@@ -40,7 +40,7 @@ def tests_init_usercodes_none():
 def tests_init_locations_empty():
     """Test init with no locations."""
     responses = [
-        RESPONSE_AUTHENTICATE_EMPTY,
+        RESPONSE_SESSION_DETAILS_EMPTY,
     ]
 
     with patch(
@@ -55,7 +55,7 @@ def tests_init_locations_empty():
 def tests_init_usercodes_string():
     """Test init with usercodes == a string."""
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
@@ -73,7 +73,7 @@ def tests_init_partitions():
     """Test that partitions populate correctly."""
     # one partition
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
@@ -92,7 +92,7 @@ def tests_init_partitions():
 
     # two partitions
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS_TWO,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,

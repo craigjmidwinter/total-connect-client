@@ -5,11 +5,12 @@ from unittest.mock import patch
 from zeep.exceptions import Fault as ZeepFault
 
 import pytest
+import requests_mock
 from const import (
     MAX_RETRY_ATTEMPTS,
     LOCATION_INFO_BASIC_NORMAL,
     RESPONSE_ARMED_AWAY,
-    RESPONSE_AUTHENTICATE,
+    RESPONSE_SESSION_DETAILS,
     RESPONSE_BAD_USER_OR_PASSWORD,
     RESPONSE_CONNECTION_ERROR,
     RESPONSE_DISARMED,
@@ -43,7 +44,7 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_request_init(self):
         """Test normal init sequence with no problems."""
         serialize_responses = [
-            RESPONSE_AUTHENTICATE,
+            RESPONSE_SESSION_DETAILS,
             RESPONSE_PARTITION_DETAILS,
             RESPONSE_GET_ZONE_DETAILS_SUCCESS,
             RESPONSE_DISARMED,
@@ -61,16 +62,10 @@ class TestTotalConnectClient(unittest.TestCase):
 
     def tests_request_init_bad_user_or_password(self):
         """Test init sequence with no a bad password."""
-        serialize_responses = [
-            RESPONSE_BAD_USER_OR_PASSWORD,
-        ]
-
-        with patch("zeep.Client"), patch(
-            "zeep.helpers.serialize_object", side_effect=serialize_responses
-        ) as mock_request:
+        with requests_mock.Mocker(real_http=True) as rm:
+            rm.post(TotalConnectClient.TOKEN_ENDPOINT, status_code=403)
             with pytest.raises(AuthenticationError):
                 TotalConnectClient("username", "password", usercodes=None)
-            assert mock_request.call_count == 1
 
     def tests_request_init_failed_to_connect(self):
         """Test init sequence when it fails to connect."""
@@ -125,12 +120,11 @@ class TestTotalConnectClient(unittest.TestCase):
         # Call to client.arm_away() will first get an invalid session,
         # which will trigger client.authenticate() before completing the arm_away()
         serialize_responses = [
-            RESPONSE_AUTHENTICATE,
+            RESPONSE_SESSION_DETAILS,
             RESPONSE_PARTITION_DETAILS,
             RESPONSE_GET_ZONE_DETAILS_SUCCESS,
             RESPONSE_DISARMED,
             RESPONSE_INVALID_SESSION,
-            RESPONSE_SESSION_INITIATED,
             RESPONSE_ARMED_AWAY,
         ]
 
@@ -144,12 +138,12 @@ class TestTotalConnectClient(unittest.TestCase):
             assert mock_request.call_count == 4
             assert client.is_logged_in() is True
 
-            assert client.token == RESPONSE_AUTHENTICATE["SessionID"]
+            assert client.token == RESPONSE_SESSION_DETAILS["SessionID"]
             # now try to arm away
             # the invalid session will trigger a new authenticate()...
             # which should result in a new token
             client.locations[LOCATION_INFO_BASIC_NORMAL["LocationID"]].arm(ArmType.AWAY)
-            assert mock_request.call_count == 7
+            assert mock_request.call_count == 6
             assert client.token == RESPONSE_SESSION_INITIATED["SessionID"]
 
     def tests_request_unknown_result_code(self):
