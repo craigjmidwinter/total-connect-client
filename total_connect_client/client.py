@@ -348,11 +348,11 @@ class TotalConnectClient:
             url=self.TOKEN_ENDPOINT,
             data=data
         )
+        response_json = response.json()
         if not response.ok:
             self._invalid_credentials = True
             self.token = None
-            raise AuthenticationError("Failed to authenticate using username/password")
-        response_json = response.json()
+            self.raise_for_resultcode(response_json)
         jwt_token = jwt.decode(
             response_json['access_token'],
             algorithms="HS256",

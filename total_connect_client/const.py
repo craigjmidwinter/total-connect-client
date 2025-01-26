@@ -157,8 +157,13 @@ class _ResultCode(Enum):
     @staticmethod
     def from_response(response_dict:Dict[str, Any]):
         try:
-            return _ResultCode(response_dict["ResultCode"])
-        except TypeError:
+            # SOAP responses put the code in 'ResultCode', HTTP responses put it in 'error'
+            try:
+                value = response_dict["ResultCode"]
+            except KeyError:
+                value = response_dict["error"]
+            return _ResultCode(int(value))
+        except (KeyError, TypeError):
             # sometimes when there are server issues,
             # it returns empty responses - see issue #228
             raise ServiceUnavailable(
@@ -166,7 +171,7 @@ class _ResultCode(Enum):
             ) from None
         except ValueError:
             raise BadResultCodeError(
-                f"unknown result code {response_dict['ResultCode']}", response_dict
+                f"unknown result code {value}", response_dict
             ) from None
 
     SUCCESS = 0

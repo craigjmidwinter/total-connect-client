@@ -20,6 +20,7 @@ from const import (
     RESPONSE_PARTITION_DETAILS,
     RESPONSE_SESSION_INITIATED,
     RESPONSE_UNKNOWN,
+    HTTP_RESPONSE_BAD_USERNAME,
 )
 
 from total_connect_client.const import ArmType
@@ -63,7 +64,11 @@ class TestTotalConnectClient(unittest.TestCase):
     def tests_request_init_bad_user_or_password(self):
         """Test init sequence with no a bad password."""
         with requests_mock.Mocker(real_http=True) as rm:
-            rm.post(TotalConnectClient.TOKEN_ENDPOINT, status_code=403)
+            rm.post(
+                TotalConnectClient.TOKEN_ENDPOINT,
+                json=HTTP_RESPONSE_BAD_USERNAME,
+                status_code=403
+            )
             with pytest.raises(AuthenticationError):
                 TotalConnectClient("username", "password", usercodes=None)
 

@@ -6,7 +6,10 @@ from unittest.mock import patch
 import pytest
 import requests_mock
 from common import create_client
-from const import LOCATION_INFO_BASIC_NORMAL
+from const import (
+    LOCATION_INFO_BASIC_NORMAL,
+    HTTP_RESPONSE_BAD_USERNAME,
+)
 
 from total_connect_client.const import _ResultCode
 from total_connect_client.client import TotalConnectClient
@@ -70,7 +73,11 @@ class TestTotalConnectClient(unittest.TestCase):
 
             # bad user or pass
             with requests_mock.Mocker(real_http=True) as rm, pytest.raises(AuthenticationError):
-                rm.post(TotalConnectClient.TOKEN_ENDPOINT, status_code=403)
+                rm.post(
+                    TotalConnectClient.TOKEN_ENDPOINT,
+                    json=HTTP_RESPONSE_BAD_USERNAME,
+                    status_code=403
+                )
                 self.client.authenticate()
             assert self.client.is_logged_in() is False
 

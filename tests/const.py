@@ -314,10 +314,15 @@ HTTP_RESPONSE_CONFIG = {
 
 SESSION_ID = "12345"
 HTTP_RESPONSE_TOKEN = {
-    "access_token": jwt.encode({"ids": SESSION_ID}, key="key", algorithm="HS256")
+    "access_token": jwt.encode({"ids": SESSION_ID}, key="key", algorithm="HS256"),
 }
 
 SESSION_ID_2 = "54321"
 HTTP_RESPONSE_TOKEN_2 = {
-    "access_token": jwt.encode({"ids": SESSION_ID_2}, key="key", algorithm="HS256")
+    "access_token": jwt.encode({"ids": SESSION_ID_2}, key="key", algorithm="HS256"),
+}
+
+HTTP_RESPONSE_BAD_USERNAME = {
+    "error": _ResultCode.BAD_USER_OR_PASSWORD.value,
+    "error_description": "Bad username",
 }
