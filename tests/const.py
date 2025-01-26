@@ -313,16 +313,25 @@ HTTP_RESPONSE_CONFIG = {
 }
 
 SESSION_ID = "12345"
+TOKEN_EXPIRATION_TIME = 1200
 HTTP_RESPONSE_TOKEN = {
     "access_token": jwt.encode({"ids": SESSION_ID}, key="key", algorithm="HS256"),
+    "refresh_token": "refresh",
+    "expires_in": TOKEN_EXPIRATION_TIME
 }
 
 SESSION_ID_2 = "54321"
 HTTP_RESPONSE_TOKEN_2 = {
     "access_token": jwt.encode({"ids": SESSION_ID_2}, key="key", algorithm="HS256"),
+    "refresh_token": "refresh2",
+    "expires_in": TOKEN_EXPIRATION_TIME
 }
 
 HTTP_RESPONSE_BAD_USER_OR_PASSWORD = {
     "error": _ResultCode.BAD_USER_OR_PASSWORD.value,
     "error_description": "Bad username",
+}
+
+HTTP_RESPONSE_REFRESH_TOKEN_FAILED = {
+    "error": "Invalid session"
 }
