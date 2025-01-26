@@ -22,7 +22,7 @@ import zeep.cache
 import zeep.transports
 from zeep.exceptions import Fault as ZeepFault
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import  PKCS1_v1_5
+from Crypto.Cipher import PKCS1_v1_5
 import base64
 import jwt
 

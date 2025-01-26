@@ -8,7 +8,7 @@ import requests_mock
 from common import create_client
 from const import (
     LOCATION_INFO_BASIC_NORMAL,
-    HTTP_RESPONSE_BAD_USERNAME,
+    HTTP_RESPONSE_BAD_USER_OR_PASSWORD,
 )
 
 from total_connect_client.const import _ResultCode
@@ -75,7 +75,7 @@ class TestTotalConnectClient(unittest.TestCase):
             with requests_mock.Mocker(real_http=True) as rm, pytest.raises(AuthenticationError):
                 rm.post(
                     TotalConnectClient.TOKEN_ENDPOINT,
-                    json=HTTP_RESPONSE_BAD_USERNAME,
+                    json=HTTP_RESPONSE_BAD_USER_OR_PASSWORD,
                     status_code=403
                 )
                 self.client.authenticate()

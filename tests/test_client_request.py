@@ -20,7 +20,7 @@ from const import (
     RESPONSE_PARTITION_DETAILS,
     RESPONSE_SESSION_INITIATED,
     RESPONSE_UNKNOWN,
-    HTTP_RESPONSE_BAD_USERNAME,
+    HTTP_RESPONSE_BAD_USER_OR_PASSWORD,
 )
 
 from total_connect_client.const import ArmType
@@ -66,7 +66,7 @@ class TestTotalConnectClient(unittest.TestCase):
         with requests_mock.Mocker(real_http=True) as rm:
             rm.post(
                 TotalConnectClient.TOKEN_ENDPOINT,
-                json=HTTP_RESPONSE_BAD_USERNAME,
+                json=HTTP_RESPONSE_BAD_USER_OR_PASSWORD,
                 status_code=403
             )
             with pytest.raises(AuthenticationError):

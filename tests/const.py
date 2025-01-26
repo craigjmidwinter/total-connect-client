@@ -322,7 +322,7 @@ HTTP_RESPONSE_TOKEN_2 = {
     "access_token": jwt.encode({"ids": SESSION_ID_2}, key="key", algorithm="HS256"),
 }
 
-HTTP_RESPONSE_BAD_USERNAME = {
+HTTP_RESPONSE_BAD_USER_OR_PASSWORD = {
     "error": _ResultCode.BAD_USER_OR_PASSWORD.value,
     "error_description": "Bad username",
 }
