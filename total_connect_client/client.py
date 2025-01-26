@@ -9,6 +9,7 @@ for location in client.locations:
     ### do stuff with this location
 """
 
+import base64
 import logging
 import ssl
 from ssl import SSLContext
@@ -23,7 +24,6 @@ import zeep.transports
 from zeep.exceptions import Fault as ZeepFault
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
-import base64
 import jwt
 
 from . import cache as cache_folder
@@ -48,6 +48,8 @@ DEFAULT_USERCODE = "-1"
 SCHEMAS_TO_CACHE = {
     "https://schemas.xmlsoap.org/soap/encoding/": "soap-encodings-schemas.xmlsoap.org.txt",
 }
+
+HTTP_REQUEST_TIMEOUT = 30
 
 LOGGER = logging.getLogger(__name__)
 
@@ -329,7 +331,7 @@ class TotalConnectClient:
 
         # Retrieve application configuration for TotalConnect web app, this is needed for the
         # encryption key and various IDs.
-        response = requests.get(self.CONFIG_ENDPOINT)
+        response = requests.get(self.CONFIG_ENDPOINT, timeout=HTTP_REQUEST_TIMEOUT)
         if not response.ok:
             raise ServiceUnavailable(
                 f"Service configuration is not available at {self.CONFIG_ENDPOINT}"
@@ -354,7 +356,8 @@ class TotalConnectClient:
         }
         response = requests.post(
             url=self.TOKEN_ENDPOINT,
-            data=data
+            data=data,
+            timeout=HTTP_REQUEST_TIMEOUT
         )
         response_json = response.json()
         if not response.ok:
@@ -405,7 +408,7 @@ class TotalConnectClient:
             return
 
         # Send a refresh request and store the new refresh token and expiration time
-        LOGGER.debug(f"refreshing session now")
+        LOGGER.debug("Session has expired, refreshing now")
         data = {
             'refresh_token': self._refresh_token,
             'grant_type': 'refresh_token',
@@ -413,7 +416,8 @@ class TotalConnectClient:
         }
         response = requests.post(
             url=self.TOKEN_ENDPOINT,
-            data=data
+            data=data,
+            timeout=HTTP_REQUEST_TIMEOUT
         )
         if not response.ok:
             raise InvalidSessionError("Failed to refresh session")

@@ -1,13 +1,14 @@
+"""Global test fixtures."""
+
 import pytest
 import requests_mock
-
-from total_connect_client.client import TotalConnectClient
 
 from const import (
     HTTP_RESPONSE_CONFIG,
     HTTP_RESPONSE_TOKEN,
-    HTTP_RESPONSE_TOKEN_2
 )
+
+from total_connect_client.client import TotalConnectClient
 
 @pytest.fixture(autouse=True)
 def mock_http_requests():

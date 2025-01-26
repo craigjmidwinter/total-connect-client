@@ -1,9 +1,9 @@
 """Testing constants."""
 
+import jwt
+
 from total_connect_client import ArmingState, ZoneType, ZoneStatus
 from total_connect_client.const import _ResultCode
-
-import jwt
 
 MAX_RETRY_ATTEMPTS = 10  # default argument to TotalConnectClient.requests()
 
