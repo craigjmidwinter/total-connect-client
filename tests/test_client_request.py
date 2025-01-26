@@ -266,9 +266,9 @@ class TestTotalConnectClient(unittest.TestCase):
             assert client.token == SESSION_ID
 
             # Check that we made a refresh session request
-            refresh_request = rm.request_history[-1]
-            assert refresh_request.url == TotalConnectClient.TOKEN_ENDPOINT
-            assert "grant_type=refresh_token" in refresh_request.text
+            last_http_request = rm.request_history[-1]
+            assert last_http_request.url == TotalConnectClient.TOKEN_ENDPOINT
+            assert "grant_type=refresh_token" in last_http_request.text
 
             # The session should come up as expired again due to the current time.
             # The session refresh fails so we reauthenticate and get a new session.
@@ -277,6 +277,6 @@ class TestTotalConnectClient(unittest.TestCase):
             assert client.token == SESSION_ID_2
 
             # Check that we made an authentication request
-            refresh_request = rm.request_history[-1]
-            assert refresh_request.url == TotalConnectClient.TOKEN_ENDPOINT
-            assert "grant_type=password" in refresh_request.text
+            last_http_request = rm.request_history[-1]
+            assert last_http_request.url == TotalConnectClient.TOKEN_ENDPOINT
+            assert "grant_type=password" in last_http_request.text
