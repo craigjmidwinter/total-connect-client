@@ -1,5 +1,7 @@
 """Testing constants."""
 
+import jwt
+
 from total_connect_client import ArmingState, ZoneType, ZoneStatus
 from total_connect_client.const import _ResultCode
 
@@ -209,19 +211,6 @@ RESPONSE_ARMED_AWAY = {
     "ArmingState": ArmingState.ARMED_AWAY.value,
 }
 
-RESPONSE_AUTHENTICATE = {
-    "ResultCode": 0,
-    "ResultData": "Success",
-    "SessionID": "12345",
-    "Locations": LOCATIONS,
-    "ModuleFlags": MODULE_FLAGS,
-    "UserInfo": USER,
-}
-
-
-
-RESPONSE_AUTHENTICATE_EMPTY = RESPONSE_AUTHENTICATE.copy()
-RESPONSE_AUTHENTICATE_EMPTY["Locations"] = None
 
 RESPONSE_BAD_USER_OR_PASSWORD = {
     "ResultCode": _ResultCode.BAD_USER_OR_PASSWORD.value,
@@ -292,4 +281,57 @@ RESPONSE_PARTITION_DETAILS_TWO = {
     "PartitionsInfoList": PARTITION_DETAILS_TWO,
 }
 
+RESPONSE_SESSION_DETAILS = {
+    "ResultCode": 0,
+    "ResultData": "Success",
+    "SessionID": "12345",
+    "Locations": LOCATIONS,
+    "ModuleFlags": MODULE_FLAGS,
+    "UserInfo": USER,
+}
+
+RESPONSE_SESSION_DETAILS_EMPTY = RESPONSE_SESSION_DETAILS.copy()
+RESPONSE_SESSION_DETAILS_EMPTY["Locations"] = None
+
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
+
+HTTP_RESPONSE_CONFIG = {
+    "RevisionNumber": "1.2.3",
+    "version": "0.0.4",
+    "AppConfig": [
+        {
+            "tc2APIKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6bdkwTazBVt7eIcelDFcfojTC4XwDAfmvVJq9EdjyCa7neeow4tfoWe57oLPkjw+Ge5VEgUOus7aqhywKBTwlmlGUiTpQLUtVuxmam2nG3kvbKA2T6HbWKQfrJsdGitZLgwOIfzjDrIFTUjRiTIV8CYO8rmsLtaQUE20PRGNvesYP1tb7e4wqdGX3J6je/bpbNRwglnarzIEw37JjCsnhZi9iaUOWbHrvrb98MsLqyugvOtCwt/NGntZ8JJeFHLMHpuHu6uM2H+wotvwE1zSNL4+DScp/vpc4Cc55rksIOaOTB8F2OhxpTnlPzcVs6Av8HYEKyrWl4vSAqS5OcIPkQIDAQAB",
+            "tc2ClientId": "9fcfbf759b0b4e5c83cd03cea1d20d59",
+        }
+    ],
+    "brandInfo": [
+        {
+            "AppID": 16808,
+            "BrandName": "totalconnect",
+        },
+    ]
+}
+
+SESSION_ID = "12345"
+TOKEN_EXPIRATION_TIME = 1200
+HTTP_RESPONSE_TOKEN = {
+    "access_token": jwt.encode({"ids": SESSION_ID}, key="key", algorithm="HS256"),
+    "refresh_token": "refresh",
+    "expires_in": TOKEN_EXPIRATION_TIME
+}
+
+SESSION_ID_2 = "54321"
+HTTP_RESPONSE_TOKEN_2 = {
+    "access_token": jwt.encode({"ids": SESSION_ID_2}, key="key", algorithm="HS256"),
+    "refresh_token": "refresh2",
+    "expires_in": TOKEN_EXPIRATION_TIME
+}
+
+HTTP_RESPONSE_BAD_USER_OR_PASSWORD = {
+    "error": _ResultCode.BAD_USER_OR_PASSWORD.value,
+    "error_description": "Bad username",
+}
+
+HTTP_RESPONSE_REFRESH_TOKEN_FAILED = {
+    "error": "Invalid session"
+}

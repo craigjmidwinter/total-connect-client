@@ -9,6 +9,7 @@ for location in client.locations:
     ### do stuff with this location
 """
 
+import base64
 import logging
 import ssl
 from ssl import SSLContext
@@ -21,6 +22,9 @@ import zeep
 import zeep.cache
 import zeep.transports
 from zeep.exceptions import Fault as ZeepFault
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_v1_5
+import jwt
 
 from . import cache as cache_folder
 from .const import ArmType, _ResultCode
@@ -44,6 +48,8 @@ DEFAULT_USERCODE = "-1"
 SCHEMAS_TO_CACHE = {
     "https://schemas.xmlsoap.org/soap/encoding/": "soap-encodings-schemas.xmlsoap.org.txt",
 }
+
+HTTP_REQUEST_TIMEOUT = 30
 
 LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +97,11 @@ class TotalConnectClient:
         self.retry_delay = retry_delay
 
         self.token = None
+        self._client_id = None
+        self._session_expiration = None
+        self._refresh_token = None
         self._invalid_credentials = False
+
         self._module_flags: Dict[str, str] = {}
         self._user: TotalConnectUser | None = None
         self._locations: Dict[Any, TotalConnectLocation] = {}
@@ -206,8 +216,8 @@ class TotalConnectClient:
         return zeep.helpers.serialize_object(operation_proxy(*args))
 
     API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
-    API_APP_ID = "14588"
-    API_APP_VERSION = "1.0.34"
+    CONFIG_ENDPOINT = "https://totalconnect2.com/application.config.json"
+    TOKEN_ENDPOINT = "https://rs.alarmnet.com/TC2API.Auth/token"
 
     def request(
         self,
@@ -242,6 +252,10 @@ class TotalConnectClient:
             )
             self.soap_client = zeep.Client(self.API_ENDPOINT, transport=transport)
         try:
+            # Refresh session if needed. If the refresh fails it will throw an InvalidSessionError,
+            # forcing a reauthentication
+            self._check_and_refresh_session()
+
             response = self._send_one_request(operation_name, args)
             self._raise_for_retry(response)
             return response
@@ -289,6 +303,19 @@ class TotalConnectClient:
             args = [self.token if old_token == arg else arg for arg in args]
         return self.request(operation_name, args, attempts_remaining)
 
+    def _encrypt_credential(self, credential: str, key_pem: str) -> str:
+        # Load the key from the PEM file
+        key = RSA.importKey(key_pem)
+
+        # Create a cipher object using PKCS1_OAEP padding
+        cipher = PKCS1_v1_5.new(key)
+
+        # Encrypt the message
+        encrypted_message = cipher.encrypt(credential.encode())
+
+        # Encode the encrypted message in base64 for safe transmission
+        return base64.b64encode(encrypted_message).decode()
+
     def authenticate(self) -> None:
         """Login to the system.
 
@@ -302,23 +329,63 @@ class TotalConnectClient:
                 f"not authenticating: password already failed for user {self.username}"
             )
 
-        # LoginAndGetSessionDetails is very slow, so only use it when necessary
-        operation_name = (
-            "AuthenticateUserLogin" if self._locations else "LoginAndGetSessionDetails"
-        )
-        response = self.request(
-            operation_name,
-            (self.username, self.password, self.API_APP_ID, self.API_APP_VERSION),
-        )
-        try:
-            self.raise_for_resultcode(response)
-        except AuthenticationError:
-            self._invalid_credentials = True
-            self.token = None
-            raise
+        # Retrieve application configuration for TotalConnect web app, this is needed for the
+        # encryption key and various IDs.
+        response = requests.get(self.CONFIG_ENDPOINT, timeout=HTTP_REQUEST_TIMEOUT)
+        if not response.ok:
+            raise ServiceUnavailable(
+                f"Service configuration is not available at {self.CONFIG_ENDPOINT}"
+            )
+        config = response.json()
+        key = config["AppConfig"][0]["tc2APIKey"]
+        self._client_id = config["AppConfig"][0]["tc2ClientId"]
+        locale = 'en-US'
+        app_id = next(
+            info for info in config["brandInfo"] if info["BrandName"] == "totalconnect"
+        )["AppID"]
+        app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
 
-        self.token = response["SessionID"]
+        # Encrypt username and password and log in to get a JWT with a session ID.
+        key_pem = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
+        data = {
+            'username': self._encrypt_credential(self.username, key_pem),
+            'password': self._encrypt_credential(self.password, key_pem),
+            'grant_type': 'password',
+            'client_id': self._client_id,
+            'locale': locale,
+        }
+        response = requests.post(
+            url=self.TOKEN_ENDPOINT,
+            data=data,
+            timeout=HTTP_REQUEST_TIMEOUT
+        )
+        response_json = response.json()
+        if not response.ok:
+            try:
+                self.raise_for_resultcode(response_json)
+            except AuthenticationError:
+                self._invalid_credentials = True
+                self.token = None
+                raise
+        jwt_token = jwt.decode(
+            response_json['access_token'],
+            algorithms="HS256",
+            options={"verify_signature": False}
+        )
+        self.token = jwt_token["ids"].split(';', 1)[0]
+
+        # We will need to refresh the token periodically, keep track of the expiration
+        # time using the system's monotonic clock so that we aren't affected by clock
+        # updates.
+        self._refresh_token = response_json["refresh_token"]
+        self._session_expiration = time.monotonic() + int(response_json["expires_in"])
+
+        # Retrieve user and location information.
         if not self._locations:
+            response = self.request(
+                "GetSessionDetails",
+                (self.token, app_id, app_version)
+            )
             self._module_flags = dict(
                 x.split("=") for x in response["ModuleFlags"].split(",")
             )
@@ -329,6 +396,34 @@ class TotalConnectClient:
                 raise TotalConnectError("no locations found", response)
         LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
         self.times["authenticate()"] = time.time() - start_time
+
+    def _check_and_refresh_session(self) -> None:
+        """Refresh the current session if needed."""
+        if not self._refresh_token:
+            raise InvalidSessionError("Not logged in")
+
+        # Check the current time against the session expire time. Use a one second
+        # grace period to mitigate race conditions.
+        if time.monotonic() < self._session_expiration - 1:
+            return
+
+        # Send a refresh request and store the new refresh token and expiration time
+        LOGGER.debug("Session has expired, refreshing now")
+        data = {
+            'refresh_token': self._refresh_token,
+            'grant_type': 'refresh_token',
+            'client_id': self._client_id,
+        }
+        response = requests.post(
+            url=self.TOKEN_ENDPOINT,
+            data=data,
+            timeout=HTTP_REQUEST_TIMEOUT
+        )
+        if not response.ok:
+            raise InvalidSessionError("Failed to refresh session")
+        response_json = response.json()
+        self._refresh_token = response_json["refresh_token"]
+        self._session_expiration = time.monotonic() + int(response_json["expires_in"])
 
     def validate_usercode(self, device_id: str, usercode: str) -> bool:
         """Return True if the usercode is valid for the device."""

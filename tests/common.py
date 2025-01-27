@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from const import (
-    RESPONSE_AUTHENTICATE,
+    RESPONSE_SESSION_DETAILS,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_PARTITION_DETAILS,
@@ -14,7 +14,7 @@ from total_connect_client.client import TotalConnectClient
 def create_client():
     """Return a TotalConnectClient that appears to be logged in."""
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
