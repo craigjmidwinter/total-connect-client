@@ -427,7 +427,10 @@ class TotalConnectClient:
 
     def validate_usercode(self, device_id: str, usercode: str) -> bool:
         """Return True if the usercode is valid for the device."""
-        response = self.request("ValidateUserCode", (self.token, device_id, usercode))
+        response = self.request(
+            "ValidateUserCodeEx",
+            ({"SessionId": self.token, "DeviceId": device_id, "UserCode": usercode}, )
+        )
         try:
             self.raise_for_resultcode(response)
         except UsercodeInvalid:
