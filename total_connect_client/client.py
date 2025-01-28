@@ -101,6 +101,10 @@ class TotalConnectClient:
         self._session_expiration = None
         self._refresh_token = None
         self._invalid_credentials = False
+        self._locale = 'en-US'
+        self._app_id = None
+        self._app_version = None
+        self._key_pem = None
 
         self._module_flags: Dict[str, str] = {}
         self._user: TotalConnectUser | None = None
@@ -329,8 +333,28 @@ class TotalConnectClient:
                 f"not authenticating: password already failed for user {self.username}"
             )
 
-        # Retrieve application configuration for TotalConnect web app, this is needed for the
-        # encryption key and various IDs.
+        self._get_configuration()
+        self._request_token()
+
+        # Retrieve user and location information.
+        if not self._locations:
+            response = self.request(
+                "GetSessionDetails",
+                (self.token, self._app_id, self._app_version)
+            )
+            self._module_flags = dict(
+                x.split("=") for x in response["ModuleFlags"].split(",")
+            )
+            self._user = TotalConnectUser(response["UserInfo"])
+            self._locations_unfetched = self._make_locations(response)
+            self._locations = self._locations_unfetched.copy()
+            if not self._locations:
+                raise TotalConnectError("no locations found", response)
+        LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
+        self.times["authenticate()"] = time.time() - start_time
+
+    def _get_configuration(self) -> None:
+        """Retrieve application configuration for TotalConnect REST API."""
         response = requests.get(self.CONFIG_ENDPOINT, timeout=HTTP_REQUEST_TIMEOUT)
         if not response.ok:
             raise ServiceUnavailable(
@@ -339,21 +363,24 @@ class TotalConnectClient:
         config = response.json()
         key = config["AppConfig"][0]["tc2APIKey"]
         self._client_id = config["AppConfig"][0]["tc2ClientId"]
-        locale = 'en-US'
-        app_id = next(
+        self._app_id = next(
             info for info in config["brandInfo"] if info["BrandName"] == "totalconnect"
         )["AppID"]
-        app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
+        self._app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
+        self._key_pem = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
 
+    
+    def _request_token(self) -> None:
+        """Request a JSON Web Token (JWT)."""
         # Encrypt username and password and log in to get a JWT with a session ID.
-        key_pem = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
         data = {
-            'username': self._encrypt_credential(self.username, key_pem),
-            'password': self._encrypt_credential(self.password, key_pem),
+            'username': self._encrypt_credential(self.username, self._key_pem),
+            'password': self._encrypt_credential(self.password, self._key_pem),
             'grant_type': 'password',
             'client_id': self._client_id,
-            'locale': locale,
+            'locale': self._locale,
         }
+
         response = requests.post(
             url=self.TOKEN_ENDPOINT,
             data=data,
@@ -379,23 +406,6 @@ class TotalConnectClient:
         # updates.
         self._refresh_token = response_json["refresh_token"]
         self._session_expiration = time.monotonic() + int(response_json["expires_in"])
-
-        # Retrieve user and location information.
-        if not self._locations:
-            response = self.request(
-                "GetSessionDetails",
-                (self.token, app_id, app_version)
-            )
-            self._module_flags = dict(
-                x.split("=") for x in response["ModuleFlags"].split(",")
-            )
-            self._user = TotalConnectUser(response["UserInfo"])
-            self._locations_unfetched = self._make_locations(response)
-            self._locations = self._locations_unfetched.copy()
-            if not self._locations:
-                raise TotalConnectError("no locations found", response)
-        LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
-        self.times["authenticate()"] = time.time() - start_time
 
     def _check_and_refresh_session(self) -> None:
         """Refresh the current session if needed."""
