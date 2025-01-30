@@ -11,8 +11,7 @@ from const import (
     HTTP_RESPONSE_BAD_USER_OR_PASSWORD,
 )
 
-from total_connect_client.const import _ResultCode
-from total_connect_client.client import TotalConnectClient
+from total_connect_client.const import _ResultCode, AUTH_TOKEN_ENDPOINT
 from total_connect_client.exceptions import AuthenticationError
 
 RESPONSE_SUCCESS = {
@@ -74,7 +73,7 @@ class TestTotalConnectClient(unittest.TestCase):
             # bad user or pass
             with requests_mock.Mocker(real_http=True) as rm, pytest.raises(AuthenticationError):
                 rm.post(
-                    TotalConnectClient.TOKEN_ENDPOINT,
+                    AUTH_TOKEN_ENDPOINT,
                     json=HTTP_RESPONSE_BAD_USER_OR_PASSWORD,
                     status_code=403
                 )
