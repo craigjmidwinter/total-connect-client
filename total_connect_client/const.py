@@ -211,3 +211,4 @@ HTTP_API_ENDPOINT_BASE = "https://rs.alarmnet.com/TC2API.TCResource/"
 def _make_http_endpoint(path: str) -> str:
     return urllib.parse.urljoin(HTTP_API_ENDPOINT_BASE, path)
 HTTP_API_SESSION_DETAILS_ENDPOINT = _make_http_endpoint("api/v3/authentication/sessiondetails")
+HTTP_API_LOGOUT = _make_http_endpoint("api/v3/authentication/logout")
