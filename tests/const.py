@@ -1,11 +1,10 @@
 """Testing constants."""
 
+import copy
 import jwt
 
 from total_connect_client import ArmingState, ZoneType, ZoneStatus
 from total_connect_client.const import _ResultCode
-
-MAX_RETRY_ATTEMPTS = 10  # default argument to TotalConnectClient.requests()
 
 PASSWORD_BAD = "none"
 USERNAME_BAD = "none"
@@ -28,10 +27,10 @@ LOCATION_INFO_BASIC_NORMAL = {
     "SecurityDeviceID": "987654",
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
     "LocationModuleFlags": "Security=1,Video=0,Automation=0,GPS=0,VideoPIR=0",
-    "DeviceList": {"DeviceInfoBasic": DEVICE_LIST},
+    "DeviceList": DEVICE_LIST,
 }
 
-LOCATIONS = {"LocationInfoBasic": [LOCATION_INFO_BASIC_NORMAL]}
+LOCATIONS = [LOCATION_INFO_BASIC_NORMAL]
 
 MODULE_FLAGS = "Some=0,Fake=1,Flags=2"
 
@@ -281,17 +280,19 @@ RESPONSE_PARTITION_DETAILS_TWO = {
     "PartitionsInfoList": PARTITION_DETAILS_TWO,
 }
 
-RESPONSE_SESSION_DETAILS = {
+HTTP_RESPONSE_SESSION_DETAILS = {
     "ResultCode": 0,
     "ResultData": "Success",
-    "SessionID": "12345",
-    "Locations": LOCATIONS,
-    "ModuleFlags": MODULE_FLAGS,
-    "UserInfo": USER,
+    "SessionDetailsResult": {
+        "SessionID": "12345",
+        "Locations": LOCATIONS,
+        "ModuleFlags": MODULE_FLAGS,
+        "UserInfo": USER,
+    }
 }
 
-RESPONSE_SESSION_DETAILS_EMPTY = RESPONSE_SESSION_DETAILS.copy()
-RESPONSE_SESSION_DETAILS_EMPTY["Locations"] = None
+HTTP_RESPONSE_SESSION_DETAILS_EMPTY = copy.deepcopy(HTTP_RESPONSE_SESSION_DETAILS)
+HTTP_RESPONSE_SESSION_DETAILS_EMPTY["SessionDetailsResult"]["Locations"] = None
 
 TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
 

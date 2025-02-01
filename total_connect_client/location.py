@@ -45,8 +45,8 @@ class TotalConnectLocation:
         self._sync_job_id = None
         self._sync_job_state: int = 0
 
-        dib = (location_info_basic.get("DeviceList") or {}).get("DeviceInfoBasic")
-        tcdevs = [TotalConnectDevice(d) for d in (dib or {})]
+        dib = location_info_basic.get("DeviceList") or []
+        tcdevs = [TotalConnectDevice(d) for d in dib]
         self.devices = {tcdev.deviceid: tcdev for tcdev in tcdevs}
 
     def __str__(self) -> str:

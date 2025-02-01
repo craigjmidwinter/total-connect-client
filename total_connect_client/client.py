@@ -10,24 +10,36 @@ for location in client.locations:
 """
 
 import base64
+import json
 import logging
 import ssl
 from ssl import SSLContext
 import time
 from importlib import resources as impresources
-from typing import Dict, Any
+from typing import Any, Callable, Dict
 import requests
 import urllib3.poolmanager
+import urllib3.util
 import zeep
 import zeep.cache
 import zeep.transports
 from zeep.exceptions import Fault as ZeepFault
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
+from oauthlib.oauth2 import LegacyApplicationClient, TokenExpiredError, OAuth2Error
+from requests_oauthlib import OAuth2Session
 import jwt
 
 from . import cache as cache_folder
-from .const import ArmType, _ResultCode
+from .const import (
+    ArmType,
+    _ResultCode,
+    SOAP_API_ENDPOINT,
+    AUTH_CONFIG_ENDPOINT,
+    AUTH_TOKEN_ENDPOINT,
+    HTTP_API_ENDPOINT_BASE,
+    HTTP_API_SESSION_DETAILS_ENDPOINT
+)
 from .exceptions import (
     AuthenticationError,
     BadResultCodeError,
@@ -48,8 +60,6 @@ DEFAULT_USERCODE = "-1"
 SCHEMAS_TO_CACHE = {
     "https://schemas.xmlsoap.org/soap/encoding/": "soap-encodings-schemas.xmlsoap.org.txt",
 }
-
-HTTP_REQUEST_TIMEOUT = 30
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +85,8 @@ class _SslContextAdapter(requests.adapters.HTTPAdapter):
 class TotalConnectClient:
     """Client for Total Connect."""
 
-    TIMEOUT = 60  # seconds until SOAP I/O will fail
+    TIMEOUT = 60  # seconds until I/O will fail
+    MAX_RETRY_ATTEMPTS = 5 # number of times to retry an API call
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -97,11 +108,10 @@ class TotalConnectClient:
         self.retry_delay = retry_delay
 
         self.token = None
-        self._client_id = None
-        self._session_expiration = None
-        self._refresh_token = None
+        self._oauth_session = None
+        self._oauth_client = None
         self._invalid_credentials = False
-        self._locale = 'en-US'
+        self._client_id = None
         self._app_id = None
         self._app_version = None
         self._key_pem = None
@@ -212,29 +222,70 @@ class TotalConnectClient:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
-    def _send_one_request(
-        self, operation_name: str, args: list[Any] | tuple[Any, ...]
-    ) -> Dict[str, Any]:
-        LOGGER.debug(f"sending API request {operation_name}{args}")
-        operation_proxy = self.soap_client.service[operation_name]
-        return zeep.helpers.serialize_object(operation_proxy(*args))
+    API_ENDPOINT = SOAP_API_ENDPOINT
 
-    API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
-    CONFIG_ENDPOINT = "https://totalconnect2.com/application.config.json"
-    TOKEN_ENDPOINT = "https://rs.alarmnet.com/TC2API.Auth/token"
+    def _request_with_retries(
+        self,
+        do_request: Callable[[], Dict[str, Any]],
+        request_description: str,
+        attempts_remaining: int = MAX_RETRY_ATTEMPTS,
+    ):
+        """Call a given request function and handle retries for temporary errors and authentication
+        problems."""
+        is_first_request = attempts_remaining == self.MAX_RETRY_ATTEMPTS
+        attempts_remaining -= 1
+
+        try:
+            LOGGER.debug(f"sending API request {request_description}")
+            response = do_request()
+            self._raise_for_retry(response)
+            return response
+        # To retry an exception that could be raised during the
+        # request, add it to an except block here, depending on what
+        # you want to have happen. The first block just retries and
+        # logs. The second block causes reauthentication.
+        except RetryableTotalConnectError as err:
+            if attempts_remaining <= 0:
+                raise
+            msg = (
+                f"{self.username} {request_description} {err.args[0]} on response"
+            )
+            if is_first_request:
+                LOGGER.info(f"{msg}: {attempts_remaining} retries remaining")
+            else:
+                LOGGER.debug(f"{msg}: {attempts_remaining} retries remaining")
+            time.sleep(self.retry_delay)
+        except (ZeepFault, requests.RequestException) as err:
+            if attempts_remaining <= 0:
+                raise ServiceUnavailable(
+                    f"Error connecting to Total Connect service: {err}"
+                ) from err
+            LOGGER.debug(
+                f"Error connecting to Total Connect service: {attempts_remaining} retries remaining"
+            )
+            time.sleep(self.retry_delay)
+        except (OAuth2Error, InvalidSessionError) as err:
+            if attempts_remaining <= 0:
+                raise ServiceUnavailable(
+                    f"Invalid Session after multiple retries: {err}"
+                ) from err
+            LOGGER.info(
+                f"reauthenticating {self.username}: {attempts_remaining} retries remaining"
+            )
+            self.authenticate()
+
+        return self._request_with_retries(do_request, request_description, attempts_remaining)
+
 
     def request(
         self,
         operation_name: str,
-        args: list[Any] | tuple[Any, ...],
-        attempts_remaining: int = 5,
+        args: list[Any] | tuple[Any, ...]
     ) -> Dict[str, Any]:
         """Send a SOAP request.
 
         args is a list or tuple defining the parameters to the operation.
         """
-        is_first_request = attempts_remaining == 5
-        attempts_remaining -= 1
         if not self.soap_client:
             # the server doesn't support RFC 5746 secure renegotiation, which
             # causes OpenSSL to fail by default. here we override the default.
@@ -254,62 +305,60 @@ class TotalConnectClient:
                 timeout=self.TIMEOUT,  # for loading WSDL and xsd documents
                 operation_timeout=self.TIMEOUT,  # for operations (POST/GET)
             )
-            self.soap_client = zeep.Client(self.API_ENDPOINT, transport=transport)
-        try:
+            self.soap_client = zeep.Client(SOAP_API_ENDPOINT, transport=transport)
+
+        def _do_soap_request() -> Dict[str, Any]:
             # Refresh session if needed. If the refresh fails it will throw an InvalidSessionError,
-            # forcing a reauthentication
-            self._check_and_refresh_session()
+            # forcing a reauthentication. This is a mildly hacky way of checking if we need a
+            # refresh, the 'add_token' function is generally used to prepare an actual request for
+            # sending. But if we call it directly then it has the useful side-effect of throwing an
+            # exception if our current token is expired.
+            try:
+                self._oauth_client.add_token(HTTP_API_ENDPOINT_BASE)
+            except TokenExpiredError:
+                LOGGER.debug("Session has expired, refreshing now")
+                self._oauth_session.refresh_token(AUTH_TOKEN_ENDPOINT)
 
-            response = self._send_one_request(operation_name, args)
-            self._raise_for_retry(response)
-            return response
-        # To retry an exception that could be raised during the
-        # request, add it to an except block here, depending on what
-        # you want to have happen. The first block just retries and
-        # logs. The second block causes reauthentication.
-        except (
-            RetryableTotalConnectError,
-            requests.exceptions.RequestException,
-        ) as err:
-            if attempts_remaining <= 0:
-                raise
-            if isinstance(err, RetryableTotalConnectError):
-                msg = (
-                    f"{self.username} {operation_name}{args} {err.args[0]} on response"
+            # The first argument is always the session token, keep it up to date in case
+            # it changes.
+            operation_proxy = self.soap_client.service[operation_name]
+            return zeep.helpers.serialize_object(operation_proxy(self.token, *args[1:]))
+
+        return self._request_with_retries(_do_soap_request, f"{operation_name}{args}")
+
+    def http_request(
+        self,
+        endpoint: str,
+        method: str,
+        params: Dict[str, Any] | None = None,
+        data: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        """Send an HTTP request to a Web API endpoint
+
+        method is the HTTP method, e.g. 'GET', 'POST', 'PUT', 'DELETE'
+        params is a dictionary defining the query parameters to add to the endpoint URL
+        data is a dictionary defining the query parameter to encode in the request body
+        """
+        def _do_http_request() -> Dict[str, Any]:
+            response = self._oauth_session.request(
+                method=method,
+                url=endpoint,
+                params=params,
+                data=data
+            )
+            if not response.ok:
+                LOGGER.debug(
+                    f"Received HTTP error code {response.status_code} with response:",
+                    response.content
                 )
-            else:
-                msg = f"{self.username} {operation_name}{args} {err} on request"
-            if is_first_request:
-                LOGGER.info(f"{msg}: {attempts_remaining} retries remaining")
-            else:
-                LOGGER.debug(f"{msg}: {attempts_remaining} retries remaining")
-            time.sleep(self.retry_delay)
-        except (ZeepFault, requests.exceptions.HTTPError) as err:
-            if attempts_remaining <= 0:
-                raise ServiceUnavailable(
-                    f"Error connecting to Total Connect service: {err}"
-                ) from err
-            LOGGER.debug(
-                f"Error connecting to Total Connect service: {attempts_remaining} retries remaining"
-            )
-            time.sleep(self.retry_delay)
-        except InvalidSessionError as err:
-            if attempts_remaining <= 0:
-                raise ServiceUnavailable(
-                    f"Invalid Session after multiple retries: {err}"
-                ) from err
-            LOGGER.info(
-                f"reauthenticating {self.username}: {attempts_remaining} retries remaining"
-            )
-            old_token = self.token
-            self.token = None
-            self.authenticate()
-            args = [self.token if old_token == arg else arg for arg in args]
-        return self.request(operation_name, args, attempts_remaining)
+            return response.json()
 
-    def _encrypt_credential(self, credential: str, key_pem: str) -> str:
+        args = {**(params or {}), **(data or {})}
+        return self._request_with_retries(_do_http_request, f"{method} {endpoint} ({args})")
+
+    def _encrypt_credential(self, credential: str) -> str:
         # Load the key from the PEM file
-        key = RSA.importKey(key_pem)
+        key = RSA.importKey(self._key_pem)
 
         # Create a cipher object using PKCS1_OAEP padding
         cipher = PKCS1_v1_5.new(key)
@@ -338,10 +387,11 @@ class TotalConnectClient:
 
         # Retrieve user and location information.
         if not self._locations:
-            response = self.request(
-                "GetSessionDetails",
-                (self.token, self._app_id, self._app_version)
-            )
+            response = self.http_request(
+                endpoint=HTTP_API_SESSION_DETAILS_ENDPOINT,
+                method="GET",
+                params={"appId": self._app_id, "appVersion": self._app_version}
+            )["SessionDetailsResult"]
             self._module_flags = dict(
                 x.split("=") for x in response["ModuleFlags"].split(",")
             )
@@ -355,10 +405,10 @@ class TotalConnectClient:
 
     def _get_configuration(self) -> None:
         """Retrieve application configuration for TotalConnect REST API."""
-        response = requests.get(self.CONFIG_ENDPOINT, timeout=HTTP_REQUEST_TIMEOUT)
+        response = requests.get(AUTH_CONFIG_ENDPOINT, timeout=self.TIMEOUT)
         if not response.ok:
             raise ServiceUnavailable(
-                f"Service configuration is not available at {self.CONFIG_ENDPOINT}"
+                f"Service configuration is not available at {AUTH_CONFIG_ENDPOINT}"
             )
         config = response.json()
         key = config["AppConfig"][0]["tc2APIKey"]
@@ -369,71 +419,35 @@ class TotalConnectClient:
         self._app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
         self._key_pem = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
 
-    
     def _request_token(self) -> None:
         """Request a JSON Web Token (JWT)."""
         # Encrypt username and password and log in to get a JWT with a session ID.
-        data = {
-            'username': self._encrypt_credential(self.username, self._key_pem),
-            'password': self._encrypt_credential(self.password, self._key_pem),
-            'grant_type': 'password',
-            'client_id': self._client_id,
-            'locale': self._locale,
-        }
-
-        response = requests.post(
-            url=self.TOKEN_ENDPOINT,
-            data=data,
-            timeout=HTTP_REQUEST_TIMEOUT
+        self._oauth_client = LegacyApplicationClient(client_id=self._client_id)
+        self._oauth_session = OAuth2Session(
+            client=self._oauth_client,
+            auto_refresh_url=AUTH_TOKEN_ENDPOINT,
+            auto_refresh_kwargs={"client_id": self._client_id}
         )
-        response_json = response.json()
-        if not response.ok:
+        try:
+            self._oauth_session.fetch_token(
+                token_url=AUTH_TOKEN_ENDPOINT,
+                username=self._encrypt_credential(self.username),
+                password=self._encrypt_credential(self.password),
+                client_id=self._client_id
+            )
+        except OAuth2Error as exc:
             try:
-                self.raise_for_resultcode(response_json)
+                self.raise_for_resultcode(json.loads(exc.json))
             except AuthenticationError:
                 self._invalid_credentials = True
                 self.token = None
                 raise
         jwt_token = jwt.decode(
-            response_json['access_token'],
+            self._oauth_session.access_token,
             algorithms="HS256",
             options={"verify_signature": False}
         )
         self.token = jwt_token["ids"].split(';', 1)[0]
-
-        # We will need to refresh the token periodically, keep track of the expiration
-        # time using the system's monotonic clock so that we aren't affected by clock
-        # updates.
-        self._refresh_token = response_json["refresh_token"]
-        self._session_expiration = time.monotonic() + int(response_json["expires_in"])
-
-    def _check_and_refresh_session(self) -> None:
-        """Refresh the current session if needed."""
-        if not self._refresh_token:
-            raise InvalidSessionError("Not logged in")
-
-        # Check the current time against the session expire time. Use a one second
-        # grace period to mitigate race conditions.
-        if time.monotonic() < self._session_expiration - 1:
-            return
-
-        # Send a refresh request and store the new refresh token and expiration time
-        LOGGER.debug("Session has expired, refreshing now")
-        data = {
-            'refresh_token': self._refresh_token,
-            'grant_type': 'refresh_token',
-            'client_id': self._client_id,
-        }
-        response = requests.post(
-            url=self.TOKEN_ENDPOINT,
-            data=data,
-            timeout=HTTP_REQUEST_TIMEOUT
-        )
-        if not response.ok:
-            raise InvalidSessionError("Failed to refresh session")
-        response_json = response.json()
-        self._refresh_token = response_json["refresh_token"]
-        self._session_expiration = time.monotonic() + int(response_json["expires_in"])
 
     def validate_usercode(self, device_id: str, usercode: str) -> bool:
         """Return True if the usercode is valid for the device."""
@@ -481,7 +495,7 @@ class TotalConnectClient:
         start_time = time.time()
         new_locations = {}
 
-        for locationinfo in (response["Locations"] or {}).get("LocationInfoBasic", {}):
+        for locationinfo in response.get("Locations") or []:
             location_id = locationinfo["LocationID"]
             location = TotalConnectLocation(locationinfo, self)
             new_locations[location_id] = location

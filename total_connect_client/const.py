@@ -2,6 +2,7 @@
 
 from enum import Enum
 from typing import Dict, Any
+import urllib.parse
 
 from .exceptions import BadResultCodeError, ServiceUnavailable
 
@@ -202,3 +203,11 @@ class _ResultCode(Enum):
 PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
 
 STATUS_URL = "https://status.resideo.com/"
+
+SOAP_API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
+AUTH_CONFIG_ENDPOINT = "https://totalconnect2.com/application.config.json"
+AUTH_TOKEN_ENDPOINT = "https://rs.alarmnet.com/TC2API.Auth/token"
+HTTP_API_ENDPOINT_BASE = "https://rs.alarmnet.com/TC2API.TCResource/"
+def _make_http_endpoint(path: str) -> str:
+    return urllib.parse.urljoin(HTTP_API_ENDPOINT_BASE, path)
+HTTP_API_SESSION_DETAILS_ENDPOINT = _make_http_endpoint("api/v3/authentication/sessiondetails")

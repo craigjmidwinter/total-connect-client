@@ -380,4 +380,3 @@ def test_bypass():
     zone = tcz(zone_data, location)
     zone.bypass()
     location.zone_bypass.assert_called_once()
-

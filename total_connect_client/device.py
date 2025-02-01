@@ -19,7 +19,7 @@ class TotalConnectDevice:
         self._unicorn_info: Dict[str, Any] = {}
 
         flags = info.get("DeviceFlags")
-        if flags is None:
+        if not flags:
             self.flags = {}
         else:
             self.flags = dict(x.split("=") for x in flags.split(","))
