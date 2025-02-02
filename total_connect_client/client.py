@@ -38,7 +38,8 @@ from .const import (
     AUTH_CONFIG_ENDPOINT,
     AUTH_TOKEN_ENDPOINT,
     HTTP_API_ENDPOINT_BASE,
-    HTTP_API_SESSION_DETAILS_ENDPOINT
+    HTTP_API_SESSION_DETAILS_ENDPOINT,
+    HTTP_API_LOGOUT,
 )
 from .exceptions import (
     AuthenticationError,
@@ -475,8 +476,14 @@ class TotalConnectClient:
         Raises TotalConnectError if we still might be logged in.
         """
         if self.is_logged_in():
-            response = self.request("Logout", (self.token,))
+            response = self.http_request(
+                endpoint=HTTP_API_LOGOUT,
+                method="POST",
+                params=None
+            )            
             self.raise_for_resultcode(response)
+            if response["ResultCode"] != 0:
+                raise TotalConnectError(f"Logout failed with response code {response['ResultCode']}: {response['ResultData']}")
             LOGGER.info("Logout Successful")
             self.token = None
 
