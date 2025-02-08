@@ -1,10 +1,10 @@
 """Total Connect Partition."""
 
 import logging
-from typing import Dict, Any
-from .const import ArmingState, PROJECT_URL, ArmType
-from .exceptions import PartialResponseError, TotalConnectError
+from typing import Any, Dict
 
+from .const import PROJECT_URL, ArmingState, ArmType
+from .exceptions import PartialResponseError, TotalConnectError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class TotalConnectPartition:
     def __init__(self, details: Dict[str, Any], parent):
         """Initialize Partition based on PartitionDetails."""
         self.parent = parent
-        self.partitionid = str(details.get("PartitionID"))
+        self.partitionid: int = details.get("PartitionID")
         self.name = details.get("PartitionName")
         self.is_stay_armed = details.get("IsStayArmed")
         self.is_fire_enabled = details.get("IsFireEnabled")

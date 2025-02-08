@@ -1,8 +1,7 @@
 """Total Connect User."""
 
 import logging
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 LOGGER = logging.getLogger(__name__)
 
