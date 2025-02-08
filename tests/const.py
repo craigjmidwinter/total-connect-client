@@ -22,9 +22,9 @@ DEVICE_LIST = []
 DEVICE_LIST.append(DEVICE_INFO_BASIC_1)
 
 LOCATION_INFO_BASIC_NORMAL = {
-    "LocationID": "123456",
+    "LocationID": 123456,
     "LocationName": "Home",
-    "SecurityDeviceID": "987654",
+    "SecurityDeviceID": 987654,
     "PhotoURL": "http://www.example.com/some/path/to/file.jpg",
     "LocationModuleFlags": "Security=1,Video=0,Automation=0,GPS=0,VideoPIR=0",
     "DeviceList": DEVICE_LIST,
@@ -150,6 +150,7 @@ PARTITION_INFO_ARMED_STAY_NIGHT = [PARTITION_ARMED_STAY_NIGHT]
 
 PARTITION_INFO_ARMED_AWAY = [PARTITION_ARMED_AWAY]
 
+HTTP_PARTITIONS_DISARMED = PARTITION_INFO_DISARMED
 PARTITIONS_DISARMED = {"PartitionInfo": PARTITION_INFO_DISARMED}
 PARTITIONS_ARMED_STAY = {"PartitionInfo": PARTITION_INFO_ARMED_STAY}
 PARTITIONS_ARMED_STAY_NIGHT = {"PartitionInfo": PARTITION_INFO_ARMED_STAY_NIGHT}
@@ -254,7 +255,7 @@ RESPONSE_UNKNOWN = {
 }
 
 PARTITION_DETAILS_1 = {
-    "PartitionID": "1",
+    "PartitionID": 1,
     "ArmingState": ArmingState.DISARMED.value,
     "PartitionName": "Test1",
 }
@@ -288,7 +289,7 @@ HTTP_RESPONSE_SESSION_DETAILS = {
         "Locations": LOCATIONS,
         "ModuleFlags": MODULE_FLAGS,
         "UserInfo": USER,
-    }
+    },
 }
 
 HTTP_RESPONSE_SESSION_DETAILS_EMPTY = copy.deepcopy(HTTP_RESPONSE_SESSION_DETAILS)
@@ -310,7 +311,7 @@ HTTP_RESPONSE_CONFIG = {
             "AppID": 16808,
             "BrandName": "totalconnect",
         },
-    ]
+    ],
 }
 
 SESSION_ID = "12345"
@@ -318,14 +319,14 @@ TOKEN_EXPIRATION_TIME = 1200
 HTTP_RESPONSE_TOKEN = {
     "access_token": jwt.encode({"ids": SESSION_ID}, key="key", algorithm="HS256"),
     "refresh_token": "refresh",
-    "expires_in": TOKEN_EXPIRATION_TIME
+    "expires_in": TOKEN_EXPIRATION_TIME,
 }
 
 SESSION_ID_2 = "54321"
 HTTP_RESPONSE_TOKEN_2 = {
     "access_token": jwt.encode({"ids": SESSION_ID_2}, key="key", algorithm="HS256"),
     "refresh_token": "refresh2",
-    "expires_in": TOKEN_EXPIRATION_TIME
+    "expires_in": TOKEN_EXPIRATION_TIME,
 }
 
 HTTP_RESPONSE_BAD_USER_OR_PASSWORD = {
@@ -333,6 +334,39 @@ HTTP_RESPONSE_BAD_USER_OR_PASSWORD = {
     "error_description": "Bad username",
 }
 
-HTTP_RESPONSE_REFRESH_TOKEN_FAILED = {
-    "error": "Invalid session"
+HTTP_RESPONSE_REFRESH_TOKEN_FAILED = {"error": "Invalid session"}
+
+HTTP_RESPONSE_PARTITION_DETAILS = {
+    "Partitions": [PARTITION_DETAILS_1, PARTITION_DETAILS_2]
+}
+
+HTTP_RESPONSE_ZONE_DETAILS = {
+    "ZoneStatus": {
+        "Zones": ZONE_DETAIL_STATUS,
+    }
+}
+
+HTTP_RESPONSE_STATUS_DISARMED = {
+    "PanelStatus": {
+        "Zones": ZONE_INFO,
+        "PromptForImportSecuritySettings": False,
+        "IsAlarmResponded": False,
+        "IsCoverTampered": False,
+        "Bell1SupervisionFailure": False,
+        "Bell2SupervisionFailure": False,
+        "SyncSecDeviceFlag": False,
+        "LastUpdatedTimestampTicks": 7,
+        "ConfigurationSequenceNumber": 8,
+        "IsInACLoss": False,
+        "IsInLowBattery": False,
+        "IsInRfJam": False,
+        "IsInBatteryMissing": False,
+        "Partitions": HTTP_PARTITIONS_DISARMED,
+    },
+    "ArmingState": ArmingState.DISARMED,
+    "IsSensorTrippedAlarm": False,
+    "IsAlarmResponded": False,
+    "IsCoverTampered": False,
+    "Bell1SupervisionFailure": False,
+    "Bell2SupervisionFailure": False,
 }
