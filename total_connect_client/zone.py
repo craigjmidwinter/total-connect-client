@@ -2,7 +2,8 @@
 
 import logging
 from enum import Enum, IntFlag
-from typing import Dict, Any
+from typing import Any, Dict
+
 from .const import PROJECT_URL
 from .exceptions import TotalConnectError
 

@@ -1,8 +1,8 @@
 """Total Connect Client constants."""
 
-from enum import Enum
-from typing import Dict, Any
 import urllib.parse
+from enum import Enum
+from typing import Any, Dict
 
 from .exceptions import BadResultCodeError, ServiceUnavailable
 
@@ -156,20 +156,12 @@ class _ResultCode(Enum):
     """
 
     @staticmethod
-    def from_response(response_dict:Dict[str, Any]):
+    def from_response(response_dict: Dict[str, Any]):
+        value = response_dict.get("ResultCode") or response_dict.get("error")
+        if not value:
+            return _ResultCode.SUCCESS
         try:
-            # SOAP responses put the code in 'ResultCode', HTTP responses put it in 'error'
-            try:
-                value = response_dict["ResultCode"]
-            except KeyError:
-                value = response_dict["error"]
             return _ResultCode(int(value))
-        except (KeyError, TypeError):
-            # sometimes when there are server issues,
-            # it returns empty responses - see issue #228
-            raise ServiceUnavailable(
-                f"Server returned empty response, check server status at {STATUS_URL}"
-            ) from None
         except ValueError:
             raise BadResultCodeError(
                 f"unknown result code {value}", response_dict
@@ -208,7 +200,13 @@ SOAP_API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
 AUTH_CONFIG_ENDPOINT = "https://totalconnect2.com/application.config.json"
 AUTH_TOKEN_ENDPOINT = "https://rs.alarmnet.com/TC2API.Auth/token"
 HTTP_API_ENDPOINT_BASE = "https://rs.alarmnet.com/TC2API.TCResource/"
-def _make_http_endpoint(path: str) -> str:
+
+
+def make_http_endpoint(path: str) -> str:
     return urllib.parse.urljoin(HTTP_API_ENDPOINT_BASE, path)
-HTTP_API_SESSION_DETAILS_ENDPOINT = _make_http_endpoint("api/v3/authentication/sessiondetails")
-HTTP_API_LOGOUT = _make_http_endpoint("api/v3/authentication/logout")
+
+
+HTTP_API_SESSION_DETAILS_ENDPOINT = make_http_endpoint(
+    "api/v3/authentication/sessiondetails"
+)
+HTTP_API_LOGOUT = make_http_endpoint("api/v3/authentication/logout")
