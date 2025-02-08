@@ -15,7 +15,7 @@ from total_connect_client.partition import TotalConnectPartition
 def tests_partition():
     """Test __init__()."""
     test_partition = TotalConnectPartition(PARTITION_DETAILS_1, None)
-    assert test_partition.partitionid == "1"
+    assert test_partition.partitionid == 1
 
     test_partition._update(PARTITION_DISARMED)
     assert test_partition.arming_state.value == PARTITION_DISARMED["ArmingState"]
