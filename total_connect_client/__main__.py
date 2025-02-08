@@ -22,3 +22,5 @@ else:
 TC = TotalConnectClient(USERNAME, PASSWORD)
 
 print(TC)
+
+TC.log_out()
