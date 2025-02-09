@@ -27,7 +27,6 @@ from .const import (
     AUTH_TOKEN_ENDPOINT,
     HTTP_API_LOGOUT,
     HTTP_API_SESSION_DETAILS_ENDPOINT,
-    SOAP_API_ENDPOINT,
     ArmType,
     _ResultCode,
 )
@@ -68,7 +67,6 @@ class TotalConnectClient:
         """Initialize."""
         self.times = {}
         self.time_start = time.time()
-        self.soap_client = None
 
         self.username: str = username
         self.password: str = password
@@ -191,7 +189,6 @@ class TotalConnectClient:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
-    API_ENDPOINT = SOAP_API_ENDPOINT
 
     def _request_with_retries(
         self,

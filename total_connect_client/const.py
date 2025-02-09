@@ -196,7 +196,6 @@ PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
 
 STATUS_URL = "https://status.resideo.com/"
 
-SOAP_API_ENDPOINT = "https://rs.alarmnet.com/TC21api/tc2.asmx?WSDL"
 AUTH_CONFIG_ENDPOINT = "https://totalconnect2.com/application.config.json"
 AUTH_TOKEN_ENDPOINT = "https://rs.alarmnet.com/TC2API.Auth/token"
 HTTP_API_ENDPOINT_BASE = "https://rs.alarmnet.com/TC2API.TCResource/"

@@ -41,3 +41,37 @@ DEBUG:total_connect_client.client:response:
 	json:
 {'ResultCode': 4101, 'ResultData': 'We are unable to connect to the security panel. Please try again later or contact support'}
 ```
+# Other Random Stuff
+
+Request: https://rs.alarmnet.com/TC2API.TCResource/api/v1/notificationLists
+Response: 
+```json
+{'NotificationListCollection': [{'NotificationListID': 4444444, 'NotificationListName': 'Default Group', 'IsNotificationListEnabled': True, 'IsInUse': True, 'AssociatedUsers': [{'UserID': 9876543}]}, {'NotificationListID': 33333333, 'NotificationListName': 'DoorBell Events', 'IsNotificationListEnabled': True, 'IsInUse': True, 'AssociatedUsers': [{'UserID': 9876543}]}], 'ResultCode': 0, 'ResultData': 'Success'}
+```
+
+# Probably unchanging stuff ?
+I don't think any of these results will change on a regular basis
+
+Request: https://rs.alarmnet.com/TC2API.TCResource/api/v1/account/notificationMethods
+Response: 
+```json
+{'NotificationMethods': [{'NotificationMethodID': 0, 'NotificationMethodName': 'None'}, {'NotificationMethodID': 1, 'NotificationMethodName': 'Short Text Email (SMS)'}, {'NotificationMethodID': 2, 'NotificationMethodName': 'Text Email'}, {'NotificationMethodID': 3, 'NotificationMethodName': 'HTML Email'}, {'NotificationMethodID': 4, 'NotificationMethodName': 'Text Email with Attachment(s)'}, {'NotificationMethodID': 5, 'NotificationMethodName': 'HTML Email with Attachment(s)'}, {'NotificationMethodID': 6, 'NotificationMethodName': 'PureSms'}, {'NotificationMethodID': 7, 'NotificationMethodName': 'Push Notification'}], 'ResultCode': 0, 'ResultData': 'Success'}
+```
+
+Request: https://rs.alarmnet.com/TC2API.TCResource/api/v1/services/version
+Response: 
+```json
+{'ResultCode': 0, 'ResultData': 'TC2 API Version 6.26.1.41'}
+```
+
+Request: https://rs.alarmnet.com/TC2API.TCResource/api/v2/interfaceSchema/clientId/16808/clientAppVersion?appVersion=3.41.1.71
+Response: 
+```json
+{'InterfaceSchemaConfigInfo': {'AppleDownloadURL': '', 'AndroidDownloadURL': '', 'LatestSupportedAppVersion': '', 'Whatsnew': '', 'SignalrHubUrl': 'https://rs.alarmnet.com/TC2HubService/SignalRHub', 'GatewayUrl': 'https://rs.alarmnet.com/TC2ApiGateway'}, 'ResultCode': 0, 'ResultData': 'Success'}
+```
+
+Request: https://rs.alarmnet.com/TC2API.TCResource/api/Dashboard
+Response: 
+```json
+{'systemStatus': [{'ServiceId': 1, 'ServiceName': 'Alarm Monitoring', 'Status': 'GOOD', 'Description': 'OPERATIONAL'}, {'ServiceId': 2, 'ServiceName': 'Total Connect', 'Status': 'GOOD', 'Description': 'OPERATIONAL'}, {'ServiceId': 3, 'ServiceName': 'Total Connect Video', 'Status': 'GOOD', 'Description': 'OPERATIONAL'}], 'ResultCode': 0, 'ResultData': 'Success'}
+```

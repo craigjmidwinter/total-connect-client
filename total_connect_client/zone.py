@@ -15,7 +15,7 @@ class ZoneStatus(IntFlag):
 
     NORMAL = 0
     BYPASSED = 1
-    FAULT = 2
+    FAULT = 2  # only returned when Sensor Events are enabled in account
     TROUBLE = 8  # is also Tampered
     TAMPER = 16  # Tamper for ProA7, see #176
     COMMUNICATION_FAILURE = 32  # see #191
