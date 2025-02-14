@@ -153,7 +153,7 @@ class TotalConnectClient:
             raise InvalidSessionError("invalid session ID", response)
         if rc == _ResultCode.CONNECTION_ERROR:
             raise RetryableTotalConnectError("connection error", response)
-        if rc == _ResultCode.FAILED_TO_CONNECT:
+        if rc in (_ResultCode.FAILED_TO_CONNECT, _ResultCode.CANNOT_CONNECT):
             raise RetryableTotalConnectError("failed to connect with panel", response)
         if rc == _ResultCode.BAD_OBJECT_REFERENCE:
             raise RetryableTotalConnectError("bad object reference", response)
