@@ -348,11 +348,20 @@ class TotalConnectClient:
     def _request_token(self) -> None:
         """Request a JSON Web Token (JWT)."""
         # Encrypt username and password and log in to get a JWT with a session ID.
+        def token_updater(token):
+            """Update the token on auto-refresh.
+            
+            Called following successful token auto-refresh by OAuth2Session.
+            """
+            LOGGER.debug("Session token was auto-refreshed")
+
         self._oauth_client = LegacyApplicationClient(client_id=self._client_id)
         self._oauth_session = OAuth2Session(
+            client_id=self._client_id,
             client=self._oauth_client,
             auto_refresh_url=AUTH_TOKEN_ENDPOINT,
             auto_refresh_kwargs={"client_id": self._client_id},
+            token_updater=token_updater
         )
         try:
             self._oauth_session.fetch_token(
@@ -369,8 +378,8 @@ class TotalConnectClient:
                 self.token = None
                 raise
         jwt_token = jwt.decode(
-            self._oauth_session.access_token,
-            algorithms="HS256",
+            jwt=self._oauth_session.access_token,
+            algorithms=["HS256"],
             options={"verify_signature": False},
         )
         self.token = jwt_token["ids"].split(";", 1)[0]
