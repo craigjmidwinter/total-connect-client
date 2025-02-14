@@ -74,7 +74,7 @@ class TotalConnectClient:
         self.auto_bypass_low_battery = auto_bypass_battery
         self.retry_delay = retry_delay
 
-        self.token = None
+        self._logged_in = False
         self._oauth_session = None
         self._oauth_client = None
         self._invalid_credentials = False
@@ -294,8 +294,8 @@ class TotalConnectClient:
     def authenticate(self) -> None:
         """Login to the system.
 
-        Upon success, self.token is a valid credential
-        for further API calls, and self._user and self.locations are valid.
+        Upon success, self._logged_in is True,
+        and self._user and self.locations are valid.
         self.locations will not be refreshed if it was non-empty on entry.
         """
         start_time = time.time()
@@ -353,6 +353,7 @@ class TotalConnectClient:
             
             Called following successful token auto-refresh by OAuth2Session.
             """
+            self._logged_in = True
             LOGGER.debug("Session token was auto-refreshed")
 
         self._oauth_client = LegacyApplicationClient(client_id=self._client_id)
@@ -375,18 +376,18 @@ class TotalConnectClient:
                 self.raise_for_resultcode(json.loads(exc.json))
             except AuthenticationError:
                 self._invalid_credentials = True
-                self.token = None
+                self._logged_in = False
                 raise
         jwt_token = jwt.decode(
             jwt=self._oauth_session.access_token,
             algorithms=["HS256"],
             options={"verify_signature": False},
         )
-        self.token = jwt_token["ids"].split(";", 1)[0]
+        self._logged_in = True
 
     def is_logged_in(self) -> bool:
         """Return true if the client is logged in to Total Connect."""
-        return self.token is not None
+        return self._logged_in
 
     def log_out(self) -> None:
         """Upon return, we are logged out.
@@ -401,7 +402,7 @@ class TotalConnectClient:
                     f"Logout failed with response code {response['ResultCode']}: {response['ResultData']}"
                 )
             LOGGER.info("Logout Successful")
-            self.token = None
+            self._logged_in = False
 
     def get_number_locations(self) -> int:
         """Return the number of locations.
