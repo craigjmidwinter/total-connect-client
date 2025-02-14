@@ -15,7 +15,6 @@ import logging
 import time
 from typing import Any, Callable, Dict
 
-import jwt
 import requests
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
@@ -346,8 +345,7 @@ class TotalConnectClient:
         )
 
     def _request_token(self) -> None:
-        """Request a JSON Web Token (JWT)."""
-        # Encrypt username and password and log in to get a JWT with a session ID.
+        """Request a token using OAuth2."""
         def token_updater(token):
             """Update the token on auto-refresh.
             
@@ -378,11 +376,6 @@ class TotalConnectClient:
                 self._invalid_credentials = True
                 self._logged_in = False
                 raise
-        jwt_token = jwt.decode(
-            jwt=self._oauth_session.access_token,
-            algorithms=["HS256"],
-            options={"verify_signature": False},
-        )
         self._logged_in = True
 
     def is_logged_in(self) -> bool:

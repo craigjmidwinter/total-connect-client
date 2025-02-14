@@ -21,7 +21,6 @@ classifiers = [
 keywords=["alarm", "TotalConnect"]
 dependencies=[
     "pycryptodome>=3.21.0",
-    "pyjwt>=2.10.1",
     "requests-oauthlib>=2.0.0"
 ]
 
