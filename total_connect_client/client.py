@@ -15,7 +15,6 @@ import logging
 import time
 from typing import Any, Callable, Dict
 
-import jwt
 import requests
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
@@ -74,7 +73,7 @@ class TotalConnectClient:
         self.auto_bypass_low_battery = auto_bypass_battery
         self.retry_delay = retry_delay
 
-        self.token = None
+        self._logged_in = False
         self._oauth_session = None
         self._oauth_client = None
         self._invalid_credentials = False
@@ -294,8 +293,8 @@ class TotalConnectClient:
     def authenticate(self) -> None:
         """Login to the system.
 
-        Upon success, self.token is a valid credential
-        for further API calls, and self._user and self.locations are valid.
+        Upon success, self._logged_in is True,
+        and self._user and self.locations are valid.
         self.locations will not be refreshed if it was non-empty on entry.
         """
         start_time = time.time()
@@ -346,13 +345,22 @@ class TotalConnectClient:
         )
 
     def _request_token(self) -> None:
-        """Request a JSON Web Token (JWT)."""
-        # Encrypt username and password and log in to get a JWT with a session ID.
+        """Request a token using OAuth2."""
+        def token_updater(token):
+            """Update the token on auto-refresh.
+            
+            Called following successful token auto-refresh by OAuth2Session.
+            """
+            self._logged_in = True
+            LOGGER.debug("Session token was auto-refreshed")
+
         self._oauth_client = LegacyApplicationClient(client_id=self._client_id)
         self._oauth_session = OAuth2Session(
+            client_id=self._client_id,
             client=self._oauth_client,
             auto_refresh_url=AUTH_TOKEN_ENDPOINT,
             auto_refresh_kwargs={"client_id": self._client_id},
+            token_updater=token_updater
         )
         try:
             self._oauth_session.fetch_token(
@@ -366,18 +374,13 @@ class TotalConnectClient:
                 self.raise_for_resultcode(json.loads(exc.json))
             except AuthenticationError:
                 self._invalid_credentials = True
-                self.token = None
+                self._logged_in = False
                 raise
-        jwt_token = jwt.decode(
-            self._oauth_session.access_token,
-            algorithms="HS256",
-            options={"verify_signature": False},
-        )
-        self.token = jwt_token["ids"].split(";", 1)[0]
+        self._logged_in = True
 
     def is_logged_in(self) -> bool:
         """Return true if the client is logged in to Total Connect."""
-        return self.token is not None
+        return self._logged_in
 
     def log_out(self) -> None:
         """Upon return, we are logged out.
@@ -392,7 +395,7 @@ class TotalConnectClient:
                     f"Logout failed with response code {response['ResultCode']}: {response['ResultData']}"
                 )
             LOGGER.info("Logout Successful")
-            self.token = None
+            self._logged_in = False
 
     def get_number_locations(self) -> int:
         """Return the number of locations.
