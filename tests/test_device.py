@@ -1,16 +1,19 @@
 """Test TotalConnectDevice."""
 
-from const import DEVICE_INFO_BASIC_1
-
+from const import DEVICE_INFO_BASIC_1, REST_RESULT_SESSION_DETAILS, SECURITY_DEVICE_ID
+ 
 from total_connect_client.device import TotalConnectDevice
 
+device_list = REST_RESULT_SESSION_DETAILS["SessionDetailsResult"]["Locations"][0]["DeviceList"]
+# [0] is a ProA7 panel
+# [1] is the built-in camera
+# [2] is a Skybell doorbell
 
-def tests_init():
-    """Test __init__()."""
-    test_device = TotalConnectDevice(DEVICE_INFO_BASIC_1)
-    assert test_device.deviceid == DEVICE_INFO_BASIC_1["DeviceID"]
 
-    # test with missing flags
-    del DEVICE_INFO_BASIC_1["DeviceFlags"]
-    test_device = TotalConnectDevice(DEVICE_INFO_BASIC_1)
-    assert not test_device.flags
+def tests_panel():
+    """Test an alarm panel."""
+    panel = TotalConnectDevice(device_list[0])
+    assert panel.deviceid == SECURITY_DEVICE_ID
+    assert panel.is_doorbell() is False
+
+
