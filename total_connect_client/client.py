@@ -112,7 +112,7 @@ class TotalConnectClient:
         assert not self._locations_unfetched
         return self._locations
 
-    def __str__(self) -> str:
+    def __str__(self) -> str: # pragma: no cover
         """Return a text string that is printable."""
         data = (
             f"CLIENT\n\n"

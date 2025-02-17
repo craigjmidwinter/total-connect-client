@@ -50,7 +50,7 @@ class TotalConnectLocation:
         tcdevs = [TotalConnectDevice(d) for d in dib]
         self.devices = {tcdev.deviceid: tcdev for tcdev in tcdevs}
 
-    def __str__(self) -> str:
+    def __str__(self) -> str: # pragma: no cover
         """Return a text string that is printable."""
         data = (
             f"LOCATION {self.location_id} - {self.location_name}\n\n"

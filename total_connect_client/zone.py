@@ -101,7 +101,7 @@ class TotalConnectZone:
         self._unknown_type_reported = False
         self._update(zone)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str: # pragma: no cover
         """Return a string that is printable."""
         return (
             f"Zone {self.zoneid} - {self.description}\n"
