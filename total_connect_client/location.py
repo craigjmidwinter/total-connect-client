@@ -192,7 +192,6 @@ class TotalConnectLocation:
                 f"Response: {response}. "
             )
             raise
-        LOGGER.debug(f"Usercode {usercode} is duplicate: {response['IsDuplicate']}")
         return response["IsDuplicate"]
 
     def _build_partition_list(self, partition_id: int = 0) -> List[int]:
