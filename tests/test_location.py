@@ -60,6 +60,16 @@ def tests_get_partition_details():
     location.get_partition_details()
     assert len(location.partitions) == 1
 
+    # now test _build_partition_list
+    # if we pass 1 it should be [1]
+    assert location._build_partition_list(1) == [1]
+    # if we pass nothing, it should be [1] because that's the only partition
+    assert location._build_partition_list() == [1]
+    # invalid partition_id should raise exception
+    with raises(TotalConnectError):
+        assert location._build_partition_list(999)
+
+
 
 def tests_get_zone_details():
     """Test get_zone_details function."""
@@ -114,14 +124,3 @@ def tests_usercode():
     assert location.set_usercode("1234") is True
 
 
-def tests_partition_list():
-    """Test _build_partition_list."""
-    client = Mock()
-    location = TotalConnectLocation(result_location, client)
-    # if we pass 1 it should be [1]
-    assert location._build_partition_list(1) == [1]
-    # if we pass nothing, it should be [1] because that's the only partition
-    assert location._build_partition_list() == [1]
-    # invalid partition_id should raise exception
-    with raises(TotalConnectError):
-        assert location._build_partition_list(999)

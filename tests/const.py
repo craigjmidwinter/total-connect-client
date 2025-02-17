@@ -295,25 +295,6 @@ HTTP_RESPONSE_SESSION_DETAILS = {
 HTTP_RESPONSE_SESSION_DETAILS_EMPTY = copy.deepcopy(HTTP_RESPONSE_SESSION_DETAILS)
 HTTP_RESPONSE_SESSION_DETAILS_EMPTY["SessionDetailsResult"]["Locations"] = None
 
-TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
-
-HTTP_RESPONSE_CONFIG = {
-    "RevisionNumber": "1.2.3",
-    "version": "0.0.4",
-    "AppConfig": [
-        {
-            "tc2APIKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6bdkwTazBVt7eIcelDFcfojTC4XwDAfmvVJq9EdjyCa7neeow4tfoWe57oLPkjw+Ge5VEgUOus7aqhywKBTwlmlGUiTpQLUtVuxmam2nG3kvbKA2T6HbWKQfrJsdGitZLgwOIfzjDrIFTUjRiTIV8CYO8rmsLtaQUE20PRGNvesYP1tb7e4wqdGX3J6je/bpbNRwglnarzIEw37JjCsnhZi9iaUOWbHrvrb98MsLqyugvOtCwt/NGntZ8JJeFHLMHpuHu6uM2H+wotvwE1zSNL4+DScp/vpc4Cc55rksIOaOTB8F2OhxpTnlPzcVs6Av8HYEKyrWl4vSAqS5OcIPkQIDAQAB",
-            "tc2ClientId": "9fcfbf759b0b4e5c83cd03cea1d20d59",
-        }
-    ],
-    "brandInfo": [
-        {
-            "AppID": 16808,
-            "BrandName": "totalconnect",
-        },
-    ],
-}
-
 SESSION_ID = "12345"
 TOKEN_EXPIRATION_TIME = 1200
 HTTP_RESPONSE_TOKEN = {
@@ -372,6 +353,24 @@ HTTP_RESPONSE_STATUS_DISARMED = {
 }
 
 ################################################ NEW TEST DATA ##########################################
+
+HTTP_RESPONSE_CONFIG = {
+    "RevisionNumber": "1.2.3",
+    "version": "0.0.4",
+    "AppConfig": [
+        {
+            "tc2APIKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6bdkwTazBVt7eIcelDFcfojTC4XwDAfmvVJq9EdjyCa7neeow4tfoWe57oLPkjw+Ge5VEgUOus7aqhywKBTwlmlGUiTpQLUtVuxmam2nG3kvbKA2T6HbWKQfrJsdGitZLgwOIfzjDrIFTUjRiTIV8CYO8rmsLtaQUE20PRGNvesYP1tb7e4wqdGX3J6je/bpbNRwglnarzIEw37JjCsnhZi9iaUOWbHrvrb98MsLqyugvOtCwt/NGntZ8JJeFHLMHpuHu6uM2H+wotvwE1zSNL4+DScp/vpc4Cc55rksIOaOTB8F2OhxpTnlPzcVs6Av8HYEKyrWl4vSAqS5OcIPkQIDAQAB",
+            "tc2ClientId": "9fcfbf759b0b4e5c83cd03cea1d20d59",
+        }
+    ],
+    "brandInfo": [
+        {
+            "AppID": 16808,
+            "BrandName": "totalconnect",
+        },
+    ],
+}
+
 
 """
 Below are real results from a ProA7Plus panel

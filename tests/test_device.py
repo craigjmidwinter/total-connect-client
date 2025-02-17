@@ -1,6 +1,6 @@
 """Test TotalConnectDevice."""
 
-from const import DEVICE_INFO_BASIC_1, REST_RESULT_SESSION_DETAILS, SECURITY_DEVICE_ID
+from const import REST_RESULT_SESSION_DETAILS, SECURITY_DEVICE_ID
  
 from total_connect_client.device import TotalConnectDevice
 
