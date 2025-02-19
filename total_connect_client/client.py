@@ -19,6 +19,7 @@ import requests
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 from oauthlib.oauth2 import LegacyApplicationClient, OAuth2Error
+import requests.adapters
 from requests_oauthlib import OAuth2Session
 
 from .const import (
@@ -54,6 +55,7 @@ class TotalConnectClient:
 
     TIMEOUT = 60  # seconds until I/O will fail
     MAX_RETRY_ATTEMPTS = 5  # number of times to retry an API call
+    RETRY_ON_HTTP_STATUS_CODES = set([429, 500, 502, 503, 504]) # HTTP status codes indicating server issue
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -75,12 +77,22 @@ class TotalConnectClient:
 
         self._logged_in = False
         self._oauth_session = None
-        self._oauth_client = None
         self._invalid_credentials = False
         self._client_id = None
         self._app_id = None
         self._app_version = None
         self._key_pem = None
+
+        self._raw_http_session = requests.Session()
+        self._raw_http_session.mount(
+            "https://",
+            requests.adapters.HTTPAdapter(
+                max_retries=requests.adapters.Retry(
+                    total=self.MAX_RETRY_ATTEMPTS,
+                    status_forcelist=self.RETRY_ON_HTTP_STATUS_CODES
+                )
+            )
+        )
 
         self._module_flags: Dict[str, str] = {}
         self._user: TotalConnectUser | None = None
@@ -270,6 +282,9 @@ class TotalConnectClient:
                     f"Received HTTP error code {response.status_code} with response:",
                     response.content,
                 )
+                # If we get a status code indicating that the server has a problem, force a retry
+                if response.status_code in self.RETRY_ON_HTTP_STATUS_CODES:
+                    raise RetryableTotalConnectError("Server temporarily unavailable")
             return response.json()
 
         args = {**(params or {}), **(data or {})}
@@ -326,7 +341,7 @@ class TotalConnectClient:
 
     def _get_configuration(self) -> None:
         """Retrieve application configuration for TotalConnect REST API."""
-        response = requests.get(AUTH_CONFIG_ENDPOINT, timeout=self.TIMEOUT)
+        response = self._raw_http_session.get(AUTH_CONFIG_ENDPOINT, timeout=self.TIMEOUT)
         if not response.ok:
             raise ServiceUnavailable(
                 f"Service configuration is not available at {AUTH_CONFIG_ENDPOINT}"
