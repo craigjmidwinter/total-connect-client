@@ -241,6 +241,8 @@ class TotalConnectLocation:
         """Disarm the system. If no partition given, disarm all of them."""
         if partition_id:
             # only check the partition
+            if partition_id not in self.partitions:
+                raise TotalConnectError(f"Requesting to disarm unknown partition {partition_id}")
             if (
                 self.partitions[partition_id].arming_state.is_disarmed()
                 or self.partitions[partition_id].arming_state.is_disarming()
