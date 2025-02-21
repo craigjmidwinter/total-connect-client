@@ -48,7 +48,7 @@ class TotalConnectUser:
 
         return problem
 
-    def __str__(self) -> str:
+    def __str__(self) -> str: # pragma: no cover
         """Return a string that is printable."""
         data = (
             f"Username: {self._username}\n"
