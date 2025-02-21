@@ -62,6 +62,7 @@ class TotalConnectClient:
         usercodes: Dict[str, str] | None = None,
         auto_bypass_battery: bool = False,
         retry_delay: int = 6,  # seconds between retries
+        load_details: bool = True,
     ) -> None:
         """Initialize."""
         self.times = {}
@@ -88,6 +89,7 @@ class TotalConnectClient:
         self._locations_unfetched: Dict[Any, TotalConnectLocation] = {}
 
         self.authenticate()
+        self._get_session_details()
 
         self.times["__init__"] = time.time() - self.time_start
 
@@ -306,22 +308,7 @@ class TotalConnectClient:
         self._get_configuration()
         self._request_token()
 
-        # Retrieve user and location information.
-        if not self._locations:
-            response = self.http_request(
-                endpoint=HTTP_API_SESSION_DETAILS_ENDPOINT,
-                method="GET",
-                params={"appId": self._app_id, "appVersion": self._app_version},
-            )["SessionDetailsResult"]
-            self._module_flags = dict(
-                x.split("=") for x in response["ModuleFlags"].split(",")
-            )
-            self._user = TotalConnectUser(response["UserInfo"])
-            self._locations_unfetched = self._make_locations(response)
-            self._locations = self._locations_unfetched.copy()
-            if not self._locations:
-                raise TotalConnectError("no locations found", response)
-        LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
+        LOGGER.info(f"{self.username} authenticated")
         self.times["authenticate"] = time.time() - start_time
 
     def _get_configuration(self) -> None:
@@ -377,6 +364,24 @@ class TotalConnectClient:
                 self._logged_in = False
                 raise
         self._logged_in = True
+
+    def _get_session_details(self) -> None:
+        """Load all session and location details.  This could take a long time."""
+        # Retrieve user and location information.
+        if not self._locations:
+            response = self.http_request(
+                endpoint=HTTP_API_SESSION_DETAILS_ENDPOINT,
+                method="GET",
+                params={"appId": self._app_id, "appVersion": self._app_version},
+            )["SessionDetailsResult"]
+            self._module_flags = dict(
+                x.split("=") for x in response["ModuleFlags"].split(",")
+            )
+            self._user = TotalConnectUser(response["UserInfo"])
+            self._locations_unfetched = self._make_locations(response)
+            self._locations = self._locations_unfetched.copy()
+            if not self._locations:
+                raise TotalConnectError("no locations found", response)
 
     def is_logged_in(self) -> bool:
         """Return true if the client is logged in to Total Connect."""
