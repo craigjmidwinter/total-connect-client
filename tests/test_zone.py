@@ -359,6 +359,7 @@ def test_unknown_status():
     zone = tcz(zone_unknown, None)
     assert zone.status == 255
 
+
 def test_bypass():
     """Test bypassing a zone."""
     location = Mock()

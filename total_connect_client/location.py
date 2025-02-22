@@ -50,7 +50,7 @@ class TotalConnectLocation:
         tcdevs = [TotalConnectDevice(d) for d in dib]
         self.devices = {tcdev.deviceid: tcdev for tcdev in tcdevs}
 
-    def __str__(self) -> str: # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         """Return a text string that is printable."""
         data = (
             f"LOCATION {self.location_id} - {self.location_name}\n\n"
@@ -242,7 +242,9 @@ class TotalConnectLocation:
         if partition_id:
             # only check the partition
             if partition_id not in self.partitions:
-                raise TotalConnectError(f"Requesting to disarm unknown partition {partition_id}")
+                raise TotalConnectError(
+                    f"Requesting to disarm unknown partition {partition_id}"
+                )
             if (
                 self.partitions[partition_id].arming_state.is_disarmed()
                 or self.partitions[partition_id].arming_state.is_disarming()

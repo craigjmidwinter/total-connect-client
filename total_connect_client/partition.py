@@ -26,7 +26,7 @@ class TotalConnectPartition:
         self.exit_delay_timer = details.get("ExitDelayTimer")
         self._update(details)
 
-    def __str__(self) -> str: # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         """Return a string that is printable."""
         data = (
             f"PARTITION {self.partitionid} - {self.name}\n"

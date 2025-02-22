@@ -1473,6 +1473,7 @@ REST_RESULT_CLEAR_BYPASS = {"ResultCode": 0, "ResultData": "Success"}
 
 REST_RESULT_LOGOUT = {"ResultCode": 0, "ResultData": "Success"}
 
+
 def panel_with_status(state: ArmingState):
     """Return panel fullStatus result with given arming state."""
     RESULT = copy.deepcopy(REST_RESULT_FULL_STATUS)
@@ -1480,6 +1481,7 @@ def panel_with_status(state: ArmingState):
     RESULT["PanelStatus"]["Partitions"][0]["PartitionArmingState"] = state.value
     RESULT["PanelStatus"]["Partitions"][0]["ArmingState"] = state.value
     return RESULT
+
 
 # define various fullStatus results for common tests
 PANEL_STATUS_DISARMED = panel_with_status(ArmingState.DISARMED)

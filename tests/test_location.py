@@ -11,7 +11,9 @@ from const import (
     REST_RESULT_PARTITIONS_ZONES,
     REST_RESULT_SESSION_DETAILS,
     REST_RESULT_VALIDATE_USER_LOCATIONS,
-    PANEL_STATUS_DISARMED, PANEL_STATUS_ARMED_AWAY, RESPONSE_DISARM_SUCCESS
+    PANEL_STATUS_DISARMED,
+    PANEL_STATUS_ARMED_AWAY,
+    RESPONSE_DISARM_SUCCESS,
 )
 from pytest import raises
 
@@ -62,8 +64,6 @@ def tests_get_partition_details():
     client.http_request.return_value = REST_RESULT_PARTITIONS_CONFIG
     location.get_partition_details()
     assert len(location.partitions) == 1
-
-
 
 
 def tests_get_zone_details():
@@ -118,16 +118,20 @@ def tests_usercode():
     client.http_request.return_value = REST_RESULT_VALIDATE_USER_LOCATIONS
     assert location.set_usercode("1234") is True
 
+
 def tests_disarm():
     """Test disarm."""
     client = create_http_client(PANEL_STATUS_ARMED_AWAY)
     location = client.locations[LOCATION_ID]
     assert location.arming_state.is_armed()
 
-
     with requests_mock.Mocker() as rm:
-        rm.put(make_http_endpoint(
-                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/disArm"), json=RESPONSE_DISARM_SUCCESS)
+        rm.put(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/disArm"
+            ),
+            json=RESPONSE_DISARM_SUCCESS,
+        )
 
         # try to disarm a non-existent partition
         with raises(TotalConnectError):
@@ -136,9 +140,12 @@ def tests_disarm():
         # now should work
         location.disarm(1, "1234")
 
-        rm.get(make_http_endpoint(
+        rm.get(
+            make_http_endpoint(
                 f"api/v3/locations/{location.location_id}/partitions/fullStatus"
-            ),json=PANEL_STATUS_DISARMED)
+            ),
+            json=PANEL_STATUS_DISARMED,
+        )
         location.get_panel_meta_data()
         assert location.arming_state.is_disarmed()
 
@@ -147,25 +154,36 @@ def tests_disarm():
         assert location.arming_state.is_disarmed()
 
         # now try just the location
-        rm.get(make_http_endpoint(
+        rm.get(
+            make_http_endpoint(
                 f"api/v3/locations/{location.location_id}/partitions/fullStatus"
-            ),json=PANEL_STATUS_ARMED_AWAY)
+            ),
+            json=PANEL_STATUS_ARMED_AWAY,
+        )
         location.get_panel_meta_data()
         assert location.arming_state.is_armed()
 
-        rm.put(make_http_endpoint(
-                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/disArm"), json=RESPONSE_DISARM_SUCCESS)
+        rm.put(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/disArm"
+            ),
+            json=RESPONSE_DISARM_SUCCESS,
+        )
         location.disarm(usercode="1234")
 
-        rm.get(make_http_endpoint(
+        rm.get(
+            make_http_endpoint(
                 f"api/v3/locations/{location.location_id}/partitions/fullStatus"
-            ),json=PANEL_STATUS_DISARMED)
+            ),
+            json=PANEL_STATUS_DISARMED,
+        )
         location.get_panel_meta_data()
         assert location.arming_state.is_disarmed()
 
         # now should do nothing because already disarmed
         location.disarm(usercode="1234")
         assert location.arming_state.is_disarmed()
+
 
 def tests_arm():
     """Test arm."""
@@ -174,8 +192,12 @@ def tests_arm():
     assert location.arming_state.is_disarmed()
 
     with requests_mock.Mocker() as rm:
-        rm.put(make_http_endpoint(
-                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/arm"), json=RESPONSE_DISARM_SUCCESS)
+        rm.put(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/arm"
+            ),
+            json=RESPONSE_DISARM_SUCCESS,
+        )
 
         # try to arm a non-existent partition
         with raises(TotalConnectError):

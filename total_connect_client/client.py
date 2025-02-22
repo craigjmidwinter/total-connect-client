@@ -419,7 +419,7 @@ class TotalConnectClient:
 
     def _make_locations(
         self, response: Dict[str, Any]
-    ) -> Dict[Any, TotalConnectLocation]:
+    ) -> None:
         """Create dict mapping LocationID to TotalConnectLocation."""
         for locationinfo in response.get("Locations") or []:
             location_id = locationinfo["LocationID"]
