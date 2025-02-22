@@ -38,7 +38,7 @@ total_connect_client = ["cache/*.txt"]
 
 [tool.tox]
 requires = ["tox>=4.24.1"]
-env_list = ["lint", "type", "3.10", "3.11", "3.12", "3.13", ]
+env_list = ["type", "lint", "3.10", "3.11", "3.12", "3.13", ]
 
 [tool.tox.env_run_base]
 description = "Run test under {base_python}"
@@ -62,11 +62,19 @@ commands = [
 ]
 [tool.tox.env.type]
 description = "run type check on code base"
-deps = ["mypy==1.15.0"]
-commands = [["mypy", "-m", "total_connect_client"]]
+deps = ["mypy>=1.15.0", "types-requests>=2.23.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
+commands = [
+    ["mypy", "-p", "tests"],
+]
 
 [tool.ruff]
 
 [tool.ruff.lint]
 
 [tool.coverage]
+
+[tool.mypy]
+
+[[tool.mypy.overrides]]
+module = 'pytest'
+ignore_missing_imports = true
