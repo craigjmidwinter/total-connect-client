@@ -384,8 +384,9 @@ class TotalConnectClient:
 
         if retry:
             if retries>0:
-                self.load_details(retries-1)        
-            LOGGER.warning("Could not load details for all locations.")
+                self.load_details(retries-1)
+            else:
+                LOGGER.warning("Could not load details for all locations.")
 
 
     def is_logged_in(self) -> bool:
