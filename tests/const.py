@@ -45,14 +45,14 @@ ZONE_NORMAL = {
     "ZoneID": "1",
     "ZoneDescription": "Normal",
     "ZoneStatus": ZoneStatus.NORMAL,
-    "PartitionID": "1",
+    "PartitionId": 1,
 }
 
 ZONE_LOW_BATTERY = {
     "ZoneID": "1",
     "ZoneDescription": "Low Battery",
     "ZoneTypeId": ZoneType.SECURITY,
-    "PartitionID": "1",
+    "PartitionId": 1,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.LOW_BATTERY,
 }
@@ -66,7 +66,7 @@ ZONE_INFO_LOW_BATTERY.append(ZONE_LOW_BATTERY)
 ZONES = {"ZoneInfo": ZONE_INFO}
 ZONES_LOW_BATTERY = {"ZoneInfo": ZONE_INFO_LOW_BATTERY}
 ZS_NORMAL = {
-    "PartitionId": "1",
+    "PartitionId": 1,
     "Batterylevel": "-1",
     "Signalstrength": "-1",
     "zoneAdditionalInfo": {"DeviceType": "test"},
@@ -112,7 +112,7 @@ RESPONSE_GET_ZONE_DETAILS_NONE = RESPONSE_GET_ZONE_DETAILS_SUCCESS.copy()
 RESPONSE_GET_ZONE_DETAILS_NONE["ZoneStatus"] = None
 
 PARTITION_DISARMED = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.DISARMED.value,
 }
 
@@ -122,17 +122,17 @@ PARTITION_DISARMED2 = {
 }
 
 PARTITION_ARMED_STAY = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.ARMED_STAY.value,
 }
 
 PARTITION_ARMED_STAY_NIGHT = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.ARMED_STAY_NIGHT.value,
 }
 
 PARTITION_ARMED_AWAY = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.ARMED_AWAY.value,
 }
 
