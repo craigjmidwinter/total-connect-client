@@ -85,7 +85,7 @@ class TotalConnectClient:
 
         self._module_flags: Dict[str, str] = {}
         self._user: TotalConnectUser | None = None
-        self._locations: Dict[Any, TotalConnectLocation] = {}
+        self._locations: Dict[int, TotalConnectLocation] = {}
         self._location_details: Dict[int, bool] = {}
 
         self.authenticate()
