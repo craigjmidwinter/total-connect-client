@@ -101,7 +101,7 @@ class TotalConnectClient:
         """Public access for locations."""
         return self._locations
 
-    def __str__(self) -> str: # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         """Return a text string that is printable."""
         data = (
             f"CLIENT\n\n"
@@ -176,7 +176,6 @@ class TotalConnectClient:
         if rc == _ResultCode.FAILED_TO_BYPASS_ZONE:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
-
 
     def _request_with_retries(
         self,
@@ -320,9 +319,10 @@ class TotalConnectClient:
 
     def _request_token(self) -> None:
         """Request a token using OAuth2."""
+
         def token_updater(token):
             """Update the token on auto-refresh.
-            
+
             Called following successful token auto-refresh by OAuth2Session.
             """
             self._logged_in = True
@@ -334,7 +334,7 @@ class TotalConnectClient:
             client=self._oauth_client,
             auto_refresh_url=AUTH_TOKEN_ENDPOINT,
             auto_refresh_kwargs={"client_id": self._client_id},
-            token_updater=token_updater
+            token_updater=token_updater,
         )
         try:
             self._oauth_session.fetch_token(
@@ -379,15 +379,16 @@ class TotalConnectClient:
                     location.get_zone_details()
                     self._location_details[location_id] = True
                 except Exception:
-                    LOGGER.debug(f"exception during initial fetch of {location_id}: retries remaining {retries}")
+                    LOGGER.debug(
+                        f"exception during initial fetch of {location_id}: retries remaining {retries}"
+                    )
                     retry = True
 
         if retry:
-            if retries>0:
-                self.load_details(retries-1)
+            if retries > 0:
+                self.load_details(retries - 1)
             else:
                 LOGGER.warning("Could not load details for all locations.")
-
 
     def is_logged_in(self) -> bool:
         """Return true if the client is logged in to Total Connect."""
