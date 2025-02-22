@@ -62,6 +62,7 @@ class TotalConnectClient:
         usercodes: Dict[str, str] | None = None,
         auto_bypass_battery: bool = False,
         retry_delay: int = 6,  # seconds between retries
+        load_details: bool = True,
     ) -> None:
         """Initialize."""
         self.times = {}
@@ -84,35 +85,23 @@ class TotalConnectClient:
 
         self._module_flags: Dict[str, str] = {}
         self._user: TotalConnectUser | None = None
-        self._locations: Dict[Any, TotalConnectLocation] = {}
-        self._locations_unfetched: Dict[Any, TotalConnectLocation] = {}
+        self._locations: Dict[int, TotalConnectLocation] = {}
+        self._location_details: Dict[int, bool] = {}
 
         self.authenticate()
+        self._get_session_details()
+
+        if load_details:
+            self.load_details()
 
         self.times["__init__"] = time.time() - self.time_start
 
     @property
     def locations(self) -> Dict[Any, TotalConnectLocation]:
-        """Raises an exception if the panel cannot be reached to retrieve
-        metadata or details. This can be retried later and will succeed
-        if/when the panel becomes reachable.
-        """
-        # to_fetch is needed because items() is invalidated by del
-        to_fetch = list(self._locations_unfetched.items())
-        for locationid, location in to_fetch:
-            try:
-                location.get_partition_details()
-                location.get_zone_details()
-                location.get_panel_meta_data()
-                # if we get here, it has been fetched successfully
-                del self._locations_unfetched[locationid]
-            except Exception:
-                LOGGER.error(f"exception during initial fetch of {locationid}")
-                raise
-        assert not self._locations_unfetched
+        """Public access for locations."""
         return self._locations
 
-    def __str__(self) -> str: # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         """Return a text string that is printable."""
         data = (
             f"CLIENT\n\n"
@@ -187,7 +176,6 @@ class TotalConnectClient:
         if rc == _ResultCode.FAILED_TO_BYPASS_ZONE:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
-
 
     def _request_with_retries(
         self,
@@ -306,22 +294,7 @@ class TotalConnectClient:
         self._get_configuration()
         self._request_token()
 
-        # Retrieve user and location information.
-        if not self._locations:
-            response = self.http_request(
-                endpoint=HTTP_API_SESSION_DETAILS_ENDPOINT,
-                method="GET",
-                params={"appId": self._app_id, "appVersion": self._app_version},
-            )["SessionDetailsResult"]
-            self._module_flags = dict(
-                x.split("=") for x in response["ModuleFlags"].split(",")
-            )
-            self._user = TotalConnectUser(response["UserInfo"])
-            self._locations_unfetched = self._make_locations(response)
-            self._locations = self._locations_unfetched.copy()
-            if not self._locations:
-                raise TotalConnectError("no locations found", response)
-        LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
+        LOGGER.info(f"{self.username} authenticated")
         self.times["authenticate"] = time.time() - start_time
 
     def _get_configuration(self) -> None:
@@ -346,9 +319,10 @@ class TotalConnectClient:
 
     def _request_token(self) -> None:
         """Request a token using OAuth2."""
+
         def token_updater(token):
             """Update the token on auto-refresh.
-            
+
             Called following successful token auto-refresh by OAuth2Session.
             """
             self._logged_in = True
@@ -360,7 +334,7 @@ class TotalConnectClient:
             client=self._oauth_client,
             auto_refresh_url=AUTH_TOKEN_ENDPOINT,
             auto_refresh_kwargs={"client_id": self._client_id},
-            token_updater=token_updater
+            token_updater=token_updater,
         )
         try:
             self._oauth_session.fetch_token(
@@ -377,6 +351,44 @@ class TotalConnectClient:
                 self._logged_in = False
                 raise
         self._logged_in = True
+
+    def _get_session_details(self) -> None:
+        """Load session and location details.  This could take a long time."""
+        response = self.http_request(
+            endpoint=HTTP_API_SESSION_DETAILS_ENDPOINT,
+            method="GET",
+            params={"appId": self._app_id, "appVersion": self._app_version},
+        )["SessionDetailsResult"]
+
+        self._module_flags = dict(
+            x.split("=") for x in response["ModuleFlags"].split(",")
+        )
+        self._user = TotalConnectUser(response["UserInfo"])
+
+        self._make_locations(response)
+        if not self._locations:
+            raise TotalConnectError("no locations found", response)
+
+    def load_details(self, retries=5):
+        """Load details for all locations."""
+        retry = False
+        for location_id, location in self._locations.items():
+            if not self._location_details[location_id]:
+                try:
+                    location.get_partition_details()
+                    location.get_zone_details()
+                    self._location_details[location_id] = True
+                except Exception:
+                    LOGGER.debug(
+                        f"exception during initial fetch of {location_id}: retries remaining {retries}"
+                    )
+                    retry = True
+
+        if retry:
+            if retries > 0:
+                self.load_details(retries - 1)
+            else:
+                LOGGER.warning("Could not load details for all locations.")
 
     def is_logged_in(self) -> bool:
         """Return true if the client is logged in to Total Connect."""
@@ -408,14 +420,10 @@ class TotalConnectClient:
     def _make_locations(
         self, response: Dict[str, Any]
     ) -> Dict[Any, TotalConnectLocation]:
-        """Return a dict mapping LocationID to TotalConnectLocation."""
-        start_time = time.time()
-        new_locations = {}
-
+        """Create dict mapping LocationID to TotalConnectLocation."""
         for locationinfo in response.get("Locations") or []:
             location_id = locationinfo["LocationID"]
             location = TotalConnectLocation(locationinfo, self)
-            new_locations[location_id] = location
 
             location.auto_bypass_low_battery = self.auto_bypass_low_battery
 
@@ -428,11 +436,11 @@ class TotalConnectClient:
             if usercode:
                 location.usercode = usercode
             else:
-                LOGGER.warning(f"no usercode for location {location_id}")
+                LOGGER.debug(f"no usercode for location {location_id}")
                 location.usercode = DEFAULT_USERCODE
 
-        self.times["_make_locations"] = time.time() - start_time
-        return new_locations
+            self._locations[location_id] = location
+            self._location_details[location_id] = False
 
 
 class ArmingHelper:
