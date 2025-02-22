@@ -42,14 +42,14 @@ USER = {
 
 
 ZONE_NORMAL = {
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneDescription": "Normal",
     "ZoneStatus": ZoneStatus.NORMAL,
     "PartitionId": 1,
 }
 
 ZONE_LOW_BATTERY = {
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneDescription": "Low Battery",
     "ZoneTypeId": ZoneType.SECURITY,
     "PartitionId": 1,
@@ -70,7 +70,7 @@ ZS_NORMAL = {
     "Batterylevel": "-1",
     "Signalstrength": "-1",
     "zoneAdditionalInfo": {"DeviceType": "test"},
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,

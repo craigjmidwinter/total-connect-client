@@ -29,7 +29,7 @@ ZONE_BYPASSED = {
 
 ZONE_FAULTED = {
     "ZoneDescription": "Faulted",
-    "ZoneID": "1",
+    "ZoneID": 1,
     "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
