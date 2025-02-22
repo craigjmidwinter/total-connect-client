@@ -85,7 +85,7 @@ class TotalConnectZone:
         """Initialize."""
         self.zoneid = zone.get("ZoneID")
         self._parent_location = parent_location
-        self.partition: str = ""
+        self.partition: int = 0
         self.status: ZoneStatus = ZoneStatus.NORMAL
         self.zone_type_id = None
         self.can_be_bypassed = None
@@ -214,11 +214,7 @@ class TotalConnectZone:
         self.description = zone.get("ZoneDescription")
         # ZoneInfo gives 'PartitionID' but
         # ZoneStatusInfoWithPartitionId gives 'PartitionId'
-        if "PartitionId" in zone:
-            # ...and PartitionId gives an int instead of a string
-            self.partition = str(zone["PartitionId"])
-        else:
-            self.partition = zone.get("PartitionID")
+        self.partition = zone.get("PartitionId") or zone.get("PartitionID")
 
         try:
             status = ZoneStatus(zone.get("ZoneStatus"))

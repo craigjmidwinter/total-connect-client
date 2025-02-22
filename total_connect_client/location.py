@@ -413,27 +413,23 @@ class TotalConnectLocation:
             LOGGER.error(
                 "no zones found: sync your panel using TotalConnect app or website"
             )
-            # PartialResponseError would mean this is retryable without fixing
-            # anything, and this needs fixing
             raise TotalConnectError("no zones found: panel sync required")
 
         for zonedata in zones:
-            zid = (zonedata or {}).get("ZoneID")
-            if not zid:
-                raise PartialResponseError("no ZoneID", zones)
-            zone = self.zones.get(zid)
+            zone_id = zonedata["ZoneID"]
+            zone = self.zones.get(zone_id)
             if zone:
                 zone._update(zonedata)
             else:
                 zone = TotalConnectZone(zonedata, self)
-                self.zones[zid] = zone
+                self.zones[zone_id] = zone
 
             if (
                 zone.is_low_battery()
                 and zone.can_be_bypassed
                 and self.auto_bypass_low_battery
             ):
-                self.zone_bypass(zid)
+                self.zone_bypass(zone_id)
 
     def sync_panel(self) -> None:
         """Syncronize the panel with the TotalConnect server."""

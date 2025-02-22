@@ -76,5 +76,5 @@ commands = [
 [tool.mypy]
 
 [[tool.mypy.overrides]]
-module = 'pytest'
+module = ["pytest", "requests_mock"]
 ignore_missing_imports = true

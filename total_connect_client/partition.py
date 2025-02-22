@@ -15,7 +15,7 @@ class TotalConnectPartition:
     def __init__(self, details: Dict[str, Any], parent):
         """Initialize Partition based on PartitionDetails."""
         self.parent = parent
-        self.partitionid: int = details.get("PartitionID")
+        self.partitionid = details.get("PartitionID")
         self.name = details.get("PartitionName")
         self.is_stay_armed = details.get("IsStayArmed")
         self.is_fire_enabled = details.get("IsFireEnabled")
