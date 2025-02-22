@@ -4,7 +4,7 @@ import urllib.parse
 from enum import Enum
 from typing import Any, Dict
 
-from .exceptions import BadResultCodeError, ServiceUnavailable
+from .exceptions import BadResultCodeError
 
 
 class ArmType(Enum):

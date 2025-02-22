@@ -1,5 +1,4 @@
 """Common test code."""
-from unittest.mock import patch
 
 import requests_mock
 from const import (HTTP_RESPONSE_CONFIG, HTTP_RESPONSE_TOKEN, LOCATION_ID,
