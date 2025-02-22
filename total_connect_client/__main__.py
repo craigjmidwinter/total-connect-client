@@ -21,9 +21,6 @@ else:
 
 TC = TotalConnectClient(USERNAME, PASSWORD)
 
-for location in TC.locations.values():
-    location.get_panel_meta_data()
-
 print(TC)
 
 print(f"Function run times:\n{TC.times_as_string()}")

@@ -377,6 +377,7 @@ class TotalConnectClient:
                 try:
                     location.get_partition_details()
                     location.get_zone_details()
+                    location.get_panel_meta_data()
                     self._location_details[location_id] = True
                 except Exception:
                     LOGGER.debug(
