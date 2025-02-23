@@ -234,9 +234,9 @@ class TotalConnectClient:
                     f"Invalid Session after multiple retries: {err}"
                 ) from err
             LOGGER.info(
-                f"refreshing token: {attempts_remaining} retries remaining"
+                f"re-authenticating: {attempts_remaining} retries remaining"
             )
-            self._oauth_session.refresh_token(token_url=AUTH_TOKEN_ENDPOINT)
+            self.authenticate()
 
         return self._request_with_retries(
             do_request, request_description, attempts_remaining
