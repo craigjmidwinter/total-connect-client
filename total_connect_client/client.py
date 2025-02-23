@@ -234,9 +234,9 @@ class TotalConnectClient:
                     f"Invalid Session after multiple retries: {err}"
                 ) from err
             LOGGER.info(
-                f"reauthenticating {self.username}: {attempts_remaining} retries remaining"
+                f"refreshing token: {attempts_remaining} retries remaining"
             )
-            self.authenticate()
+            self._oauth_session.refresh_token(token_url=AUTH_TOKEN_ENDPOINT)
 
         return self._request_with_retries(
             do_request, request_description, attempts_remaining
@@ -272,8 +272,10 @@ class TotalConnectClient:
                     response.content,
                 )
                 # If we get a status code indicating that the server has a problem, force a retry
+                if response.status_code == 401:
+                    raise InvalidSessionError("Received status code 401 during a request. Requesting new token")
                 if response.status_code in self.RETRY_ON_HTTP_STATUS_CODES:
-                    raise RetryableTotalConnectError("Server temporarily unavailable")
+                    raise RetryableTotalConnectError(f"Server temporarily unavailable. Status code: {response.status_code}")
             return response.json()
 
         args = {**(params or {}), **(data or {})}
