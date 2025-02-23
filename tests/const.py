@@ -42,17 +42,17 @@ USER = {
 
 
 ZONE_NORMAL = {
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneDescription": "Normal",
     "ZoneStatus": ZoneStatus.NORMAL,
-    "PartitionID": "1",
+    "PartitionId": 1,
 }
 
 ZONE_LOW_BATTERY = {
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneDescription": "Low Battery",
     "ZoneTypeId": ZoneType.SECURITY,
-    "PartitionID": "1",
+    "PartitionId": 1,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.LOW_BATTERY,
 }
@@ -66,11 +66,11 @@ ZONE_INFO_LOW_BATTERY.append(ZONE_LOW_BATTERY)
 ZONES = {"ZoneInfo": ZONE_INFO}
 ZONES_LOW_BATTERY = {"ZoneInfo": ZONE_INFO_LOW_BATTERY}
 ZS_NORMAL = {
-    "PartitionId": "1",
+    "PartitionId": 1,
     "Batterylevel": "-1",
     "Signalstrength": "-1",
     "zoneAdditionalInfo": {"DeviceType": "test"},
-    "ZoneID": "1",
+    "ZoneID": 1,
     "ZoneStatus": ZoneStatus.NORMAL,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
@@ -112,7 +112,7 @@ RESPONSE_GET_ZONE_DETAILS_NONE = RESPONSE_GET_ZONE_DETAILS_SUCCESS.copy()
 RESPONSE_GET_ZONE_DETAILS_NONE["ZoneStatus"] = None
 
 PARTITION_DISARMED = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.DISARMED.value,
 }
 
@@ -122,17 +122,17 @@ PARTITION_DISARMED2 = {
 }
 
 PARTITION_ARMED_STAY = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.ARMED_STAY.value,
 }
 
 PARTITION_ARMED_STAY_NIGHT = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.ARMED_STAY_NIGHT.value,
 }
 
 PARTITION_ARMED_AWAY = {
-    "PartitionID": "1",
+    "PartitionId": 1,
     "ArmingState": ArmingState.ARMED_AWAY.value,
 }
 
@@ -295,25 +295,6 @@ HTTP_RESPONSE_SESSION_DETAILS = {
 HTTP_RESPONSE_SESSION_DETAILS_EMPTY = copy.deepcopy(HTTP_RESPONSE_SESSION_DETAILS)
 HTTP_RESPONSE_SESSION_DETAILS_EMPTY["SessionDetailsResult"]["Locations"] = None
 
-TCC_REQUEST_METHOD = "total_connect_client.client.TotalConnectClient.request"
-
-HTTP_RESPONSE_CONFIG = {
-    "RevisionNumber": "1.2.3",
-    "version": "0.0.4",
-    "AppConfig": [
-        {
-            "tc2APIKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6bdkwTazBVt7eIcelDFcfojTC4XwDAfmvVJq9EdjyCa7neeow4tfoWe57oLPkjw+Ge5VEgUOus7aqhywKBTwlmlGUiTpQLUtVuxmam2nG3kvbKA2T6HbWKQfrJsdGitZLgwOIfzjDrIFTUjRiTIV8CYO8rmsLtaQUE20PRGNvesYP1tb7e4wqdGX3J6je/bpbNRwglnarzIEw37JjCsnhZi9iaUOWbHrvrb98MsLqyugvOtCwt/NGntZ8JJeFHLMHpuHu6uM2H+wotvwE1zSNL4+DScp/vpc4Cc55rksIOaOTB8F2OhxpTnlPzcVs6Av8HYEKyrWl4vSAqS5OcIPkQIDAQAB",
-            "tc2ClientId": "9fcfbf759b0b4e5c83cd03cea1d20d59",
-        }
-    ],
-    "brandInfo": [
-        {
-            "AppID": 16808,
-            "BrandName": "totalconnect",
-        },
-    ],
-}
-
 SESSION_ID = "12345"
 TOKEN_EXPIRATION_TIME = 1200
 HTTP_RESPONSE_TOKEN = {
@@ -372,6 +353,24 @@ HTTP_RESPONSE_STATUS_DISARMED = {
 }
 
 ################################################ NEW TEST DATA ##########################################
+
+HTTP_RESPONSE_CONFIG = {
+    "RevisionNumber": "1.2.3",
+    "version": "0.0.4",
+    "AppConfig": [
+        {
+            "tc2APIKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA6bdkwTazBVt7eIcelDFcfojTC4XwDAfmvVJq9EdjyCa7neeow4tfoWe57oLPkjw+Ge5VEgUOus7aqhywKBTwlmlGUiTpQLUtVuxmam2nG3kvbKA2T6HbWKQfrJsdGitZLgwOIfzjDrIFTUjRiTIV8CYO8rmsLtaQUE20PRGNvesYP1tb7e4wqdGX3J6je/bpbNRwglnarzIEw37JjCsnhZi9iaUOWbHrvrb98MsLqyugvOtCwt/NGntZ8JJeFHLMHpuHu6uM2H+wotvwE1zSNL4+DScp/vpc4Cc55rksIOaOTB8F2OhxpTnlPzcVs6Av8HYEKyrWl4vSAqS5OcIPkQIDAQAB",
+            "tc2ClientId": "9fcfbf759b0b4e5c83cd03cea1d20d59",
+        }
+    ],
+    "brandInfo": [
+        {
+            "AppID": 16808,
+            "BrandName": "totalconnect",
+        },
+    ],
+}
+
 
 """
 Below are real results from a ProA7Plus panel
@@ -1473,3 +1472,18 @@ REST_RESULT_VALIDATE_USER_LOCATIONS = {"IsDuplicate": True}
 REST_RESULT_CLEAR_BYPASS = {"ResultCode": 0, "ResultData": "Success"}
 
 REST_RESULT_LOGOUT = {"ResultCode": 0, "ResultData": "Success"}
+
+
+def panel_with_status(state: ArmingState):
+    """Return panel fullStatus result with given arming state."""
+    RESULT = copy.deepcopy(REST_RESULT_FULL_STATUS)
+    RESULT["ArmingState"] = state.value
+    RESULT["PanelStatus"]["Partitions"][0]["PartitionArmingState"] = state.value
+    RESULT["PanelStatus"]["Partitions"][0]["ArmingState"] = state.value
+    return RESULT
+
+
+# define various fullStatus results for common tests
+PANEL_STATUS_DISARMED = panel_with_status(ArmingState.DISARMED)
+PANEL_STATUS_ARMED_AWAY = panel_with_status(ArmingState.ARMED_AWAY)
+PANEL_STATUS_ARMED_STAY = panel_with_status(ArmingState.ARMED_STAY)

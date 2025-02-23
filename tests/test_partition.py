@@ -92,7 +92,7 @@ def tests_proa7_states():
         ArmingState.ARMED_STAY_PROA7,
         ArmingState.ARMED_STAY_BYPASS_PROA7,
         ArmingState.ARMED_STAY_INSTANT_PROA7,
-        ArmingState.ARMED_STAY_INSTANT_BYPASS_PROA7
+        ArmingState.ARMED_STAY_INSTANT_BYPASS_PROA7,
     ]
 
     armed_night = [

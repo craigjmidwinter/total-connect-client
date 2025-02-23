@@ -4,7 +4,7 @@ import urllib.parse
 from enum import Enum
 from typing import Any, Dict
 
-from .exceptions import BadResultCodeError, ServiceUnavailable
+from .exceptions import BadResultCodeError
 
 
 class ArmType(Enum):
@@ -177,7 +177,7 @@ class _ResultCode(Enum):
     FAILED_TO_BYPASS_ZONE = -4504
     COMMAND_FAILED = -4502
     USER_CODE_UNAVAILABLE = -4114
-    CANNOT_CONNECT = -4108 # see #262
+    CANNOT_CONNECT = -4108  # see #262
     USER_CODE_INVALID = -4106
     FAILED_TO_CONNECT = -4104
 

@@ -3,7 +3,6 @@
 import getpass
 import logging
 import sys
-from pprint import pprint
 
 from total_connect_client.client import TotalConnectClient
 
