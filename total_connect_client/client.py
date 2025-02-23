@@ -75,8 +75,8 @@ class TotalConnectClient:
         self.retry_delay = retry_delay
 
         self._logged_in = False
-        self._oauth_session = None
-        self._oauth_client = None
+        self._oauth_session: OAuth2Session | None = None
+        self._oauth_client: LegacyApplicationClient | None = None
         self._invalid_credentials = False
         self._client_id = None
         self._app_id = None
@@ -377,6 +377,7 @@ class TotalConnectClient:
                 try:
                     location.get_partition_details()
                     location.get_zone_details()
+                    location.get_panel_meta_data()
                     self._location_details[location_id] = True
                 except Exception:
                     LOGGER.debug(
@@ -419,7 +420,7 @@ class TotalConnectClient:
 
     def _make_locations(
         self, response: Dict[str, Any]
-    ) -> Dict[Any, TotalConnectLocation]:
+    ) -> None:
         """Create dict mapping LocationID to TotalConnectLocation."""
         for locationinfo in response.get("Locations") or []:
             location_id = locationinfo["LocationID"]

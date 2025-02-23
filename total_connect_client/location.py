@@ -50,7 +50,7 @@ class TotalConnectLocation:
         tcdevs = [TotalConnectDevice(d) for d in dib]
         self.devices = {tcdev.deviceid: tcdev for tcdev in tcdevs}
 
-    def __str__(self) -> str: # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         """Return a text string that is printable."""
         data = (
             f"LOCATION {self.location_id} - {self.location_name}\n\n"
@@ -242,7 +242,9 @@ class TotalConnectLocation:
         if partition_id:
             # only check the partition
             if partition_id not in self.partitions:
-                raise TotalConnectError(f"Requesting to disarm unknown partition {partition_id}")
+                raise TotalConnectError(
+                    f"Requesting to disarm unknown partition {partition_id}"
+                )
             if (
                 self.partitions[partition_id].arming_state.is_disarmed()
                 or self.partitions[partition_id].arming_state.is_disarming()
@@ -411,27 +413,23 @@ class TotalConnectLocation:
             LOGGER.error(
                 "no zones found: sync your panel using TotalConnect app or website"
             )
-            # PartialResponseError would mean this is retryable without fixing
-            # anything, and this needs fixing
             raise TotalConnectError("no zones found: panel sync required")
 
         for zonedata in zones:
-            zid = (zonedata or {}).get("ZoneID")
-            if not zid:
-                raise PartialResponseError("no ZoneID", zones)
-            zone = self.zones.get(zid)
+            zone_id = zonedata["ZoneID"]
+            zone = self.zones.get(zone_id)
             if zone:
                 zone._update(zonedata)
             else:
                 zone = TotalConnectZone(zonedata, self)
-                self.zones[zid] = zone
+                self.zones[zone_id] = zone
 
             if (
                 zone.is_low_battery()
                 and zone.can_be_bypassed
                 and self.auto_bypass_low_battery
             ):
-                self.zone_bypass(zid)
+                self.zone_bypass(zone_id)
 
     def sync_panel(self) -> None:
         """Syncronize the panel with the TotalConnect server."""

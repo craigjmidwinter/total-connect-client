@@ -41,14 +41,12 @@ class TotalConnectUser:
             problem = True
 
         if self._config_admin:
-            LOGGER.warning(
-                f"User {self._username} " "is a configuration administrator."
-            )
+            LOGGER.warning(f"User {self._username} is a configuration administrator.")
             problem = True
 
         return problem
 
-    def __str__(self) -> str: # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         """Return a string that is printable."""
         data = (
             f"Username: {self._username}\n"

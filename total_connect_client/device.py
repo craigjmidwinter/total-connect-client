@@ -24,7 +24,7 @@ class TotalConnectDevice:
         else:
             self.flags = dict(x.split("=") for x in flags.split(","))
 
-    def __str__(self) -> str: # pragma: no cover
+    def __str__(self) -> str:  # pragma: no cover
         """Return a string that is printable."""
         data = (
             f"DEVICE {self.deviceid} - {self.name}\n"

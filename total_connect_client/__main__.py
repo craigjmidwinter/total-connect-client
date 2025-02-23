@@ -23,4 +23,6 @@ TC = TotalConnectClient(USERNAME, PASSWORD)
 
 print(TC)
 
+print(f"Function run times:\n{TC.times_as_string()}")
+
 TC.log_out()
