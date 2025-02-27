@@ -228,7 +228,8 @@ class TotalConnectClient:
                 f"Error connecting to Total Connect service: {attempts_remaining} retries remaining"
             )
             time.sleep(self.retry_delay)
-        except (OAuth2Error, InvalidSessionError) as err:
+        except (OAuth2Error, InvalidSessionError, ValueError) as err:
+            LOGGER.debug(f"Invalid session during request.  Attempts remaining: {attempts_remaining}. Error: {err}")
             if attempts_remaining <= 0:
                 raise ServiceUnavailable(
                     f"Invalid Session after multiple retries: {err}"
