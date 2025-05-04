@@ -110,7 +110,7 @@ class TotalConnectClient:
         self.times["__init__"] = time.time() - self.time_start
 
     @property
-    def locations(self) -> Dict[Any, TotalConnectLocation]:
+    def locations(self) -> Dict[int, TotalConnectLocation]:
         """Public access for locations."""
         return self._locations
 
