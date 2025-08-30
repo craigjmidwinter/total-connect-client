@@ -113,6 +113,9 @@ class ArmingState(Enum):
             ArmingState.ARMED_STAY_NIGHT_BYPASS_PROA7,
             ArmingState.ARMED_STAY_NIGHT_INSTANT_PROA7,
             ArmingState.ARMED_STAY_NIGHT_INSTANT_BYPASS_PROA7,
+            # per #240 STAY_INSTANT and STAY_INSTANT_BYPASS are actually Night
+            ArmingState.ARMED_STAY_INSTANT,
+            ArmingState.ARMED_STAY_INSTANT_BYPASS,
         )
 
     def is_armed(self) -> bool:
