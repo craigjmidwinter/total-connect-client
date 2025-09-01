@@ -8,7 +8,7 @@ and TotalConnectZone (from .location, .partition, and .zone respectively), but
 users of this interface never create those themselves.
 """
 
-from . import client, zone, const
+from . import client, const, zone
 
 TotalConnectClient = client.TotalConnectClient
 ArmingHelper = client.ArmingHelper
@@ -20,6 +20,10 @@ ArmType = const.ArmType
 ResultCode = const._ResultCode
 
 __all__ = [
-    'TotalConnectClient', 'ArmType', 'ArmingState', 'ArmingHelper',
-    'ZoneType', 'ZoneStatus',
+    "TotalConnectClient",
+    "ArmType",
+    "ArmingState",
+    "ArmingHelper",
+    "ZoneType",
+    "ZoneStatus",
 ]

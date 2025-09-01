@@ -1,195 +1,210 @@
-"""Test total_connect_client location."""
+"""Tests TotalConnectLocation."""
 
-import unittest
-from copy import deepcopy
-from unittest.mock import Mock, patch
-
-import pytest
+from unittest.mock import Mock
+import requests_mock
+from common import create_http_client
 from const import (
-    LOCATION_INFO_BASIC_NORMAL,
-    METADATA_DISARMED,
-    METADATA_DISARMED_LOW_BATTERY,
-    RESPONSE_DISARMED,
-    RESPONSE_GET_ZONE_DETAILS_SUCCESS,
+    LOCATION_ID,
+    RESPONSE_UNKNOWN,
+    REST_RESULT_FULL_STATUS,
+    REST_RESULT_PARTITIONS_CONFIG,
+    REST_RESULT_PARTITIONS_ZONES,
+    REST_RESULT_SESSION_DETAILS,
+    REST_RESULT_VALIDATE_USER_LOCATIONS,
+    PANEL_STATUS_DISARMED,
+    PANEL_STATUS_ARMED_AWAY,
+    RESPONSE_DISARM_SUCCESS,
 )
+from pytest import raises
 
-from total_connect_client.const import ArmingState
-from total_connect_client.exceptions import PartialResponseError, TotalConnectError
-from total_connect_client.location import DEFAULT_USERCODE, TotalConnectLocation
+from total_connect_client.const import ArmingState, ArmType
+from total_connect_client.exceptions import (
+    FeatureNotSupportedError,
+    PartialResponseError,
+    TotalConnectError,
+)
+from total_connect_client.location import TotalConnectLocation
+from total_connect_client.const import make_http_endpoint
+
+RESULT_LOCATION = REST_RESULT_SESSION_DETAILS["SessionDetailsResult"]["Locations"][0]
+result_num_zones = len(REST_RESULT_PARTITIONS_ZONES["ZoneStatus"]["Zones"])
 
 
-class TestTotalConnectLocation(unittest.TestCase):
-    """Test TotalConnectLocation."""
+def tests_location_basic():
+    """Tests basic location info."""
+    location = TotalConnectLocation(RESULT_LOCATION, Mock())
+    assert location.location_id == LOCATION_ID
+    assert location.is_ac_loss() is False
+    assert location.is_cover_tampered() is False
+    assert location.is_low_battery() is False
 
-    def setUp(self):
-        """Set up for location testing."""
-        self.auto_bypass_low_battery = False
-        self.location_normal = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
-        self.location_normal._update_status(deepcopy(RESPONSE_DISARMED))
-        self.location_normal._update_partitions(deepcopy(RESPONSE_DISARMED))
-        self.location_normal._update_zones(deepcopy(RESPONSE_DISARMED))
 
-    def tearDown(self):
-        """Tear down."""
-        self.location_normal = None
+def tests_get_partition_details():
+    """Test get_partition_details function."""
 
-    def tests_basic(self):
-        """Test basic attributes were set properly."""
-        self.assertTrue(
-            self.location_normal.location_id == LOCATION_INFO_BASIC_NORMAL["LocationID"]
+    client = Mock()
+    location = TotalConnectLocation(RESULT_LOCATION, client)
+    assert len(location.partitions) == 0
+
+    # first an error
+    client.http_request.return_value = RESPONSE_UNKNOWN
+    client.raise_for_resultcode.side_effect = TotalConnectError()
+    with raises(TotalConnectError):
+        location.get_partition_details()
+    assert len(location.partitions) == 0
+
+    # now with partial data
+    client.http_request.return_value = {}
+    client.raise_for_resultcode.side_effect = None
+    with raises(PartialResponseError):
+        location.get_partition_details()
+    assert len(location.partitions) == 0
+
+    # now it works
+    client.http_request.return_value = REST_RESULT_PARTITIONS_CONFIG
+    location.get_partition_details()
+    assert len(location.partitions) == 1
+
+
+def tests_get_zone_details():
+    """Test get_zone_details function."""
+
+    client = Mock()
+    client.http_request.return_value = REST_RESULT_PARTITIONS_ZONES
+    client.raise_for_resultcode.return_value = None
+
+    location = TotalConnectLocation(RESULT_LOCATION, client)
+    assert len(location.zones) == 0
+
+    # first an error
+    client.raise_for_resultcode.side_effect = FeatureNotSupportedError()
+    location.get_zone_details()
+    assert len(location.zones) == 0
+
+    # now it should work
+    client.raise_for_resultcode.side_effect = None
+    location.get_zone_details()
+    assert len(location.zones) == result_num_zones
+
+
+def tests_get_panel_metadata():
+    """Test status updates."""
+
+    client = Mock()
+    client.http_request.return_value = REST_RESULT_PARTITIONS_ZONES
+    client.raise_for_resultcode.return_value = None
+
+    location = TotalConnectLocation(RESULT_LOCATION, client)
+    location.get_zone_details()
+    assert len(location.zones) == result_num_zones
+    assert location.arming_state == ArmingState.UNKNOWN
+
+    client.http_request.return_value = REST_RESULT_FULL_STATUS
+    location.get_panel_meta_data()
+    assert location.arming_state == ArmingState.DISARMED_ZONE_FAULTED
+
+
+def tests_usercode():
+    """Test usercode fuctions."""
+    client = Mock()
+    location = TotalConnectLocation(RESULT_LOCATION, client)
+
+    # first an error
+    client.http_request.return_value = RESPONSE_UNKNOWN
+    client.raise_for_resultcode.side_effect = TotalConnectError()
+    assert location.set_usercode("1234") is False
+
+    client.raise_for_resultcode.side_effect = None
+    client.http_request.return_value = REST_RESULT_VALIDATE_USER_LOCATIONS
+    assert location.set_usercode("1234") is True
+
+
+def tests_disarm():
+    """Test disarm."""
+    client = create_http_client(PANEL_STATUS_ARMED_AWAY)
+    location = client.locations[LOCATION_ID]
+    assert location.arming_state.is_armed()
+
+    with requests_mock.Mocker() as rm:
+        rm.put(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/disArm"
+            ),
+            json=RESPONSE_DISARM_SUCCESS,
         )
-        lname = LOCATION_INFO_BASIC_NORMAL["LocationName"]
-        self.assertTrue(self.location_normal.location_name == lname)
-        lsdid = LOCATION_INFO_BASIC_NORMAL["SecurityDeviceID"]
-        self.assertTrue(self.location_normal.security_device_id == lsdid)
 
-    def tests_panel(self):
-        """Test panel attributes."""
-        self.assertFalse(self.location_normal.is_low_battery())
-        self.assertFalse(self.location_normal.is_ac_loss())
-        self.assertFalse(self.location_normal.is_cover_tampered())
+        # try to disarm a non-existent partition
+        with raises(TotalConnectError):
+            location.disarm(999, "1234")
 
-    def tests_status(self):
-        """Normal zone."""
-        self.assertFalse(self.location_normal.arming_state.is_arming())
-        self.assertFalse(self.location_normal.arming_state.is_disarming())
-        self.assertTrue(self.location_normal.arming_state.is_disarmed())
-        self.assertFalse(self.location_normal.arming_state.is_armed_away())
-        self.assertFalse(self.location_normal.arming_state.is_armed_custom_bypass())
-        self.assertFalse(self.location_normal.arming_state.is_armed_home())
-        self.assertFalse(self.location_normal.arming_state.is_armed_night())
-        self.assertFalse(self.location_normal.arming_state.is_armed())
-        self.assertFalse(self.location_normal.arming_state.is_pending())
-        self.assertFalse(self.location_normal.arming_state.is_triggered_police())
-        self.assertFalse(self.location_normal.arming_state.is_triggered_fire())
-        self.assertFalse(self.location_normal.arming_state.is_triggered_gas())
-        self.assertFalse(self.location_normal.arming_state.is_triggered())
+        # now should work
+        location.disarm(1, "1234")
 
-        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
-        response = deepcopy(RESPONSE_DISARMED)
-        response["PanelMetadataAndStatus"] = METADATA_DISARMED_LOW_BATTERY
-        loc._update_zones(response)
-        assert loc.zones["1"].is_low_battery() is True
+        rm.get(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/partitions/fullStatus"
+            ),
+            json=PANEL_STATUS_DISARMED,
+        )
+        location.get_panel_meta_data()
+        assert location.arming_state.is_disarmed()
 
-    def tests_update_status_none(self):
-        """Test _update_status with None passed in."""
-        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, self)
-        loc._update_status(deepcopy(RESPONSE_DISARMED))
-        loc._update_partitions(deepcopy(RESPONSE_DISARMED))
-        loc._update_zones(deepcopy(RESPONSE_DISARMED))
+        # now should do nothing because already disarmed
+        location.disarm(1, "1234")
+        assert location.arming_state.is_disarmed()
 
-        self.assertTrue(loc.arming_state.is_disarmed())
-        with pytest.raises(PartialResponseError):
-            loc._update_status(None)
+        # now try just the location
+        rm.get(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/partitions/fullStatus"
+            ),
+            json=PANEL_STATUS_ARMED_AWAY,
+        )
+        location.get_panel_meta_data()
+        assert location.arming_state.is_armed()
 
-        data = deepcopy(RESPONSE_DISARMED)
-        del data["PanelMetadataAndStatus"]["Partitions"]["PartitionInfo"]
-        with pytest.raises(PartialResponseError):
-            loc._update_partitions(data)
-        del data["PanelMetadataAndStatus"]["Partitions"]
-        with pytest.raises(PartialResponseError):
-            loc._update_partitions(data)
+        rm.put(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/disArm"
+            ),
+            json=RESPONSE_DISARM_SUCCESS,
+        )
+        location.disarm(usercode="1234")
 
-        data = deepcopy(RESPONSE_DISARMED)
-        del data["PanelMetadataAndStatus"]["Zones"]["ZoneInfo"]
-        with pytest.raises(TotalConnectError):
-            loc._update_zones(data)
+        rm.get(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/partitions/fullStatus"
+            ),
+            json=PANEL_STATUS_DISARMED,
+        )
+        location.get_panel_meta_data()
+        assert location.arming_state.is_disarmed()
 
-        # See issue #112 when user's system returned zero zones,
-        # and zeep set "Zones" to None
-        data["PanelMetadataAndStatus"]["Zones"] = None
-        with pytest.raises(TotalConnectError):
-            loc._update_zones(data)
-
-        del data["PanelMetadataAndStatus"]["Zones"]
-        with pytest.raises(TotalConnectError):
-            loc._update_zones(data)
-        self.assertTrue(loc.arming_state.is_disarmed())
-
-    def tests_set_zone_details(self):
-        """Test set_zone_details with normal data passed in."""
-        location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, None)
-        location._update_zone_details(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
-        assert len(location.zones) == 1
-
-        location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, None)
-        # "Zones" is None, as seen in #112 and #205
-        response = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
-        response["ZoneStatus"]["Zones"] = None
-        location._update_zone_details(response)
-        assert len(location.zones) == 0
-
-        # "ZoneStatusInfoWithPartitionId" is None
-        location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, None)
-        response = deepcopy(RESPONSE_GET_ZONE_DETAILS_SUCCESS)
-        response["ZoneStatus"]["Zones"] = {"ZoneStatusInfoWithPartitionId": None}
-        location._update_zone_details(response)
-        assert len(location.zones) == 0
-
-    def tests_auto_bypass_low_battery(self):
-        """Test auto bypass of low battery zones."""
-
-        mock_client = Mock()
-        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, mock_client)
-
-        # should not try to bypass by default
-        assert loc.auto_bypass_low_battery is False
-        response = deepcopy(RESPONSE_DISARMED)
-        response["PanelMetadataAndStatus"] = METADATA_DISARMED_LOW_BATTERY
-
-        zbp = "total_connect_client.client.TotalConnectLocation.zone_bypass"
-        with patch(zbp) as mock:
-            loc._update_status(response)
-            loc._update_partitions(response)
-            loc._update_zones(response)
-            assert mock.call_count == 0
-
-        # now set to auto bypass
-        loc.auto_bypass_low_battery = True
-
-        # now update status with a low battery and ensure it is bypassed
-        with patch(zbp) as mock:
-            loc._update_status(response)
-            loc._update_partitions(response)
-            loc._update_zones(response)
-            assert mock.call_count == 1
-
-    def tests_set_usercode(self):
-        """Test set_usercode."""
-
-        mock_client = Mock()
-
-        loc = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, mock_client)
-
-        # should start with default usercode
-        assert loc.usercode == DEFAULT_USERCODE
-
-        # now set it with an invalid code
-        mock_client.validate_usercode.return_value = False
-        assert loc.set_usercode("0000") is False
-        assert loc.usercode == DEFAULT_USERCODE
-        assert mock_client.validate_usercode.call_count == 1
-
-        # now set it with a valid code
-        mock_client.validate_usercode.return_value = True
-        assert loc.set_usercode("1234") is True
-        assert loc.usercode == "1234"
-        assert mock_client.validate_usercode.call_count == 2
+        # now should do nothing because already disarmed
+        location.disarm(usercode="1234")
+        assert location.arming_state.is_disarmed()
 
 
-def tests_update_status():
-    """Test location._update_status()."""
-    location = TotalConnectLocation(LOCATION_INFO_BASIC_NORMAL, Mock())
+def tests_arm():
+    """Test arm."""
+    client = create_http_client(PANEL_STATUS_DISARMED)
+    location = client.locations[LOCATION_ID]
+    assert location.arming_state.is_disarmed()
 
-    # known arming state should not produce an error
-    response = {
-        "PanelMetadataAndStatus": METADATA_DISARMED,
-        "ArmingState": ArmingState.DISARMED,
-    }
-    location._update_status(response)
-    assert location.arming_state == ArmingState.DISARMED
+    with requests_mock.Mocker() as rm:
+        rm.put(
+            make_http_endpoint(
+                f"api/v3/locations/{location.location_id}/devices/{location.security_device_id}/partitions/arm"
+            ),
+            json=RESPONSE_DISARM_SUCCESS,
+        )
 
-    # unknown arming state should produce an error
-    with pytest.raises(TotalConnectError):
-        response["ArmingState"] = 99999
-        location._update_status(response)
+        # try to arm a non-existent partition
+        with raises(TotalConnectError):
+            location.arm(partition_id=999, usercode="1234", arm_type=ArmType.AWAY)
+
+        # now should work
+        location.arm(partition_id=1, usercode="1234", arm_type=ArmType.AWAY)
+
+        # now just the location should work
+        location.arm(usercode="1234", arm_type=ArmType.AWAY)

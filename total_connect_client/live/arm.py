@@ -4,8 +4,8 @@ import getpass
 import logging
 import sys
 
-from ..const import ArmType
 from ..client import TotalConnectClient
+from ..const import ArmType
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 

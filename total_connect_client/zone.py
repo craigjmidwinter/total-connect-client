@@ -2,7 +2,8 @@
 
 import logging
 from enum import Enum, IntFlag
-from typing import Dict, Any
+from typing import Any, Dict
+
 from .const import PROJECT_URL
 from .exceptions import TotalConnectError
 
@@ -14,7 +15,7 @@ class ZoneStatus(IntFlag):
 
     NORMAL = 0
     BYPASSED = 1
-    FAULT = 2
+    FAULT = 2  # only returned when Sensor Events are enabled in account
     TROUBLE = 8  # is also Tampered
     TAMPER = 16  # Tamper for ProA7, see #176
     COMMUNICATION_FAILURE = 32  # see #191
@@ -84,7 +85,7 @@ class TotalConnectZone:
         """Initialize."""
         self.zoneid = zone.get("ZoneID")
         self._parent_location = parent_location
-        self.partition: str = ""
+        self.partition: int = 0
         self.status: ZoneStatus = ZoneStatus.NORMAL
         self.zone_type_id = None
         self.can_be_bypassed = None
@@ -100,7 +101,7 @@ class TotalConnectZone:
         self._unknown_type_reported = False
         self._update(zone)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         """Return a string that is printable."""
         return (
             f"Zone {self.zoneid} - {self.description}\n"
@@ -213,11 +214,7 @@ class TotalConnectZone:
         self.description = zone.get("ZoneDescription")
         # ZoneInfo gives 'PartitionID' but
         # ZoneStatusInfoWithPartitionId gives 'PartitionId'
-        if "PartitionId" in zone:
-            # ...and PartitionId gives an int instead of a string
-            self.partition = str(zone["PartitionId"])
-        else:
-            self.partition = zone.get("PartitionID")
+        self.partition = zone.get("PartitionId") or zone.get("PartitionID")
 
         try:
             status = ZoneStatus(zone.get("ZoneStatus"))

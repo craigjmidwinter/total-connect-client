@@ -21,7 +21,7 @@ from total_connect_client.exceptions import TotalConnectError
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.BYPASSED,
@@ -29,8 +29,8 @@ ZONE_BYPASSED = {
 
 ZONE_FAULTED = {
     "ZoneDescription": "Faulted",
-    "ZoneID": "1",
-    "PartitionId": "1",
+    "ZoneID": 1,
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.FAULT,
@@ -38,7 +38,7 @@ ZONE_FAULTED = {
 
 ZONE_TAMPERED = {
     "ZoneDescription": "Tampered",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.TROUBLE,
@@ -46,7 +46,7 @@ ZONE_TAMPERED = {
 
 ZONE_BYPASSED_LOW_BATTERY = {
     "ZoneDescription": "Bypassed Low Battery",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 65,
@@ -54,7 +54,7 @@ ZONE_BYPASSED_LOW_BATTERY = {
 
 ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneDescription": "Trouble Low Battery",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 72,
@@ -62,7 +62,7 @@ ZONE_TROUBLE_LOW_BATTERY = {
 
 ZONE_TRIGGERED = {
     "ZoneDescription": "Triggered",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.TRIGGERED,
@@ -70,7 +70,7 @@ ZONE_TRIGGERED = {
 
 ZONE_BUTTON = {
     "ZoneDescription": "Button",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
@@ -78,7 +78,7 @@ ZONE_BUTTON = {
 
 ZONE_SMOKE = {
     "ZoneDescription": "Smoke",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.FIRE_SMOKE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
@@ -86,7 +86,7 @@ ZONE_SMOKE = {
 
 ZONE_GAS = {
     "ZoneDescription": "Gas",
-    "PartitionId": "1",
+    "PartitionId": 1,
     "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
@@ -138,7 +138,7 @@ class TestTotalConnectZone(unittest.TestCase):
     def tests_normal(self):
         """Normal zone."""
         zone = tcz(ZS_NORMAL, None)
-        assert zone.partition == "1"
+        assert zone.partition == 1
         assert zone.is_bypassed() is False
         assert zone.is_faulted() is False
         assert zone.is_tampered() is False
@@ -314,7 +314,7 @@ def test_proa7_zones():
 
     zone_medical = {
         "ZoneDescription": "Gas",
-        "PartitionId": "1",
+        "PartitionId": 1,
         "ZoneTypeId": ZoneType.PROA7_MEDICAL,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.TAMPER,
@@ -330,7 +330,7 @@ def test_unknown_type():
     """Test unknown ZoneType."""
     zone_unknown = {
         "ZoneDescription": "Unknown",
-        "PartitionId": "1",
+        "PartitionId": 1,
         "ZoneTypeId": 12345,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.NORMAL,
@@ -345,7 +345,7 @@ def test_unknown_status():
     """Test unknown ZoneStatus."""
     zone_unknown = {
         "ZoneDescription": "Unknown",
-        "PartitionId": "1",
+        "PartitionId": 1,
         "ZoneTypeId": 12345,
         "CanBeBypassed": 0,
     }
@@ -359,12 +359,13 @@ def test_unknown_status():
     zone = tcz(zone_unknown, None)
     assert zone.status == 255
 
+
 def test_bypass():
     """Test bypassing a zone."""
     location = Mock()
     zone_data = {
         "ZoneDescription": "MyZone",
-        "PartitionId": "1",
+        "PartitionId": 1,
         "ZoneTypeId": ZoneType.SECURITY,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.NORMAL,

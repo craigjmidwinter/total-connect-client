@@ -12,34 +12,23 @@ for location in client.locations:
 import base64
 import json
 import logging
-import ssl
-from ssl import SSLContext
 import time
-from importlib import resources as impresources
 from typing import Any, Callable, Dict
-import requests
-import urllib3.poolmanager
-import urllib3.util
-import zeep
-import zeep.cache
-import zeep.transports
-from zeep.exceptions import Fault as ZeepFault
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_v1_5
-from oauthlib.oauth2 import LegacyApplicationClient, TokenExpiredError, OAuth2Error
-from requests_oauthlib import OAuth2Session
-import jwt
 
-from . import cache as cache_folder
+import requests
+from Crypto.Cipher import PKCS1_v1_5
+from Crypto.PublicKey import RSA
+from oauthlib.oauth2 import LegacyApplicationClient, OAuth2Error
+import requests.adapters
+from requests_oauthlib import OAuth2Session
+
 from .const import (
-    ArmType,
-    _ResultCode,
-    SOAP_API_ENDPOINT,
     AUTH_CONFIG_ENDPOINT,
     AUTH_TOKEN_ENDPOINT,
-    HTTP_API_ENDPOINT_BASE,
-    HTTP_API_SESSION_DETAILS_ENDPOINT,
     HTTP_API_LOGOUT,
+    HTTP_API_SESSION_DETAILS_ENDPOINT,
+    ArmType,
+    _ResultCode,
 )
 from .exceptions import (
     AuthenticationError,
@@ -58,36 +47,15 @@ from .user import TotalConnectUser
 
 DEFAULT_USERCODE = "-1"
 
-SCHEMAS_TO_CACHE = {
-    "https://schemas.xmlsoap.org/soap/encoding/": "soap-encodings-schemas.xmlsoap.org.txt",
-}
-
 LOGGER = logging.getLogger(__name__)
-
-
-class _SslContextAdapter(requests.adapters.HTTPAdapter):
-    """Makes Zeep use our ssl_context."""
-
-    def __init__(self, ssl_context: SSLContext, **kwargs) -> None:
-        self.ssl_context = ssl_context
-        super().__init__(**kwargs)
-
-    def init_poolmanager(
-        self, num_pools: int, maxsize: int, block: bool = False
-    ) -> None:
-        self.poolmanager = urllib3.poolmanager.PoolManager(
-            num_pools=num_pools,
-            maxsize=maxsize,
-            block=block,
-            ssl_context=self.ssl_context,
-        )
 
 
 class TotalConnectClient:
     """Client for Total Connect."""
 
     TIMEOUT = 60  # seconds until I/O will fail
-    MAX_RETRY_ATTEMPTS = 5 # number of times to retry an API call
+    MAX_RETRY_ATTEMPTS = 5  # number of times to retry an API call
+    RETRY_ON_HTTP_STATUS_CODES = set([429, 500, 502, 503, 504]) # HTTP status codes indicating server issue
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -96,11 +64,11 @@ class TotalConnectClient:
         usercodes: Dict[str, str] | None = None,
         auto_bypass_battery: bool = False,
         retry_delay: int = 6,  # seconds between retries
+        load_details: bool = True,
     ) -> None:
         """Initialize."""
         self.times = {}
         self.time_start = time.time()
-        self.soap_client = None
 
         self.username: str = username
         self.password: str = password
@@ -108,46 +76,45 @@ class TotalConnectClient:
         self.auto_bypass_low_battery = auto_bypass_battery
         self.retry_delay = retry_delay
 
-        self.token = None
-        self._oauth_session = None
-        self._oauth_client = None
+        self._logged_in = False
+        self._oauth_session: OAuth2Session | None = None
+        self._oauth_client: LegacyApplicationClient | None = None
         self._invalid_credentials = False
         self._client_id = None
         self._app_id = None
         self._app_version = None
         self._key_pem = None
 
+        self._raw_http_session = requests.Session()
+        self._raw_http_session.mount(
+            "https://",
+            requests.adapters.HTTPAdapter(
+                max_retries=requests.adapters.Retry(
+                    total=self.MAX_RETRY_ATTEMPTS,
+                    status_forcelist=self.RETRY_ON_HTTP_STATUS_CODES
+                )
+            )
+        )
+
         self._module_flags: Dict[str, str] = {}
         self._user: TotalConnectUser | None = None
-        self._locations: Dict[Any, TotalConnectLocation] = {}
-        self._locations_unfetched: Dict[Any, TotalConnectLocation] = {}
+        self._locations: Dict[int, TotalConnectLocation] = {}
+        self._location_details: Dict[int, bool] = {}
 
         self.authenticate()
+        self._get_session_details()
+
+        if load_details:
+            self.load_details()
 
         self.times["__init__"] = time.time() - self.time_start
 
     @property
-    def locations(self) -> Dict[Any, TotalConnectLocation]:
-        """Raises an exception if the panel cannot be reached to retrieve
-        metadata or details. This can be retried later and will succeed
-        if/when the panel becomes reachable.
-        """
-        # to_fetch is needed because items() is invalidated by del
-        to_fetch = list(self._locations_unfetched.items())
-        for locationid, location in to_fetch:
-            try:
-                location.get_partition_details()
-                location.get_zone_details()
-                location.get_panel_meta_data()
-                # if we get here, it has been fetched successfully
-                del self._locations_unfetched[locationid]
-            except Exception:
-                LOGGER.error(f"exception during initial fetch of {locationid}")
-                raise
-        assert not self._locations_unfetched
+    def locations(self) -> Dict[int, TotalConnectLocation]:
+        """Public access for locations."""
         return self._locations
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         """Return a text string that is printable."""
         data = (
             f"CLIENT\n\n"
@@ -188,7 +155,7 @@ class TotalConnectClient:
             raise InvalidSessionError("invalid session ID", response)
         if rc == _ResultCode.CONNECTION_ERROR:
             raise RetryableTotalConnectError("connection error", response)
-        if rc == _ResultCode.FAILED_TO_CONNECT:
+        if rc in (_ResultCode.FAILED_TO_CONNECT, _ResultCode.CANNOT_CONNECT):
             raise RetryableTotalConnectError("failed to connect with panel", response)
         if rc == _ResultCode.BAD_OBJECT_REFERENCE:
             raise RetryableTotalConnectError("bad object reference", response)
@@ -223,8 +190,6 @@ class TotalConnectClient:
             raise FailedToBypassZone(rc.name, response)
         raise BadResultCodeError(rc.name, response)
 
-    API_ENDPOINT = SOAP_API_ENDPOINT
-
     def _request_with_retries(
         self,
         do_request: Callable[[], Dict[str, Any]],
@@ -248,15 +213,13 @@ class TotalConnectClient:
         except RetryableTotalConnectError as err:
             if attempts_remaining <= 0:
                 raise
-            msg = (
-                f"{self.username} {request_description} {err.args[0]} on response"
-            )
+            msg = f"{self.username} {request_description} {err.args[0]} on response"
             if is_first_request:
                 LOGGER.info(f"{msg}: {attempts_remaining} retries remaining")
             else:
                 LOGGER.debug(f"{msg}: {attempts_remaining} retries remaining")
             time.sleep(self.retry_delay)
-        except (ZeepFault, requests.RequestException) as err:
+        except requests.RequestException as err:
             if attempts_remaining <= 0:
                 raise ServiceUnavailable(
                     f"Error connecting to Total Connect service: {err}"
@@ -265,67 +228,20 @@ class TotalConnectClient:
                 f"Error connecting to Total Connect service: {attempts_remaining} retries remaining"
             )
             time.sleep(self.retry_delay)
-        except (OAuth2Error, InvalidSessionError) as err:
+        except (OAuth2Error, InvalidSessionError, ValueError) as err:
+            LOGGER.debug(f"Invalid session during request.  Attempts remaining: {attempts_remaining}. Error: {err}")
             if attempts_remaining <= 0:
                 raise ServiceUnavailable(
                     f"Invalid Session after multiple retries: {err}"
                 ) from err
             LOGGER.info(
-                f"reauthenticating {self.username}: {attempts_remaining} retries remaining"
+                f"re-authenticating: {attempts_remaining} retries remaining"
             )
             self.authenticate()
 
-        return self._request_with_retries(do_request, request_description, attempts_remaining)
-
-
-    def request(
-        self,
-        operation_name: str,
-        args: list[Any] | tuple[Any, ...]
-    ) -> Dict[str, Any]:
-        """Send a SOAP request.
-
-        args is a list or tuple defining the parameters to the operation.
-        """
-        if not self.soap_client:
-            # the server doesn't support RFC 5746 secure renegotiation, which
-            # causes OpenSSL to fail by default. here we override the default.
-            # if they fix their server, we should revert this change to ctx.options
-            session = requests.Session()
-            ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-            ctx.options |= 0x04  # ssl.OP_LEGACY_SERVER_CONNECT once that exists
-            session.mount("https://", _SslContextAdapter(ctx))
-            cache = zeep.cache.InMemoryCache()
-            for url, filename in SCHEMAS_TO_CACHE.items():
-                cache_file = impresources.files(cache_folder) / filename
-                with cache_file.open() as file:
-                    cache.add(url, file.read())
-            transport = zeep.transports.Transport(
-                session=session,
-                cache=cache,
-                timeout=self.TIMEOUT,  # for loading WSDL and xsd documents
-                operation_timeout=self.TIMEOUT,  # for operations (POST/GET)
-            )
-            self.soap_client = zeep.Client(SOAP_API_ENDPOINT, transport=transport)
-
-        def _do_soap_request() -> Dict[str, Any]:
-            # Refresh session if needed. If the refresh fails it will throw an InvalidSessionError,
-            # forcing a reauthentication. This is a mildly hacky way of checking if we need a
-            # refresh, the 'add_token' function is generally used to prepare an actual request for
-            # sending. But if we call it directly then it has the useful side-effect of throwing an
-            # exception if our current token is expired.
-            try:
-                self._oauth_client.add_token(HTTP_API_ENDPOINT_BASE)
-            except TokenExpiredError:
-                LOGGER.debug("Session has expired, refreshing now")
-                self._oauth_session.refresh_token(AUTH_TOKEN_ENDPOINT)
-
-            # The first argument is always the session token, keep it up to date in case
-            # it changes.
-            operation_proxy = self.soap_client.service[operation_name]
-            return zeep.helpers.serialize_object(operation_proxy(self.token, *args[1:]))
-
-        return self._request_with_retries(_do_soap_request, f"{operation_name}{args}")
+        return self._request_with_retries(
+            do_request, request_description, attempts_remaining
+        )
 
     def http_request(
         self,
@@ -337,25 +253,36 @@ class TotalConnectClient:
         """Send an HTTP request to a Web API endpoint
 
         method is the HTTP method, e.g. 'GET', 'POST', 'PUT', 'DELETE'
-        params is a dictionary defining the query parameters to add to the endpoint URL
-        data is a dictionary defining the query parameter to encode in the request body
+        params is a dictionary defining the query parameters to add to the endpoint URL (usually with GET)
+        data is a dictionary defining the query parameter to encode in the request body (usually with POST/PUT)
         """
+        LOGGER.debug(
+            f"\n----- http_request -----\n\tendpoint: {endpoint}\n\tmethod: {method}\n\tparams: {params}\n\tdata: {data}\n----- end request -----"
+        )
+
         def _do_http_request() -> Dict[str, Any]:
             response = self._oauth_session.request(
-                method=method,
-                url=endpoint,
-                params=params,
-                data=data
+                method=method, url=endpoint, params=params, data=data
+            )
+            LOGGER.debug(
+                f"\n----- http response -----\n\tok: {response.ok}\n\tstatus code: {response.status_code}\n\tJSON: {response.json()}\n----- end response -----"
             )
             if not response.ok:
                 LOGGER.debug(
                     f"Received HTTP error code {response.status_code} with response:",
-                    response.content
+                    response.content,
                 )
+                # If we get a status code indicating that the server has a problem, force a retry
+                if response.status_code == 401:
+                    raise InvalidSessionError("Received status code 401 during a request. Requesting new token")
+                if response.status_code in self.RETRY_ON_HTTP_STATUS_CODES:
+                    raise RetryableTotalConnectError(f"Server temporarily unavailable. Status code: {response.status_code}")
             return response.json()
 
         args = {**(params or {}), **(data or {})}
-        return self._request_with_retries(_do_http_request, f"{method} {endpoint} ({args})")
+        return self._request_with_retries(
+            _do_http_request, f"{method} {endpoint} ({args})"
+        )
 
     def _encrypt_credential(self, credential: str) -> str:
         # Load the key from the PEM file
@@ -373,8 +300,8 @@ class TotalConnectClient:
     def authenticate(self) -> None:
         """Login to the system.
 
-        Upon success, self.token is a valid credential
-        for further API calls, and self._user and self.locations are valid.
+        Upon success, self._logged_in is True,
+        and self._user and self.locations are valid.
         self.locations will not be refreshed if it was non-empty on entry.
         """
         start_time = time.time()
@@ -386,27 +313,12 @@ class TotalConnectClient:
         self._get_configuration()
         self._request_token()
 
-        # Retrieve user and location information.
-        if not self._locations:
-            response = self.http_request(
-                endpoint=HTTP_API_SESSION_DETAILS_ENDPOINT,
-                method="GET",
-                params={"appId": self._app_id, "appVersion": self._app_version}
-            )["SessionDetailsResult"]
-            self._module_flags = dict(
-                x.split("=") for x in response["ModuleFlags"].split(",")
-            )
-            self._user = TotalConnectUser(response["UserInfo"])
-            self._locations_unfetched = self._make_locations(response)
-            self._locations = self._locations_unfetched.copy()
-            if not self._locations:
-                raise TotalConnectError("no locations found", response)
-        LOGGER.info(f"{self.username} authenticated: {len(self._locations)} locations")
-        self.times["authenticate()"] = time.time() - start_time
+        LOGGER.info(f"{self.username} authenticated")
+        self.times["authenticate"] = time.time() - start_time
 
     def _get_configuration(self) -> None:
         """Retrieve application configuration for TotalConnect REST API."""
-        response = requests.get(AUTH_CONFIG_ENDPOINT, timeout=self.TIMEOUT)
+        response = self._raw_http_session.get(AUTH_CONFIG_ENDPOINT, timeout=self.TIMEOUT)
         if not response.ok:
             raise ServiceUnavailable(
                 f"Service configuration is not available at {AUTH_CONFIG_ENDPOINT}"
@@ -417,58 +329,90 @@ class TotalConnectClient:
         self._app_id = next(
             info for info in config["brandInfo"] if info["BrandName"] == "totalconnect"
         )["AppID"]
-        self._app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
-        self._key_pem = '-----BEGIN PUBLIC KEY-----\n' + key + '\n-----END PUBLIC KEY-----'
+        self._app_version = (
+            config["RevisionNumber"] + "." + config["version"].split(".")[-1]
+        )
+        self._key_pem = (
+            "-----BEGIN PUBLIC KEY-----\n" + key + "\n-----END PUBLIC KEY-----"
+        )
 
     def _request_token(self) -> None:
-        """Request a JSON Web Token (JWT)."""
-        # Encrypt username and password and log in to get a JWT with a session ID.
+        """Request a token using OAuth2."""
+
+        def token_updater(token):
+            """Update the token on auto-refresh.
+
+            Called following successful token auto-refresh by OAuth2Session.
+            """
+            self._logged_in = True
+            LOGGER.debug("Session token was auto-refreshed")
+
         self._oauth_client = LegacyApplicationClient(client_id=self._client_id)
         self._oauth_session = OAuth2Session(
+            client_id=self._client_id,
             client=self._oauth_client,
             auto_refresh_url=AUTH_TOKEN_ENDPOINT,
-            auto_refresh_kwargs={"client_id": self._client_id}
+            auto_refresh_kwargs={"client_id": self._client_id},
+            token_updater=token_updater,
         )
         try:
             self._oauth_session.fetch_token(
                 token_url=AUTH_TOKEN_ENDPOINT,
                 username=self._encrypt_credential(self.username),
                 password=self._encrypt_credential(self.password),
-                client_id=self._client_id
+                client_id=self._client_id,
             )
         except OAuth2Error as exc:
             try:
                 self.raise_for_resultcode(json.loads(exc.json))
             except AuthenticationError:
                 self._invalid_credentials = True
-                self.token = None
+                self._logged_in = False
                 raise
-        jwt_token = jwt.decode(
-            self._oauth_session.access_token,
-            algorithms="HS256",
-            options={"verify_signature": False}
-        )
-        self.token = jwt_token["ids"].split(';', 1)[0]
+        self._logged_in = True
 
-    def validate_usercode(self, device_id: str, usercode: str) -> bool:
-        """Return True if the usercode is valid for the device."""
-        response = self.request(
-            "ValidateUserCodeEx",
-            ({"SessionId": self.token, "DeviceId": device_id, "UserCode": usercode}, )
+    def _get_session_details(self) -> None:
+        """Load session and location details.  This could take a long time."""
+        response = self.http_request(
+            endpoint=HTTP_API_SESSION_DETAILS_ENDPOINT,
+            method="GET",
+            params={"appId": self._app_id, "appVersion": self._app_version},
+        )["SessionDetailsResult"]
+
+        self._module_flags = dict(
+            x.split("=") for x in response["ModuleFlags"].split(",")
         )
-        try:
-            self.raise_for_resultcode(response)
-        except UsercodeInvalid:
-            LOGGER.warning(f"usercode {usercode} invalid for device {device_id}")
-            return False
-        except UsercodeUnavailable:
-            LOGGER.warning(f"usercode {usercode} unavailable for device {device_id}")
-            return False
-        return True
+        self._user = TotalConnectUser(response["UserInfo"])
+
+        self._make_locations(response)
+        if not self._locations:
+            raise TotalConnectError("no locations found", response)
+
+    def load_details(self, retries=5):
+        """Load details for all locations."""
+        retry = False
+        for location_id, location in self._locations.items():
+            if not self._location_details[location_id]:
+                try:
+                    location.get_partition_details()
+                    location.get_zone_details()
+                    location.get_panel_meta_data()
+                    self._location_details[location_id] = True
+                except Exception:
+                    LOGGER.debug(
+                        f"exception during initial fetch of {location_id}: retries remaining {retries}"
+                    )
+                    retry = True
+
+        if retry:
+            if retries > 0:
+                self.load_details(retries - 1)
+            else:
+                LOGGER.warning("Could not load details for all locations.")
 
     def is_logged_in(self) -> bool:
         """Return true if the client is logged in to Total Connect."""
-        return self.token is not None
+        return self._logged_in
 
     def log_out(self) -> None:
         """Upon return, we are logged out.
@@ -476,16 +420,14 @@ class TotalConnectClient:
         Raises TotalConnectError if we still might be logged in.
         """
         if self.is_logged_in():
-            response = self.http_request(
-                endpoint=HTTP_API_LOGOUT,
-                method="POST",
-                params=None
-            )            
+            response = self.http_request(endpoint=HTTP_API_LOGOUT, method="POST")
             self.raise_for_resultcode(response)
             if response["ResultCode"] != 0:
-                raise TotalConnectError(f"Logout failed with response code {response['ResultCode']}: {response['ResultData']}")
+                raise TotalConnectError(
+                    f"Logout failed with response code {response['ResultCode']}: {response['ResultData']}"
+                )
             LOGGER.info("Logout Successful")
-            self.token = None
+            self._logged_in = False
 
     def get_number_locations(self) -> int:
         """Return the number of locations.
@@ -497,15 +439,11 @@ class TotalConnectClient:
 
     def _make_locations(
         self, response: Dict[str, Any]
-    ) -> Dict[Any, TotalConnectLocation]:
-        """Return a dict mapping LocationID to TotalConnectLocation."""
-        start_time = time.time()
-        new_locations = {}
-
+    ) -> None:
+        """Create dict mapping LocationID to TotalConnectLocation."""
         for locationinfo in response.get("Locations") or []:
             location_id = locationinfo["LocationID"]
             location = TotalConnectLocation(locationinfo, self)
-            new_locations[location_id] = location
 
             location.auto_bypass_low_battery = self.auto_bypass_low_battery
 
@@ -518,11 +456,11 @@ class TotalConnectClient:
             if usercode:
                 location.usercode = usercode
             else:
-                LOGGER.warning(f"no usercode for location {location_id}")
+                LOGGER.debug(f"no usercode for location {location_id}")
                 location.usercode = DEFAULT_USERCODE
 
-        self.times["_make_locations()"] = time.time() - start_time
-        return new_locations
+            self._locations[location_id] = location
+            self._location_details[location_id] = False
 
 
 class ArmingHelper:

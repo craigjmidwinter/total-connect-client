@@ -1,8 +1,9 @@
-"""Experimental API calls to find new capability."""
+"""Test your system from the command line."""
 
 import getpass
 import logging
 import sys
+from time import sleep
 
 from total_connect_client.client import TotalConnectClient
 
@@ -21,8 +22,12 @@ else:
 
 TC = TotalConnectClient(USERNAME, PASSWORD)
 
-for location_id, location in TC.locations.items():
-    print(f"{location}")
+for x in range(10000):
+    print(f"request {x}")
+    for location in TC.locations.values():
+        location.get_panel_meta_data()
+    sleep(30)
 
-    # camera
-    location.get_cameras()
+print(f"Function run times:\n{TC.times_as_string()}")
+
+TC.log_out()
