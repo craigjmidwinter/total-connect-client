@@ -31,8 +31,12 @@ If you're having trouble with your system, or find an error message, we may ask 
 
 Do the following steps:
  
-`python3 -m total_connect_client username`
- 
+
+```command-line
+pip install total-connect-client
+python3 -m total_connect_client username
+``` 
+
 If you want to easily put the info into a file for sharing: 
  - `python3 -m total_connect_client username > my_info.txt`
  - Now the file my_info.txt in the same directory will hold all of that information
