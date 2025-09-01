@@ -4,8 +4,11 @@ Information on devices found through testing.
 
 Real Device | DeviceName | DeviceClassID | PanelType | PanelVariant | SecurityPanelTypeID | Notes
 ------------ | - | - | - | - | - | -
-Lynx Touch 7000 | ILP5 | 1 | 8 | 0 | None |
 Vista-21IP | Security Panel | 1 | 2 | 1 | None | #36
+Lynx Plus | Security Panel | 1 | 5 | 1 | None | # 66
+Lynx Touch 7000 | ILP5 | 1 | 8 | 0 | None |
+Lynx Touch 5210 | ILP5 | 1 | 8 | 1 | None | # 85
+LCP500-L | Security System | ? | 10 | 1 | null | # 163
 ProA7Plus | Security System | 1 | 12 | 1 | None | 
 ProA7Plus Z-Wave | Automation  | 3 | None | None | None | #213
 ProA7Plus camera | Built-In Camera  | 6 | None | None | None | #213
