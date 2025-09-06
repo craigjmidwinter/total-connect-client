@@ -513,3 +513,15 @@ class TotalConnectLocation:
             id = video["DeviceID"]
             if id in self.devices:
                 self.devices[id].video_info = video
+
+    def trigger(self) -> None:
+        """Trigger the alarm (experimental)."""
+        result = self.parent.http_request(
+            endpoint=make_http_endpoint(
+                f"api/v1/locations/{self.location_id}/devices/{self.security_device_id}/RemotePanicAlarm"
+            ),
+            method="POST",
+        )
+        LOGGER.debug(f"trigger result:\n{result}")
+        self.parent.raise_for_resultcode(result)
+        LOGGER.info(f"Triggered alarm at {self.location_id}")
