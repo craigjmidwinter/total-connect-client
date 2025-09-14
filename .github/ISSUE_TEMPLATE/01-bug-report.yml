@@ -1,0 +1,55 @@
+name: Bug Report
+description: Help us identify and fix bugs by filling out the details below.
+title: "[BUG]: <short description>"
+labels: [bug, needs-triage]
+assignees: [austinmroczek]
+projects: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please provide as much detail as possible.
+
+  - type: input
+    id: bug-summary
+    attributes:
+      label: Bug Summary
+      description: A brief description of the issue.
+      placeholder: "e.g., 'Alarm reports wrong status'"
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware
+      description: Your alarm hardware model/version.
+      placeholder: "ProA7, Lynx Touch, Vista 21, etc"
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Home Assistant or total_connect_client?
+      multiple: false
+      options:
+        - Home Assistant
+        - total_connect_client
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Version of the software you chose above (Home Assistant or total_connect_client).
+      placeholder: "e.g., 2025.9.2"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+
+  - type: textarea
+    id: other
+    attributes:
+      label: Other information
+      description: Any other information that may be useful, such as additional hardware information (sensors) or a description of what the panel did or didn't do.
