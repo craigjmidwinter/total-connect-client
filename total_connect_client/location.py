@@ -329,20 +329,10 @@ class TotalConnectLocation:
         if _ResultCode.from_response(result) == _ResultCode.FAILED_TO_BYPASS_ZONE:
             raise FailedToBypassZone(f"Failed to bypass zone: {result}")
 
-        # Check if zones were actually bypassed
-        if "Zones" in result:
-            for zone_data in result["Zones"]:
-                zone_id = zone_data["ZoneID"]
-                returned_status = zone_data["ZoneStatus"]
-                if returned_status == ZoneStatus.BYPASSED:
-                    LOGGER.info(f"Zone {zone_id} successfully bypassed")
-                else:
-                    LOGGER.warning(
-                        f"Zone {zone_id} was not bypassed. Returned status: {returned_status} "
-                        f"(expected {ZoneStatus.BYPASSED})"
-                    )
-        else:
-            LOGGER.warning("No zone status information returned from bypass API")
+        # as of 12/31/2025
+        # The API gives ResultCode 0 (success) but returns ZoneStatus 0 (normal) instead of 1 (bypassed)
+        # but the next fullStatus panel update shows the zone as bypassed
+        # so we can't rely on this response to update zone status
 
     def clear_bypass(self) -> None:
         """Clear all bypassed zones."""
