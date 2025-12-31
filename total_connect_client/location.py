@@ -325,7 +325,8 @@ class TotalConnectLocation:
             data={"ZoneIds": valid_zones, "UserCode": int(self.usercode)},
         )
 
-        if self.parent.raise_for_resultcode(result) == _ResultCode.FAILED_TO_BYPASS_ZONE:
+        self.parent.raise_for_resultcode(result)
+        if _ResultCode.from_response(result) == _ResultCode.FAILED_TO_BYPASS_ZONE:
             raise FailedToBypassZone(f"Failed to bypass zone: {result}")
 
         # Check if zones were actually bypassed
@@ -442,7 +443,7 @@ class TotalConnectLocation:
             raise TotalConnectError("no zones found: panel sync required")
 
         for zonedata in zones:
-            zone_id = zonedata["ZoneID"]
+            zone_id = int(zonedata["ZoneID"])
             zone = self.zones.get(zone_id)
             if zone:
                 zone._update(zonedata)

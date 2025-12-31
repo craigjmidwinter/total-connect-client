@@ -258,6 +258,8 @@ class TotalConnectClient:
         )
 
         def _do_http_request() -> Dict[str, Any]:
+            if self._oauth_session is None:
+                raise TotalConnectError("OAuth session not initialized")
             response = self._oauth_session.request(
                 method=method, url=endpoint, params=params, data=data
             )
