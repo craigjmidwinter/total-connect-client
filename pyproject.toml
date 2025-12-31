@@ -1,26 +1,35 @@
 # total_connect_client packaging file
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta:__legacy__"
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name="total_connect_client"
-version="2025.8"
+name = "total_connect_client"
+version = "2025.8"
 authors = [
-  { name="Craig J. Midwinter", email="craig.j.midwinter@gmail.com" },
+  { name = "Craig J. Midwinter", email = "craig.j.midwinter@gmail.com" },
 ]
-description="Interact with Total Connect 2 alarm systems"
-readme = "README.md"
+description = "Interact with Total Connect 2 alarm systems"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { text = "MIT" }
 requires-python = ">=3.10"
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Topic :: Home Automation",
+    "Topic :: Security",
 ]
-keywords=["alarm", "TotalConnect"]
-dependencies=[
-    "pycryptodome>=3.21.0",
+keywords = ["alarm", "TotalConnect"]
+dependencies = [
+    "pycryptodome>=3.23.0",
     "requests-oauthlib>=2.0.0"
 ]
 
@@ -28,53 +37,80 @@ dependencies=[
 "Homepage" = "https://github.com/craigjmidwinter/total-connect-client"
 "Bug Tracker" = "https://github.com/craigjmidwinter/total-connect-client/issues"
 
-[tool.coverage.run]
-omit = [
-    "total_connect_client/live*.py"
-]
+[project.optional-dependencies]
+test = ["pytest>=9.0.2", "pytest-sugar>=1.1.1", "requests_mock>=1.12.1", "pyjwt>=2.10.1"]
+type = ["mypy>=1.15.0", "types-requests>=2.23.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
+lint = ["ruff>=0.9.7", "coverage>=7.6.12"]
+dev = ["total-connect-client[test,type,lint]", "tox>=4.32.0"]
 
 [tool.setuptools.package-data]
 total_connect_client = ["cache/*.txt"]
 
-[tool.tox]
-requires = ["tox>=4.24.1"]
-env_list = ["type", "lint", "3.10", "3.11", "3.12", "3.13", ]
-
-[tool.tox.env_run_base]
-description = "Run test under {base_python}"
-deps = [
-    "-r{toxinidir}/requirements.txt",
-    "pyjwt>=2.10.1",
-    "pytest>=8.3.4",
-    "pytest-sugar>=1.0.0",
-    "requests_mock>=1.3.0",
-
+[tool.coverage.run]
+branch = true
+source = ["total_connect_client"]
+omit = [
+    "total_connect_client/live*.py",
+    "tests/*"
 ]
-commands = [["pytest"]]
 
-
-[tool.tox.env.lint]
-deps = ["ruff>=0.9.7", "coverage>=7.6.12",]
-ignore_errors = true
-commands = [
-    ["ruff", "check", "--fix","total_connect_client", "tests"],
-    ["coverage", "report", "-m"]
-]
-[tool.tox.env.type]
-description = "run type check on code base"
-deps = ["mypy>=1.15.0", "types-requests>=2.23.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
-commands = [
-    ["mypy", "-p", "tests"],
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "raise AssertionError",
+    "raise NotImplementedError",
 ]
 
 [tool.ruff]
+target-version = "py310"
+line-length = 100
 
 [tool.ruff.lint]
-
-[tool.coverage]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = ["E501"]  # Line too long (handled by formatter)
 
 [tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = ["pytest", "requests_mock"]
 ignore_missing_imports = true
+
+[tool.tox]
+env_list = ["py{310,311,312,313}", "type", "lint"]
+
+[tool.tox.env_run_base]
+description = "Run tests under {base_python}"
+deps = ["total-connect-client[test]"]
+allowlist_externals = ["pytest"]
+commands = [["pytest", "-xvs"]]
+
+[tool.tox.env.lint]
+deps = ["total-connect-client[lint]"]
+allowlist_externals = ["ruff", "coverage"]
+commands = [
+    ["ruff", "check", "total_connect_client", "tests"],
+    ["ruff", "format", "--check", "total_connect_client", "tests"],
+    ["coverage", "run", "-m", "pytest"],
+    ["coverage", "report"],
+]
+
+[tool.tox.env.type]
+description = "Run type checking on code base"
+deps = ["total-connect-client[type]"]
+allowlist_externals = ["mypy"]
+commands = [["mypy", "total_connect_client", "tests"]]
