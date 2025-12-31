@@ -423,7 +423,7 @@ class TotalConnectLocation:
             )
             raise TotalConnectError(f"unknown location ArmingState {astate} in {result}") from None
 
-    def _update_partitions(self, partitions: dict[str, Any]) -> None:
+    def _update_partitions(self, partitions: list[dict[str, Any]]) -> None:
         """Update partition info from Partitions."""
         # loop through partitions and update
         # NOTE: do not use keys because they don't line up with PartitionID
@@ -436,7 +436,7 @@ class TotalConnectLocation:
             else:
                 LOGGER.warning(f"Update provided for unknown partion {partition_id}")
 
-    def _update_zones(self, zones: dict[str, Any]) -> None:
+    def _update_zones(self, zones: list[dict[str, Any]]) -> None:
         """Update zone info from Zones."""
         if not zones:
             LOGGER.error("no zones found: sync your panel using TotalConnect app or website")
