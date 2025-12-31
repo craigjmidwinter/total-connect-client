@@ -195,7 +195,7 @@ class TotalConnectClient:
         do_request: Callable[[], Dict[str, Any]],
         request_description: str,
         attempts_remaining: int = MAX_RETRY_ATTEMPTS,
-    ):
+    ) -> Dict[str, Any]:
         """Call a given request function and handle retries for temporary errors and authentication
         problems."""
         is_first_request = attempts_remaining == self.MAX_RETRY_ATTEMPTS
@@ -339,7 +339,7 @@ class TotalConnectClient:
     def _request_token(self) -> None:
         """Request a token using OAuth2."""
 
-        def token_updater(token):
+        def token_updater(token: Any) -> None:
             """Update the token on auto-refresh.
 
             Called following successful token auto-refresh by OAuth2Session.
@@ -388,7 +388,7 @@ class TotalConnectClient:
         if not self._locations:
             raise TotalConnectError("no locations found", response)
 
-    def load_details(self, retries=5):
+    def load_details(self, retries: int = 5) -> None:
         """Load details for all locations."""
         retry = False
         for location_id, location in self._locations.items():
@@ -473,7 +473,7 @@ class ArmingHelper:
        Example: ArmingHelper(partition).arm_away()
     """
 
-    def __init__(self, partition_or_location) -> None:
+    def __init__(self, partition_or_location: Any) -> None:
         """Initialize ArmingHelper."""
         self.armable = partition_or_location
 
