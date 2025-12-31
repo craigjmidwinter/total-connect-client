@@ -174,7 +174,7 @@ class TestTotalConnectZone(unittest.TestCase):
         """Test updates to the wrong zone."""
         zone_temp = ZS_NORMAL.copy()
         zone_temp["ZoneID"] = "99"
-        with pytest.raises(Exception):
+        with pytest.raises(TotalConnectError):
             assert self.zone_normal._update(zone_temp)
 
     def tests_bypassed(self):
