@@ -1,29 +1,36 @@
 """Total Connect Partition."""
 
 import logging
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Final
 
 from .const import PROJECT_URL, ArmingState, ArmType
 from .exceptions import PartialResponseError, TotalConnectError
 
-LOGGER = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from .location import TotalConnectLocation
+
+LOGGER: Final = logging.getLogger(__name__)
 
 
 class TotalConnectPartition:
     """Partition class for Total Connect."""
 
-    def __init__(self, details: Dict[str, Any], parent):
+    def __init__(self, details: dict[str, Any], parent: "TotalConnectLocation"):
         """Initialize Partition based on PartitionDetails."""
-        self.parent = parent
-        self.partitionid = details.get("PartitionID")
-        self.name = details.get("PartitionName")
-        self.is_stay_armed = details.get("IsStayArmed")
-        self.is_fire_enabled = details.get("IsFireEnabled")
-        self.is_common_enabled = details.get("IsCommonEnabled")
-        self.is_locked = details.get("IsLocked")
-        self.is_new_partition = details.get("IsNewPartition")
-        self.is_night_stay_enabled = details.get("IsNightStayEnabled")
-        self.exit_delay_timer = details.get("ExitDelayTimer")
+        self.parent: TotalConnectLocation = parent
+        partition_id = details.get("PartitionID")
+        if partition_id is None:
+            raise TotalConnectError("PartitionID is required")
+        self.partitionid: int = partition_id
+        self.name: str | None = details.get("PartitionName")
+        self.is_stay_armed: bool | None = details.get("IsStayArmed")
+        self.is_fire_enabled: bool | None = details.get("IsFireEnabled")
+        self.is_common_enabled: bool | None = details.get("IsCommonEnabled")
+        self.is_locked: bool | None = details.get("IsLocked")
+        self.is_new_partition: bool | None = details.get("IsNewPartition")
+        self.is_night_stay_enabled: bool | None = details.get("IsNightStayEnabled")
+        self.exit_delay_timer: int | None = details.get("ExitDelayTimer")
+        self.arming_state: ArmingState  # Set by _update()
         self._update(details)
 
     def __str__(self) -> str:  # pragma: no cover
@@ -47,8 +54,8 @@ class TotalConnectPartition:
         """Disarm the partition."""
         self.parent.disarm(self.partitionid, usercode)
 
-    def _update(self, info: Dict[str, Any]) -> None:
-        """Update partition based on PartitionInfo."""
+    def _update(self, info: dict[str, Any]) -> None:
+        """Update partition state from PartitionInfo data."""
         astate = (info or {}).get("ArmingState")
         if astate is None:
             raise PartialResponseError("no ArmingState")
@@ -58,6 +65,4 @@ class TotalConnectPartition:
             LOGGER.error(
                 f"unknown partition ArmingState {astate} in {info}: report at {PROJECT_URL}/issues"
             )
-            raise TotalConnectError(
-                f"unknown partition ArmingState {astate} in {info}"
-            ) from None
+            raise TotalConnectError(f"unknown partition ArmingState {astate} in {info}") from None

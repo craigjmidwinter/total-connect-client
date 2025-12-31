@@ -1,9 +1,10 @@
 """Test TotalConnectClient."""
 
 import requests_mock
-from pytest import raises
 from common import create_http_client
-from const import REST_RESULT_LOGOUT, RESPONSE_UNKNOWN
+from const import RESPONSE_UNKNOWN, REST_RESULT_LOGOUT
+from pytest import raises
+
 from total_connect_client.const import HTTP_API_LOGOUT
 from total_connect_client.exceptions import TotalConnectError
 

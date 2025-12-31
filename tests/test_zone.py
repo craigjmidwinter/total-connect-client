@@ -7,17 +7,17 @@ import pytest
 from const import (
     ZONE_LOW_BATTERY,
     ZONE_STATUS_LYRIC_CONTACT,
-    ZONE_STATUS_LYRIC_LOCAL_ALARM,
     ZONE_STATUS_LYRIC_KEYPAD,
+    ZONE_STATUS_LYRIC_LOCAL_ALARM,
     ZONE_STATUS_LYRIC_MOTION,
     ZONE_STATUS_LYRIC_POLICE,
     ZONE_STATUS_LYRIC_TEMP,
     ZS_NORMAL,
 )
 
-from total_connect_client.zone import ZoneStatus, ZoneType
-from total_connect_client.zone import TotalConnectZone as tcz
 from total_connect_client.exceptions import TotalConnectError
+from total_connect_client.zone import TotalConnectZone as tcz
+from total_connect_client.zone import ZoneStatus, ZoneType
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",
@@ -25,6 +25,7 @@ ZONE_BYPASSED = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.BYPASSED,
+    "ZoneID": 1,
 }
 
 ZONE_FAULTED = {
@@ -42,6 +43,7 @@ ZONE_TAMPERED = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.TROUBLE,
+    "ZoneID": 1,
 }
 
 ZONE_BYPASSED_LOW_BATTERY = {
@@ -50,6 +52,7 @@ ZONE_BYPASSED_LOW_BATTERY = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 65,
+    "ZoneID": 1,
 }
 
 ZONE_TROUBLE_LOW_BATTERY = {
@@ -58,6 +61,7 @@ ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 72,
+    "ZoneID": 1,
 }
 
 ZONE_TRIGGERED = {
@@ -66,6 +70,7 @@ ZONE_TRIGGERED = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.TRIGGERED,
+    "ZoneID": 1,
 }
 
 ZONE_BUTTON = {
@@ -74,6 +79,7 @@ ZONE_BUTTON = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneID": 1,
 }
 
 ZONE_SMOKE = {
@@ -82,6 +88,7 @@ ZONE_SMOKE = {
     "ZoneTypeId": ZoneType.FIRE_SMOKE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneID": 1,
 }
 
 ZONE_GAS = {
@@ -90,6 +97,7 @@ ZONE_GAS = {
     "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneID": 1,
 }
 
 
@@ -98,23 +106,24 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def setUp(self):
         """Test setup."""
-        self.zone_normal = tcz(ZS_NORMAL, None)
-        self.zone_bypassed = tcz(ZONE_BYPASSED, None)
-        self.zone_faulted = tcz(ZONE_FAULTED, None)
-        self.zone_tampered = tcz(ZONE_TAMPERED, None)
-        self.zone_low_battery = tcz(ZONE_LOW_BATTERY, None)
-        self.zone_bypassed_low_battery = tcz(ZONE_BYPASSED_LOW_BATTERY, None)
-        self.zone_trouble_low_battery = tcz(ZONE_TROUBLE_LOW_BATTERY, None)
-        self.zone_triggered = tcz(ZONE_TRIGGERED, None)
-        self.zone_button = tcz(ZONE_BUTTON, None)
-        self.zone_smoke = tcz(ZONE_SMOKE, None)
-        self.zone_gas = tcz(ZONE_GAS, None)
-        self.zone_lyric_contact = tcz(ZONE_STATUS_LYRIC_CONTACT, None)
-        self.zone_lyric_motion = tcz(ZONE_STATUS_LYRIC_MOTION, None)
-        self.zone_lyric_police = tcz(ZONE_STATUS_LYRIC_POLICE, None)
-        self.zone_lyric_temp = tcz(ZONE_STATUS_LYRIC_TEMP, None)
-        self.zone_lyric_keypad = tcz(ZONE_STATUS_LYRIC_KEYPAD, None)
-        self.zone_lyric_local_alarm = tcz(ZONE_STATUS_LYRIC_LOCAL_ALARM, None)
+        location = Mock()
+        self.zone_normal = tcz(ZS_NORMAL, location)
+        self.zone_bypassed = tcz(ZONE_BYPASSED, location)
+        self.zone_faulted = tcz(ZONE_FAULTED, location)
+        self.zone_tampered = tcz(ZONE_TAMPERED, location)
+        self.zone_low_battery = tcz(ZONE_LOW_BATTERY, location)
+        self.zone_bypassed_low_battery = tcz(ZONE_BYPASSED_LOW_BATTERY, location)
+        self.zone_trouble_low_battery = tcz(ZONE_TROUBLE_LOW_BATTERY, location)
+        self.zone_triggered = tcz(ZONE_TRIGGERED, location)
+        self.zone_button = tcz(ZONE_BUTTON, location)
+        self.zone_smoke = tcz(ZONE_SMOKE, location)
+        self.zone_gas = tcz(ZONE_GAS, location)
+        self.zone_lyric_contact = tcz(ZONE_STATUS_LYRIC_CONTACT, location)
+        self.zone_lyric_motion = tcz(ZONE_STATUS_LYRIC_MOTION, location)
+        self.zone_lyric_police = tcz(ZONE_STATUS_LYRIC_POLICE, location)
+        self.zone_lyric_temp = tcz(ZONE_STATUS_LYRIC_TEMP, location)
+        self.zone_lyric_keypad = tcz(ZONE_STATUS_LYRIC_KEYPAD, location)
+        self.zone_lyric_local_alarm = tcz(ZONE_STATUS_LYRIC_LOCAL_ALARM, location)
 
     def tearDown(self):
         """Tear down."""
@@ -137,7 +146,8 @@ class TestTotalConnectZone(unittest.TestCase):
 
     def tests_normal(self):
         """Normal zone."""
-        zone = tcz(ZS_NORMAL, None)
+        location = Mock()
+        zone = tcz(ZS_NORMAL, location)
         assert zone.partition == 1
         assert zone.is_bypassed() is False
         assert zone.is_faulted() is False
@@ -164,7 +174,7 @@ class TestTotalConnectZone(unittest.TestCase):
         """Test updates to the wrong zone."""
         zone_temp = ZS_NORMAL.copy()
         zone_temp["ZoneID"] = "99"
-        with pytest.raises(Exception):
+        with pytest.raises(TotalConnectError):
             assert self.zone_normal._update(zone_temp)
 
     def tests_bypassed(self):
@@ -318,6 +328,7 @@ def test_proa7_zones():
         "ZoneTypeId": ZoneType.PROA7_MEDICAL,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.TAMPER,
+        "ZoneID": 1,
     }
 
     zone = tcz(zone_medical, None)
@@ -334,6 +345,7 @@ def test_unknown_type():
         "ZoneTypeId": 12345,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.NORMAL,
+        "ZoneID": 1,
     }
 
     zone = tcz(zone_unknown, None)
@@ -348,6 +360,7 @@ def test_unknown_status():
         "PartitionId": 1,
         "ZoneTypeId": 12345,
         "CanBeBypassed": 0,
+        "ZoneID": 1,
     }
 
     # invalid status (i.e. None or a string) should raise exception
@@ -369,6 +382,7 @@ def test_bypass():
         "ZoneTypeId": ZoneType.SECURITY,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.NORMAL,
+        "ZoneID": 1,
     }
 
     # should do nothing if zone cannot be bypassed

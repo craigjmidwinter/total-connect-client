@@ -1,9 +1,10 @@
 """Testing constants."""
 
 import copy
+
 import jwt
 
-from total_connect_client import ArmingState, ZoneType, ZoneStatus
+from total_connect_client import ArmingState, ZoneStatus, ZoneType
 from total_connect_client.const import _ResultCode
 
 PASSWORD_BAD = "none"
@@ -317,9 +318,7 @@ HTTP_RESPONSE_BAD_USER_OR_PASSWORD = {
 
 HTTP_RESPONSE_REFRESH_TOKEN_FAILED = {"error": "Invalid session"}
 
-HTTP_RESPONSE_PARTITION_DETAILS = {
-    "Partitions": [PARTITION_DETAILS_1, PARTITION_DETAILS_2]
-}
+HTTP_RESPONSE_PARTITION_DETAILS = {"Partitions": [PARTITION_DETAILS_1, PARTITION_DETAILS_2]}
 
 HTTP_RESPONSE_ZONE_DETAILS = {
     "ZoneStatus": {

@@ -2,11 +2,10 @@
 
 import pytest
 import requests_mock
-
 from const import (
     HTTP_RESPONSE_CONFIG,
-    HTTP_RESPONSE_TOKEN,
     HTTP_RESPONSE_SESSION_DETAILS,
+    HTTP_RESPONSE_TOKEN,
 )
 
 from total_connect_client.const import (

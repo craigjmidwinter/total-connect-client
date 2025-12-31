@@ -2,12 +2,15 @@
 
 import logging
 from enum import Enum, IntFlag
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Final
 
 from .const import PROJECT_URL
 from .exceptions import TotalConnectError
 
-LOGGER = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from .location import TotalConnectLocation
+
+LOGGER: Final = logging.getLogger(__name__)
 
 
 class ZoneStatus(IntFlag):
@@ -81,24 +84,28 @@ class ZoneType(Enum):
 class TotalConnectZone:
     """Do not create instances of this class yourself."""
 
-    def __init__(self, zone: Dict[str, Any], parent_location) -> None:
+    def __init__(self, zone: dict[str, Any], parent_location: "TotalConnectLocation") -> None:
         """Initialize."""
-        self.zoneid = zone.get("ZoneID")
-        self._parent_location = parent_location
+        zone_id = zone.get("ZoneID")
+        if zone_id is None:
+            raise TotalConnectError("ZoneID is required")
+        self.zoneid: int = zone_id
+        self._parent_location: TotalConnectLocation = parent_location
         self.partition: int = 0
         self.status: ZoneStatus = ZoneStatus.NORMAL
-        self.zone_type_id = None
-        self.can_be_bypassed = None
-        self.battery_level = None
-        self.signal_strength = None
-        self.sensor_serial_number = None
-        self.loop_number = None
-        self.response_type = None
-        self.alarm_report_state = None
-        self.supervision_type = None
-        self.chime_state = None
-        self.device_type = None
-        self._unknown_type_reported = False
+        self.zone_type_id: ZoneType | int | None = None
+        self.can_be_bypassed: bool | None = None
+        self.battery_level: int | None = None
+        self.signal_strength: int | None = None
+        self.sensor_serial_number: str | None = None
+        self.loop_number: int | None = None
+        self.response_type: str | None = None
+        self.alarm_report_state: str | None = None
+        self.supervision_type: str | None = None
+        self.chime_state: int | None = None
+        self.device_type: int | None = None
+        self._unknown_type_reported: bool = False
+        self.description: str | None  # Set by _update()
         self._update(zone)
 
     def __str__(self) -> str:  # pragma: no cover
@@ -130,9 +137,7 @@ class TotalConnectZone:
 
     def is_tampered(self) -> bool:
         """Return true if zone is tampered."""
-        return (self.status & ZoneStatus.TROUBLE > 0) or (
-            self.status & ZoneStatus.TAMPER > 0
-        )
+        return (self.status & ZoneStatus.TROUBLE > 0) or (self.status & ZoneStatus.TAMPER > 0)
 
     def is_low_battery(self) -> bool:
         """Return true if low battery."""
@@ -205,19 +210,26 @@ class TotalConnectZone:
         """Return true if zone type is keypad."""
         return self.zone_type_id == ZoneType.LYRIC_KEYPAD
 
-    def _update(self, zone: Dict[str, Any]) -> None:
-        """Update the zone."""
-        assert zone
+    def _update(self, zone: dict[str, Any]) -> None:
+        """Update zone state from zone data."""
+        if not zone:
+            raise TotalConnectError("Missing data in zone update")
+
         zid = zone.get("ZoneID")
-        assert self.zoneid == zid, (self.zoneid, zid)
+        if not self.zoneid == zid:
+            raise TotalConnectError("Zone ID mismatch")
 
         self.description = zone.get("ZoneDescription")
         # ZoneInfo gives 'PartitionID' but
         # ZoneStatusInfoWithPartitionId gives 'PartitionId'
-        self.partition = zone.get("PartitionId") or zone.get("PartitionID")
+        partition_value = zone.get("PartitionId") or zone.get("PartitionID")
+        self.partition = partition_value if partition_value is not None else 0
 
         try:
-            status = ZoneStatus(zone.get("ZoneStatus"))
+            zone_status_value = zone.get("ZoneStatus")
+            if zone_status_value is None:
+                raise ValueError("ZoneStatus is required")
+            status = ZoneStatus(zone_status_value)
             if status & ~ZoneStatus.KNOWN > 0:
                 LOGGER.warning(
                     f"unknown ZoneStatus {zone.get('ZoneStatus')} in {zone}: please report at {PROJECT_URL}/issues"

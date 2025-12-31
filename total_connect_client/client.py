@@ -13,13 +13,14 @@ import base64
 import json
 import logging
 import time
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any, cast
 
 import requests
+import requests.adapters
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 from oauthlib.oauth2 import LegacyApplicationClient, OAuth2Error
-import requests.adapters
 from requests_oauthlib import OAuth2Session
 
 from .const import (
@@ -55,13 +56,14 @@ class TotalConnectClient:
 
     TIMEOUT = 60  # seconds until I/O will fail
     MAX_RETRY_ATTEMPTS = 5  # number of times to retry an API call
-    RETRY_ON_HTTP_STATUS_CODES = set([429, 500, 502, 503, 504]) # HTTP status codes indicating server issue
+    RETRY_ON_HTTP_STATUS_CODES = [429, 500, 502, 503, 504]
+    # HTTP status codes indicating server issue
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
         username: str,
         password: str,
-        usercodes: Dict[str, str] | None = None,
+        usercodes: dict[str, str] | None = None,
         auto_bypass_battery: bool = False,
         retry_delay: int = 6,  # seconds between retries
         load_details: bool = True,
@@ -73,33 +75,32 @@ class TotalConnectClient:
         self.username: str = username
         self.password: str = password
         self.usercodes = usercodes or {}
-        self.auto_bypass_low_battery = auto_bypass_battery
-        self.retry_delay = retry_delay
+        self.auto_bypass_low_battery: bool = auto_bypass_battery
+        self.retry_delay: int = retry_delay
 
-        self._logged_in = False
+        self._logged_in: bool = False
         self._oauth_session: OAuth2Session | None = None
         self._oauth_client: LegacyApplicationClient | None = None
-        self._invalid_credentials = False
-        self._client_id = None
-        self._app_id = None
-        self._app_version = None
-        self._key_pem = None
+        self._invalid_credentials: bool = False
+        self._client_id: str = ""
+        self._app_id: str = ""
+        self._app_version: str = ""
+        self._key_pem: str = ""
 
         self._raw_http_session = requests.Session()
         self._raw_http_session.mount(
             "https://",
             requests.adapters.HTTPAdapter(
                 max_retries=requests.adapters.Retry(
-                    total=self.MAX_RETRY_ATTEMPTS,
-                    status_forcelist=self.RETRY_ON_HTTP_STATUS_CODES
+                    total=self.MAX_RETRY_ATTEMPTS, status_forcelist=self.RETRY_ON_HTTP_STATUS_CODES
                 )
-            )
+            ),
         )
 
-        self._module_flags: Dict[str, str] = {}
+        self._module_flags: dict[str, str] = {}
         self._user: TotalConnectUser | None = None
-        self._locations: Dict[int, TotalConnectLocation] = {}
-        self._location_details: Dict[int, bool] = {}
+        self._locations: dict[int, TotalConnectLocation] = {}
+        self._location_details: dict[int, bool] = {}
 
         self.authenticate()
         self._get_session_details()
@@ -110,7 +111,7 @@ class TotalConnectClient:
         self.times["__init__"] = time.time() - self.time_start
 
     @property
-    def locations(self) -> Dict[int, TotalConnectLocation]:
+    def locations(self) -> dict[int, TotalConnectLocation]:
         """Public access for locations."""
         return self._locations
 
@@ -146,7 +147,7 @@ class TotalConnectClient:
 
         return msg
 
-    def _raise_for_retry(self, response: Dict[str, Any]) -> None:
+    def _raise_for_retry(self, response: dict[str, Any]) -> None:
         """Determine which responses should be retried in request()."""
         rc = _ResultCode.from_response(response)
         if rc == _ResultCode.INVALID_SESSION:
@@ -160,7 +161,7 @@ class TotalConnectClient:
         if rc == _ResultCode.BAD_OBJECT_REFERENCE:
             raise RetryableTotalConnectError("bad object reference", response)
 
-    def raise_for_resultcode(self, response: Dict[str, Any]) -> None:
+    def raise_for_resultcode(self, response: dict[str, Any]) -> None:
         """If response.ResultCode indicates success, return and do nothing.
 
         If it indicates an authentication error, raise AuthenticationError.
@@ -192,10 +193,10 @@ class TotalConnectClient:
 
     def _request_with_retries(
         self,
-        do_request: Callable[[], Dict[str, Any]],
+        do_request: Callable[[], dict[str, Any]],
         request_description: str,
         attempts_remaining: int = MAX_RETRY_ATTEMPTS,
-    ):
+    ) -> dict[str, Any]:
         """Call a given request function and handle retries for temporary errors and authentication
         problems."""
         is_first_request = attempts_remaining == self.MAX_RETRY_ATTEMPTS
@@ -229,27 +230,23 @@ class TotalConnectClient:
             )
             time.sleep(self.retry_delay)
         except (OAuth2Error, InvalidSessionError, ValueError) as err:
-            LOGGER.debug(f"Invalid session during request.  Attempts remaining: {attempts_remaining}. Error: {err}")
-            if attempts_remaining <= 0:
-                raise ServiceUnavailable(
-                    f"Invalid Session after multiple retries: {err}"
-                ) from err
-            LOGGER.info(
-                f"re-authenticating: {attempts_remaining} retries remaining"
+            LOGGER.debug(
+                f"Invalid session during request.  Attempts remaining: {attempts_remaining}. Error: {err}"
             )
+            if attempts_remaining <= 0:
+                raise ServiceUnavailable(f"Invalid Session after multiple retries: {err}") from err
+            LOGGER.info(f"re-authenticating: {attempts_remaining} retries remaining")
             self.authenticate()
 
-        return self._request_with_retries(
-            do_request, request_description, attempts_remaining
-        )
+        return self._request_with_retries(do_request, request_description, attempts_remaining)
 
     def http_request(
         self,
         endpoint: str,
         method: str,
-        params: Dict[str, Any] | None = None,
-        data: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Send an HTTP request to a Web API endpoint
 
         method is the HTTP method, e.g. 'GET', 'POST', 'PUT', 'DELETE'
@@ -260,7 +257,9 @@ class TotalConnectClient:
             f"\n----- http_request -----\n\tendpoint: {endpoint}\n\tmethod: {method}\n\tparams: {params}\n\tdata: {data}\n----- end request -----"
         )
 
-        def _do_http_request() -> Dict[str, Any]:
+        def _do_http_request() -> dict[str, Any]:
+            if self._oauth_session is None:
+                raise TotalConnectError("OAuth session not initialized")
             response = self._oauth_session.request(
                 method=method, url=endpoint, params=params, data=data
             )
@@ -274,15 +273,17 @@ class TotalConnectClient:
                 )
                 # If we get a status code indicating that the server has a problem, force a retry
                 if response.status_code == 401:
-                    raise InvalidSessionError("Received status code 401 during a request. Requesting new token")
+                    raise InvalidSessionError(
+                        "Received status code 401 during a request. Requesting new token"
+                    )
                 if response.status_code in self.RETRY_ON_HTTP_STATUS_CODES:
-                    raise RetryableTotalConnectError(f"Server temporarily unavailable. Status code: {response.status_code}")
-            return response.json()
+                    raise RetryableTotalConnectError(
+                        f"Server temporarily unavailable. Status code: {response.status_code}"
+                    )
+            return cast(dict[str, Any], response.json())
 
         args = {**(params or {}), **(data or {})}
-        return self._request_with_retries(
-            _do_http_request, f"{method} {endpoint} ({args})"
-        )
+        return self._request_with_retries(_do_http_request, f"{method} {endpoint} ({args})")
 
     def _encrypt_credential(self, credential: str) -> str:
         # Load the key from the PEM file
@@ -329,17 +330,13 @@ class TotalConnectClient:
         self._app_id = next(
             info for info in config["brandInfo"] if info["BrandName"] == "totalconnect"
         )["AppID"]
-        self._app_version = (
-            config["RevisionNumber"] + "." + config["version"].split(".")[-1]
-        )
-        self._key_pem = (
-            "-----BEGIN PUBLIC KEY-----\n" + key + "\n-----END PUBLIC KEY-----"
-        )
+        self._app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
+        self._key_pem = "-----BEGIN PUBLIC KEY-----\n" + key + "\n-----END PUBLIC KEY-----"
 
     def _request_token(self) -> None:
         """Request a token using OAuth2."""
 
-        def token_updater(token):
+        def token_updater(token: Any) -> None:
             """Update the token on auto-refresh.
 
             Called following successful token auto-refresh by OAuth2Session.
@@ -379,16 +376,14 @@ class TotalConnectClient:
             params={"appId": self._app_id, "appVersion": self._app_version},
         )["SessionDetailsResult"]
 
-        self._module_flags = dict(
-            x.split("=") for x in response["ModuleFlags"].split(",")
-        )
+        self._module_flags = dict(x.split("=") for x in response["ModuleFlags"].split(","))
         self._user = TotalConnectUser(response["UserInfo"])
 
         self._make_locations(response)
         if not self._locations:
             raise TotalConnectError("no locations found", response)
 
-    def load_details(self, retries=5):
+    def load_details(self, retries: int = 5) -> None:
         """Load details for all locations."""
         retry = False
         for location_id, location in self._locations.items():
@@ -437,9 +432,7 @@ class TotalConnectClient:
         """
         return len(self.locations)
 
-    def _make_locations(
-        self, response: Dict[str, Any]
-    ) -> None:
+    def _make_locations(self, response: dict[str, Any]) -> None:
         """Create dict mapping LocationID to TotalConnectLocation."""
         for locationinfo in response.get("Locations") or []:
             location_id = locationinfo["LocationID"]
@@ -449,7 +442,7 @@ class TotalConnectClient:
 
             # set the usercode for the location
             usercode = (
-                self.usercodes.get(location_id)  # noqa: W504
+                self.usercodes.get(location_id)
                 or self.usercodes.get(str(location_id))
                 or self.usercodes.get("default")
             )
@@ -473,7 +466,7 @@ class ArmingHelper:
        Example: ArmingHelper(partition).arm_away()
     """
 
-    def __init__(self, partition_or_location) -> None:
+    def __init__(self, partition_or_location: Any) -> None:
         """Initialize ArmingHelper."""
         self.armable = partition_or_location
 

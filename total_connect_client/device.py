@@ -1,12 +1,12 @@
 """Total Connect Device."""
 
-from typing import Any, Dict
+from typing import Any
 
 
 class TotalConnectDevice:
     """Device class for Total Connect."""
 
-    def __init__(self, info: Dict[str, Any]) -> None:
+    def __init__(self, info: dict[str, Any]) -> None:
         """Initialize device based on DeviceInfoBasic."""
         self.deviceid = info.get("DeviceID")
         self.name = info.get("DeviceName")
@@ -14,9 +14,9 @@ class TotalConnectDevice:
         self.serial_number = info.get("DeviceSerialNumber")
         self.security_panel_type_id = info.get("SecurityPanelTypeID")
         self.serial_text = info.get("DeviceSerialText")
-        self._doorbell_info: Dict[str, Any] = {}
-        self._video_info: Dict[str, Any] = {}
-        self._unicorn_info: Dict[str, Any] = {}
+        self._doorbell_info: dict[str, Any] = {}
+        self._video_info: dict[str, Any] = {}
+        self._unicorn_info: dict[str, Any] = {}
 
         flags = info.get("DeviceFlags")
         if not flags:
@@ -53,12 +53,12 @@ class TotalConnectDevice:
         return data
 
     @property
-    def doorbell_info(self) -> Dict[str, Any]:
+    def doorbell_info(self) -> dict[str, Any]:
         """Return doorbell info."""
         return self._doorbell_info
 
     @doorbell_info.setter
-    def doorbell_info(self, data: Dict[str, Any]) -> None:
+    def doorbell_info(self, data: dict[str, Any]) -> None:
         """Set values based on WifiDoorBellInfo object."""
         if data:
             self._doorbell_info = data
@@ -68,32 +68,29 @@ class TotalConnectDevice:
         if self._doorbell_info and self._doorbell_info["IsExistingDoorBellUser"] == 1:
             return True
 
-        if (
-            self._unicorn_info
-            and self._unicorn_info["DeviceVariant"] == "home.dv.doorbell"
-        ):
+        if self._unicorn_info and self._unicorn_info["DeviceVariant"] == "home.dv.doorbell":
             return True
 
         return False
 
     @property
-    def video_info(self) -> Dict[str, Any]:
+    def video_info(self) -> dict[str, Any]:
         """VideoPIR info."""
         return self._video_info
 
     @video_info.setter
-    def video_info(self, data: Dict[str, Any]) -> None:
+    def video_info(self, data: dict[str, Any]) -> None:
         """Set values based on VideoPIRInfo object."""
         if data:
             self._video_info = data
 
     @property
-    def unicorn_info(self) -> Dict[str, Any]:
+    def unicorn_info(self) -> dict[str, Any]:
         """Unicorn info."""
         return self._video_info
 
     @unicorn_info.setter
-    def unicorn_info(self, data: Dict[str, Any]) -> None:
+    def unicorn_info(self, data: dict[str, Any]) -> None:
         """Set values based on UnicornInfo object."""
         if data:
             self._unicorn_info = data

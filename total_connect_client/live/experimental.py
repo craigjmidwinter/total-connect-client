@@ -22,7 +22,7 @@ else:
 TC = TotalConnectClient(USERNAME, PASSWORD)
 
 for location_id, location in TC.locations.items():
-    print(f"{location}")
+    print(f"Get cameras for location {location_id}")
 
     # camera
     location.get_cameras()

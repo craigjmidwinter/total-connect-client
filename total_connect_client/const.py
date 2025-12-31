@@ -2,7 +2,7 @@
 
 import urllib.parse
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, Final
 
 from .exceptions import BadResultCodeError
 
@@ -22,9 +22,7 @@ class ArmingState(Enum):
 
     DISARMED = 10200
     DISARMED_BYPASS = 10211
-    DISARMED_ZONE_FAULTED = (
-        10214  # seems to apply to location, not to partition.  See issue #144
-    )
+    DISARMED_ZONE_FAULTED = 10214  # seems to apply to location, not to partition.  See issue #144
 
     ARMED_AWAY = 10201
     ARMED_AWAY_BYPASS = 10202
@@ -144,11 +142,7 @@ class ArmingState(Enum):
 
     def is_triggered(self) -> bool:
         """Return True if the system is triggered in any way."""
-        return (
-            self.is_triggered_fire()
-            or self.is_triggered_gas()
-            or self.is_triggered_police()
-        )
+        return self.is_triggered_fire() or self.is_triggered_gas() or self.is_triggered_police()
 
 
 class _ResultCode(Enum):
@@ -159,16 +153,25 @@ class _ResultCode(Enum):
     """
 
     @staticmethod
-    def from_response(response_dict: Dict[str, Any]):
+    def from_response(response_dict: dict[str, Any]) -> "_ResultCode":
+        """Create a _ResultCode from an API response dictionary.
+
+        Args:
+            response_dict: Dictionary containing API response with ResultCode or error field
+
+        Returns:
+            _ResultCode enum value corresponding to the response
+
+        Raises:
+            BadResultCodeError: If the result code is unknown
+        """
         value = response_dict.get("ResultCode") or response_dict.get("error")
         if not value:
             return _ResultCode.SUCCESS
         try:
             return _ResultCode(int(value))
         except ValueError:
-            raise BadResultCodeError(
-                f"unknown result code {value}", response_dict
-            ) from None
+            raise BadResultCodeError(f"unknown result code {value}", response_dict) from None
 
     SUCCESS = 0
     ARM_SUCCESS = 4500
@@ -196,20 +199,21 @@ class _ResultCode(Enum):
     ACCOUNT_LOCKED = -123
 
 
-PROJECT_URL = "https://github.com/craigjmidwinter/total-connect-client"
+PROJECT_URL: Final[str] = "https://github.com/craigjmidwinter/total-connect-client"
 
-STATUS_URL = "https://status.resideo.com/"
+STATUS_URL: Final[str] = "https://status.resideo.com/"
 
-AUTH_CONFIG_ENDPOINT = "https://totalconnect2.com/application.config.json"
-AUTH_TOKEN_ENDPOINT = "https://rs.alarmnet.com/TC2API.Auth/token"
-HTTP_API_ENDPOINT_BASE = "https://rs.alarmnet.com/TC2API.TCResource/"
+AUTH_CONFIG_ENDPOINT: Final[str] = "https://totalconnect2.com/application.config.json"
+AUTH_TOKEN_ENDPOINT: Final[str] = "https://rs.alarmnet.com/TC2API.Auth/token"
+HTTP_API_ENDPOINT_BASE: Final[str] = "https://rs.alarmnet.com/TC2API.TCResource/"
 
 
 def make_http_endpoint(path: str) -> str:
+    """Create a full HTTP endpoint URL by joining the base URL with the given path."""
     return urllib.parse.urljoin(HTTP_API_ENDPOINT_BASE, path)
 
 
-HTTP_API_SESSION_DETAILS_ENDPOINT = make_http_endpoint(
+HTTP_API_SESSION_DETAILS_ENDPOINT: Final[str] = make_http_endpoint(
     "api/v3/authentication/sessiondetails"
 )
-HTTP_API_LOGOUT = make_http_endpoint("api/v3/authentication/logout")
+HTTP_API_LOGOUT: Final[str] = make_http_endpoint("api/v3/authentication/logout")
