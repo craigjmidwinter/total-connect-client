@@ -195,7 +195,7 @@ class TotalConnectLocation:
                 f"Response: {response}. "
             )
             raise
-        return response["IsDuplicate"]
+        return bool(response["IsDuplicate"])
 
     def _build_partition_list(self, partition_id: int = 0) -> list[int]:
         """Build a list of partitions to use for arming/disarming."""
@@ -217,7 +217,7 @@ class TotalConnectLocation:
         partition_list = self._build_partition_list(partition_id)
         usercode = usercode or self.usercode
         # treats usercode as int here, but str elsewhere
-        usercode = int(usercode)
+        usercode_int = int(usercode)
 
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
@@ -226,7 +226,7 @@ class TotalConnectLocation:
             method="PUT",
             data={
                 "armType": arm_type.value,
-                "userCode": usercode,
+                "userCode": usercode_int,
                 "partitions": partition_list,
             },
         )
@@ -260,14 +260,14 @@ class TotalConnectLocation:
         partition_list = self._build_partition_list(partition_id)
         usercode = usercode or self.usercode
         # treats usercode as int here, but str elsewere
-        usercode = int(usercode)
+        usercode_int = int(usercode)
 
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
                 f"api/v3/locations/{self.location_id}/devices/{self.security_device_id}/partitions/disArm"
             ),
             method="PUT",
-            data={"userCode": usercode, "partitions": partition_list},
+            data={"userCode": usercode_int, "partitions": partition_list},
         )
         self.parent.raise_for_resultcode(result)
         LOGGER.info(f"DISARMED partitions {partition_list} at location {self.location_id}")
@@ -429,7 +429,7 @@ class TotalConnectLocation:
         for partition in partitions:
             if "PartitionID" not in partition:
                 raise PartialResponseError("no PartitionID", partitions)
-            partition_id = partition["PartitionID"]
+            partition_id = int(partition["PartitionID"])
             if partition_id in self.partitions:
                 self.partitions[partition_id]._update(partition)
             else:
