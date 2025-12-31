@@ -37,14 +37,18 @@ dependencies = [
 "Homepage" = "https://github.com/craigjmidwinter/total-connect-client"
 "Bug Tracker" = "https://github.com/craigjmidwinter/total-connect-client/issues"
 
-[project.optional-dependencies]
+[dependency-groups]
 test = ["pytest>=9.0.2", "pytest-sugar>=1.1.1", "requests_mock>=1.12.1", "pyjwt>=2.10.1"]
 type = ["mypy>=1.15.0", "types-requests>=2.23.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
-lint = ["ruff>=0.9.7", "coverage>=7.6.12", "pytest>=9.0.2"]
-dev = ["total-connect-client[test,type,lint]", "tox>=4.32.0"]
-
-[tool.setuptools.package-data]
-total_connect_client = ["cache/*.txt"]
+lint = ["ruff>=0.9.7"]
+coverage = ["coverage>=7.6.12", {include-group = "test"}]
+dev = [
+    "tox>=4.32.0",
+    {include-group = "test"},
+    {include-group = "type"},
+    {include-group = "lint"},
+    {include-group = "coverage"}
+]
 
 [tool.coverage.run]
 branch = true
@@ -91,26 +95,33 @@ module = ["pytest", "requests_mock"]
 ignore_missing_imports = true
 
 [tool.tox]
-env_list = ["py{310,311,312,313}", "type", "lint"]
+env_list = ["py{310,311,312,313}", "type", "lint", "coverage"]
 
 [tool.tox.env_run_base]
 description = "Run tests under {base_python}"
-deps = ["total-connect-client[test]"]
+dependency_groups = ["test"]
 allowlist_externals = ["pytest"]
 commands = [["pytest", "-xvs"]]
 
 [tool.tox.env.lint]
-deps = ["total-connect-client[lint]"]
-allowlist_externals = ["ruff", "coverage"]
+dependency_groups = ["lint"]
+allowlist_externals = ["ruff"]
 commands = [
     ["ruff", "check", "total_connect_client", "tests"],
     ["ruff", "format", "--check", "total_connect_client", "tests"],
-    ["coverage", "run", "-m", "pytest"],
-    ["coverage", "report"],
 ]
 
 [tool.tox.env.type]
 description = "Run type checking on code base"
-deps = ["total-connect-client[type]"]
+dependency_groups = ["type"]
 allowlist_externals = ["mypy"]
 commands = [["mypy", "-p", "total_connect_client"]]
+
+[tool.tox.env.coverage]
+description = "Run type checking on code base"
+dependency_groups = ["coverage"]
+allowlist_externals = ["coverage"]
+commands = [
+    ["coverage", "run", "-m", "pytest"],
+    ["coverage", "report"],
+]
