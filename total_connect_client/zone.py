@@ -137,9 +137,7 @@ class TotalConnectZone:
 
     def is_tampered(self) -> bool:
         """Return true if zone is tampered."""
-        return (self.status & ZoneStatus.TROUBLE > 0) or (
-            self.status & ZoneStatus.TAMPER > 0
-        )
+        return (self.status & ZoneStatus.TROUBLE > 0) or (self.status & ZoneStatus.TAMPER > 0)
 
     def is_low_battery(self) -> bool:
         """Return true if low battery."""
@@ -214,10 +212,10 @@ class TotalConnectZone:
 
     def _update(self, zone: dict[str, Any]) -> None:
         """Update zone state from zone data.
-        
+
         Args:
             zone: Dictionary containing zone information from API
-            
+
         Raises:
             TotalConnectError: If zone status is invalid or zone IDs don't match
         """

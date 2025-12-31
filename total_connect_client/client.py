@@ -13,7 +13,7 @@ import base64
 import json
 import logging
 import time
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 import requests
 from Crypto.Cipher import PKCS1_v1_5
@@ -63,7 +63,7 @@ class TotalConnectClient:
         self,
         username: str,
         password: str,
-        usercodes: Dict[str, str] | None = None,
+        usercodes: dict[str, str] | None = None,
         auto_bypass_battery: bool = False,
         retry_delay: int = 6,  # seconds between retries
         load_details: bool = True,
@@ -97,10 +97,10 @@ class TotalConnectClient:
             ),
         )
 
-        self._module_flags: Dict[str, str] = {}
+        self._module_flags: dict[str, str] = {}
         self._user: TotalConnectUser | None = None
-        self._locations: Dict[int, TotalConnectLocation] = {}
-        self._location_details: Dict[int, bool] = {}
+        self._locations: dict[int, TotalConnectLocation] = {}
+        self._location_details: dict[int, bool] = {}
 
         self.authenticate()
         self._get_session_details()
@@ -111,7 +111,7 @@ class TotalConnectClient:
         self.times["__init__"] = time.time() - self.time_start
 
     @property
-    def locations(self) -> Dict[int, TotalConnectLocation]:
+    def locations(self) -> dict[int, TotalConnectLocation]:
         """Public access for locations."""
         return self._locations
 
@@ -147,7 +147,7 @@ class TotalConnectClient:
 
         return msg
 
-    def _raise_for_retry(self, response: Dict[str, Any]) -> None:
+    def _raise_for_retry(self, response: dict[str, Any]) -> None:
         """Determine which responses should be retried in request()."""
         rc = _ResultCode.from_response(response)
         if rc == _ResultCode.INVALID_SESSION:
@@ -161,7 +161,7 @@ class TotalConnectClient:
         if rc == _ResultCode.BAD_OBJECT_REFERENCE:
             raise RetryableTotalConnectError("bad object reference", response)
 
-    def raise_for_resultcode(self, response: Dict[str, Any]) -> None:
+    def raise_for_resultcode(self, response: dict[str, Any]) -> None:
         """If response.ResultCode indicates success, return and do nothing.
 
         If it indicates an authentication error, raise AuthenticationError.
@@ -193,10 +193,10 @@ class TotalConnectClient:
 
     def _request_with_retries(
         self,
-        do_request: Callable[[], Dict[str, Any]],
+        do_request: Callable[[], dict[str, Any]],
         request_description: str,
         attempts_remaining: int = MAX_RETRY_ATTEMPTS,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Call a given request function and handle retries for temporary errors and authentication
         problems."""
         is_first_request = attempts_remaining == self.MAX_RETRY_ATTEMPTS
@@ -244,9 +244,9 @@ class TotalConnectClient:
         self,
         endpoint: str,
         method: str,
-        params: Dict[str, Any] | None = None,
-        data: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Send an HTTP request to a Web API endpoint
 
         method is the HTTP method, e.g. 'GET', 'POST', 'PUT', 'DELETE'
@@ -257,7 +257,7 @@ class TotalConnectClient:
             f"\n----- http_request -----\n\tendpoint: {endpoint}\n\tmethod: {method}\n\tparams: {params}\n\tdata: {data}\n----- end request -----"
         )
 
-        def _do_http_request() -> Dict[str, Any]:
+        def _do_http_request() -> dict[str, Any]:
             if self._oauth_session is None:
                 raise TotalConnectError("OAuth session not initialized")
             response = self._oauth_session.request(
@@ -432,7 +432,7 @@ class TotalConnectClient:
         """
         return len(self.locations)
 
-    def _make_locations(self, response: Dict[str, Any]) -> None:
+    def _make_locations(self, response: dict[str, Any]) -> None:
         """Create dict mapping LocationID to TotalConnectLocation."""
         for locationinfo in response.get("Locations") or []:
             location_id = locationinfo["LocationID"]

@@ -1,7 +1,7 @@
 """Total Connect User."""
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 LOGGER = logging.getLogger(__name__)
 
@@ -9,13 +9,11 @@ LOGGER = logging.getLogger(__name__)
 class TotalConnectUser:
     """User for Total Connect."""
 
-    def __init__(self, user_info: Dict[str, Any]) -> None:
+    def __init__(self, user_info: dict[str, Any]) -> None:
         """Initialize based on UserInfo from LoginAndGetSessionDetails."""
         self._user_id = user_info["UserID"]
         self._username = user_info["Username"]
-        self._features = dict(
-            x.split("=") for x in user_info["UserFeatureList"].split(",")
-        )
+        self._features = dict(x.split("=") for x in user_info["UserFeatureList"].split(","))
         self._master_user = self._features["Master"] == "1"
         self._user_admin = self._features["User Administration"] == "1"
         self._config_admin = self._features["Configuration Administration"] == "1"
