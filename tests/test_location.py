@@ -141,9 +141,7 @@ def tests_disarm():
         location.disarm(1, "1234")
 
         rm.get(
-            make_http_endpoint(
-                f"api/v3/locations/{location.location_id}/partitions/fullStatus"
-            ),
+            make_http_endpoint(f"api/v3/locations/{location.location_id}/partitions/fullStatus"),
             json=PANEL_STATUS_DISARMED,
         )
         location.get_panel_meta_data()
@@ -155,9 +153,7 @@ def tests_disarm():
 
         # now try just the location
         rm.get(
-            make_http_endpoint(
-                f"api/v3/locations/{location.location_id}/partitions/fullStatus"
-            ),
+            make_http_endpoint(f"api/v3/locations/{location.location_id}/partitions/fullStatus"),
             json=PANEL_STATUS_ARMED_AWAY,
         )
         location.get_panel_meta_data()
@@ -172,9 +168,7 @@ def tests_disarm():
         location.disarm(usercode="1234")
 
         rm.get(
-            make_http_endpoint(
-                f"api/v3/locations/{location.location_id}/partitions/fullStatus"
-            ),
+            make_http_endpoint(f"api/v3/locations/{location.location_id}/partitions/fullStatus"),
             json=PANEL_STATUS_DISARMED,
         )
         location.get_panel_meta_data()

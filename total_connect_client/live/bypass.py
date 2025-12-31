@@ -29,7 +29,9 @@ BYPASS_WAIT_TIME: Final[int] = 10
 
 def usage() -> NoReturn:
     """Print usage instructions."""
-    print("usage:  python -m total_connect_client.live.bypass username location1=usercode1,location2=usercode2\n")
+    print(
+        "usage:  python -m total_connect_client.live.bypass username location1=usercode1,location2=usercode2\n"
+    )
     print("This script will:")
     print("1. Try to bypass all faulted zones")
     print("2. Wait for 10 seconds")
