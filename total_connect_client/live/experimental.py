@@ -21,7 +21,7 @@ else:
 
 TC = TotalConnectClient(USERNAME, PASSWORD)
 
-for location_id, location in TC.locations.items():
+for location in TC.locations.items():
     print(f"{location}")
 
     # camera

@@ -55,15 +55,7 @@ class TotalConnectPartition:
         self.parent.disarm(self.partitionid, usercode)
 
     def _update(self, info: dict[str, Any]) -> None:
-        """Update partition state from PartitionInfo data.
-        
-        Args:
-            info: Dictionary containing partition information from API
-            
-        Raises:
-            PartialResponseError: If ArmingState is missing from info
-            TotalConnectError: If ArmingState value is unknown
-        """
+        """Update partition state from PartitionInfo data."""
         astate = (info or {}).get("ArmingState")
         if astate is None:
             raise PartialResponseError("no ArmingState")
@@ -73,6 +65,4 @@ class TotalConnectPartition:
             LOGGER.error(
                 f"unknown partition ArmingState {astate} in {info}: report at {PROJECT_URL}/issues"
             )
-            raise TotalConnectError(
-                f"unknown partition ArmingState {astate} in {info}"
-            ) from None
+            raise TotalConnectError(f"unknown partition ArmingState {astate} in {info}") from None

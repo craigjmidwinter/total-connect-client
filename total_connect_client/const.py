@@ -22,9 +22,7 @@ class ArmingState(Enum):
 
     DISARMED = 10200
     DISARMED_BYPASS = 10211
-    DISARMED_ZONE_FAULTED = (
-        10214  # seems to apply to location, not to partition.  See issue #144
-    )
+    DISARMED_ZONE_FAULTED = 10214  # seems to apply to location, not to partition.  See issue #144
 
     ARMED_AWAY = 10201
     ARMED_AWAY_BYPASS = 10202
@@ -144,11 +142,7 @@ class ArmingState(Enum):
 
     def is_triggered(self) -> bool:
         """Return True if the system is triggered in any way."""
-        return (
-            self.is_triggered_fire()
-            or self.is_triggered_gas()
-            or self.is_triggered_police()
-        )
+        return self.is_triggered_fire() or self.is_triggered_gas() or self.is_triggered_police()
 
 
 class _ResultCode(Enum):
@@ -161,13 +155,13 @@ class _ResultCode(Enum):
     @staticmethod
     def from_response(response_dict: dict[str, Any]) -> "_ResultCode":
         """Create a _ResultCode from an API response dictionary.
-        
+
         Args:
             response_dict: Dictionary containing API response with ResultCode or error field
-            
+
         Returns:
             _ResultCode enum value corresponding to the response
-            
+
         Raises:
             BadResultCodeError: If the result code is unknown
         """
@@ -177,9 +171,7 @@ class _ResultCode(Enum):
         try:
             return _ResultCode(int(value))
         except ValueError:
-            raise BadResultCodeError(
-                f"unknown result code {value}", response_dict
-            ) from None
+            raise BadResultCodeError(f"unknown result code {value}", response_dict) from None
 
     SUCCESS = 0
     ARM_SUCCESS = 4500
@@ -217,14 +209,7 @@ HTTP_API_ENDPOINT_BASE: Final[str] = "https://rs.alarmnet.com/TC2API.TCResource/
 
 
 def make_http_endpoint(path: str) -> str:
-    """Create a full HTTP endpoint URL by joining the base URL with the given path.
-    
-    Args:
-        path: The API path to append to the base URL
-        
-    Returns:
-        Complete URL string for the API endpoint
-    """
+    """Create a full HTTP endpoint URL by joining the base URL with the given path."""
     return urllib.parse.urljoin(HTTP_API_ENDPOINT_BASE, path)
 
 

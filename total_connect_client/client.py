@@ -56,9 +56,8 @@ class TotalConnectClient:
 
     TIMEOUT = 60  # seconds until I/O will fail
     MAX_RETRY_ATTEMPTS = 5  # number of times to retry an API call
-    RETRY_ON_HTTP_STATUS_CODES = set(
-        [429, 500, 502, 503, 504]
-    )  # HTTP status codes indicating server issue
+    RETRY_ON_HTTP_STATUS_CODES = [429, 500, 502, 503, 504]
+    # HTTP status codes indicating server issue
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -443,7 +442,7 @@ class TotalConnectClient:
 
             # set the usercode for the location
             usercode = (
-                self.usercodes.get(location_id)  # noqa: W504
+                self.usercodes.get(location_id)
                 or self.usercodes.get(str(location_id))
                 or self.usercodes.get("default")
             )
