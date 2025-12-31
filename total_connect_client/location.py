@@ -299,7 +299,9 @@ class TotalConnectLocation:
     def _bypass_zones(self, zone_list: List[int]) -> None:
         """Bypass the given list of zones."""
         if not zone_list:
-            LOGGER.info("Bypass request stopped because no zones are available to bypass")
+            LOGGER.info(
+                "Bypass request stopped because no zones are available to bypass"
+            )
             return
 
         # Validate zones before attempting bypass
@@ -310,10 +312,14 @@ class TotalConnectLocation:
                 LOGGER.warning(f"Zone {zone_id} not found, skipping bypass")
                 continue
             if not zone.can_be_bypassed:
-                LOGGER.warning(f"Zone {zone_id} ({zone.description}) cannot be bypassed")
+                LOGGER.warning(
+                    f"Zone {zone_id} ({zone.description}) cannot be bypassed"
+                )
                 continue
             if not zone.is_faulted():
-                LOGGER.warning(f"Zone {zone_id} ({zone.description}) is not faulted, cannot bypass")
+                LOGGER.warning(
+                    f"Zone {zone_id} ({zone.description}) is not faulted, cannot bypass"
+                )
                 continue
             valid_zones.append(zone_id)
 
@@ -322,7 +328,7 @@ class TotalConnectLocation:
             return
 
         LOGGER.info(f"Attempting to bypass zones: {valid_zones}")
-        
+
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
                 f"api/v1/locations/{self.location_id}/devices/{self.security_device_id}/bypass"
