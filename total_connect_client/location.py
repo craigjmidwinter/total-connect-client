@@ -306,9 +306,6 @@ class TotalConnectLocation:
             if not zone.can_be_bypassed:
                 LOGGER.warning(f"Zone {zone_id} ({zone.description}) cannot be bypassed")
                 continue
-            if not zone.is_faulted():
-                LOGGER.warning(f"Zone {zone_id} ({zone.description}) is not faulted, cannot bypass")
-                continue
             valid_zones.append(zone_id)
 
         if not valid_zones:
