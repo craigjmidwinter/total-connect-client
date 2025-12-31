@@ -2,12 +2,15 @@
 
 import logging
 from enum import Enum, IntFlag
-from typing import Any, Dict
+from typing import Any, Final, TYPE_CHECKING
 
 from .const import PROJECT_URL
 from .exceptions import TotalConnectError
 
-LOGGER = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from .location import TotalConnectLocation
+
+LOGGER: Final = logging.getLogger(__name__)
 
 
 class ZoneStatus(IntFlag):
@@ -81,24 +84,25 @@ class ZoneType(Enum):
 class TotalConnectZone:
     """Do not create instances of this class yourself."""
 
-    def __init__(self, zone: Dict[str, Any], parent_location) -> None:
+    def __init__(self, zone: dict[str, Any], parent_location: "TotalConnectLocation") -> None:
         """Initialize."""
-        self.zoneid = zone.get("ZoneID")
-        self._parent_location = parent_location
+        self.zoneid: int | None = zone.get("ZoneID")
+        self._parent_location: "TotalConnectLocation" = parent_location
         self.partition: int = 0
         self.status: ZoneStatus = ZoneStatus.NORMAL
-        self.zone_type_id = None
-        self.can_be_bypassed = None
-        self.battery_level = None
-        self.signal_strength = None
-        self.sensor_serial_number = None
-        self.loop_number = None
-        self.response_type = None
-        self.alarm_report_state = None
-        self.supervision_type = None
-        self.chime_state = None
-        self.device_type = None
-        self._unknown_type_reported = False
+        self.zone_type_id: ZoneType | int | None = None
+        self.can_be_bypassed: bool | None = None
+        self.battery_level: int | None = None
+        self.signal_strength: int | None = None
+        self.sensor_serial_number: str | None = None
+        self.loop_number: int | None = None
+        self.response_type: str | None = None
+        self.alarm_report_state: str | None = None
+        self.supervision_type: str | None = None
+        self.chime_state: int | None = None
+        self.device_type: int | None = None
+        self._unknown_type_reported: bool = False
+        self.description: str | None  # Set by _update()
         self._update(zone)
 
     def __str__(self) -> str:  # pragma: no cover
@@ -205,8 +209,15 @@ class TotalConnectZone:
         """Return true if zone type is keypad."""
         return self.zone_type_id == ZoneType.LYRIC_KEYPAD
 
-    def _update(self, zone: Dict[str, Any]) -> None:
-        """Update the zone."""
+    def _update(self, zone: dict[str, Any]) -> None:
+        """Update zone state from zone data.
+        
+        Args:
+            zone: Dictionary containing zone information from API
+            
+        Raises:
+            TotalConnectError: If zone status is invalid or zone IDs don't match
+        """
         assert zone
         zid = zone.get("ZoneID")
         assert self.zoneid == zid, (self.zoneid, zid)

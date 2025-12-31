@@ -1,16 +1,33 @@
-"""Test zone bypass functionality from the command line."""
+"""Command-line tool to test zone bypass functionality.
+
+This script tests the complete bypass workflow:
+1. Identifies faulted zones in the alarm system
+2. Attempts to bypass all faulted zones
+3. Waits 10 seconds for the system to process
+4. Attempts to clear all bypassed zones
+
+Usage:
+    python -m total_connect_client.live.bypass username location1=usercode1,location2=usercode2
+
+Args:
+    username: Total Connect username
+    location_usercode_pairs: Comma-separated pairs of location=usercode
+"""
 
 import getpass
 import logging
 import sys
 import time
+from typing import Final, NoReturn
 
 from ..client import TotalConnectClient
 
 logging.basicConfig(filename="test.log", level=logging.DEBUG)
 
+BYPASS_WAIT_TIME: Final[int] = 10
 
-def usage():
+
+def usage() -> NoReturn:
     """Print usage instructions."""
     print("usage:  python -m total_connect_client.live.bypass username location1=usercode1,location2=usercode2\n")
     print("This script will:")
@@ -23,11 +40,11 @@ def usage():
 if len(sys.argv) != 3:
     usage()
 
-USERNAME = sys.argv[1]
-USERCODES = dict(x.split("=") for x in sys.argv[2].split(","))
-PASSWORD = getpass.getpass()
+USERNAME: Final[str] = sys.argv[1]
+USERCODES: Final[dict[str, str]] = dict(x.split("=") for x in sys.argv[2].split(","))
+PASSWORD: Final[str] = getpass.getpass()
 
-TC = TotalConnectClient(USERNAME, PASSWORD, USERCODES)
+TC: Final[TotalConnectClient] = TotalConnectClient(USERNAME, PASSWORD, USERCODES)
 
 for location_id in TC.locations:
     location = TC.locations[location_id]
@@ -39,7 +56,7 @@ for location_id in TC.locations:
     print(f"Found {len(location.zones)} zones")
     
     # Show faulted zones
-    faulted_zones = []
+    faulted_zones: list[int] = []
     for zone_id, zone in location.zones.items():
         if zone.is_faulted():
             faulted_zones.append(zone_id)
@@ -56,15 +73,15 @@ for location_id in TC.locations:
         location.zone_bypass_all()
         print("Successfully initiated bypass for all faulted zones")
         
-        # Wait 10 seconds
-        print("Waiting 10 seconds...")
-        time.sleep(10)
+        # Wait for system to process
+        print(f"Waiting {BYPASS_WAIT_TIME} seconds...")
+        time.sleep(BYPASS_WAIT_TIME)
         
         # Refresh zone status
         location.get_zone_details()
         
         # Show bypassed zones
-        bypassed_zones = []
+        bypassed_zones: list[int] = []
         for zone_id, zone in location.zones.items():
             if zone.is_bypassed():
                 bypassed_zones.append(zone_id)
