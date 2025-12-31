@@ -25,6 +25,7 @@ ZONE_BYPASSED = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.BYPASSED,
+    "ZoneID": 1,
 }
 
 ZONE_FAULTED = {
@@ -42,6 +43,7 @@ ZONE_TAMPERED = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.TROUBLE,
+    "ZoneID": 1,
 }
 
 ZONE_BYPASSED_LOW_BATTERY = {
@@ -50,6 +52,7 @@ ZONE_BYPASSED_LOW_BATTERY = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 65,
+    "ZoneID": 1,
 }
 
 ZONE_TROUBLE_LOW_BATTERY = {
@@ -58,6 +61,7 @@ ZONE_TROUBLE_LOW_BATTERY = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": 72,
+    "ZoneID": 1,
 }
 
 ZONE_TRIGGERED = {
@@ -66,6 +70,7 @@ ZONE_TRIGGERED = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 1,
     "ZoneStatus": ZoneStatus.TRIGGERED,
+    "ZoneID": 1,
 }
 
 ZONE_BUTTON = {
@@ -74,6 +79,7 @@ ZONE_BUTTON = {
     "ZoneTypeId": ZoneType.SECURITY,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneID": 1,
 }
 
 ZONE_SMOKE = {
@@ -82,6 +88,7 @@ ZONE_SMOKE = {
     "ZoneTypeId": ZoneType.FIRE_SMOKE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneID": 1,
 }
 
 ZONE_GAS = {
@@ -90,6 +97,7 @@ ZONE_GAS = {
     "ZoneTypeId": ZoneType.CARBON_MONOXIDE,
     "CanBeBypassed": 0,
     "ZoneStatus": ZoneStatus.NORMAL,
+    "ZoneID": 1,
 }
 
 
@@ -318,6 +326,7 @@ def test_proa7_zones():
         "ZoneTypeId": ZoneType.PROA7_MEDICAL,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.TAMPER,
+        "ZoneID": 1,
     }
 
     zone = tcz(zone_medical, None)
@@ -334,6 +343,7 @@ def test_unknown_type():
         "ZoneTypeId": 12345,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.NORMAL,
+        "ZoneID": 1,
     }
 
     zone = tcz(zone_unknown, None)
@@ -348,6 +358,7 @@ def test_unknown_status():
         "PartitionId": 1,
         "ZoneTypeId": 12345,
         "CanBeBypassed": 0,
+        "ZoneID": 1,
     }
 
     # invalid status (i.e. None or a string) should raise exception
@@ -369,6 +380,7 @@ def test_bypass():
         "ZoneTypeId": ZoneType.SECURITY,
         "CanBeBypassed": 0,
         "ZoneStatus": ZoneStatus.NORMAL,
+        "ZoneID": 1,
     }
 
     # should do nothing if zone cannot be bypassed
