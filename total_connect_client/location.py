@@ -51,7 +51,9 @@ class TotalConnectLocation:
 
         dib = location_info_basic.get("DeviceList") or []
         tcdevs = [TotalConnectDevice(d) for d in dib]
-        self.devices: dict[str, TotalConnectDevice] = {tcdev.deviceid: tcdev for tcdev in tcdevs if tcdev.deviceid is not None}
+        self.devices: dict[str, TotalConnectDevice] = {
+            tcdev.deviceid: tcdev for tcdev in tcdevs if tcdev.deviceid is not None
+        }
 
     def __str__(self) -> str:  # pragma: no cover
         """Return a text string that is printable."""
@@ -103,9 +105,7 @@ class TotalConnectLocation:
         """Get Zone details."""
         # 0 is the ListIdentifierID, whatever that might be
         result = self.parent.http_request(
-            endpoint=make_http_endpoint(
-                f"api/v1/locations/{self.location_id}/partitions/zones/0"
-            ),
+            endpoint=make_http_endpoint(f"api/v1/locations/{self.location_id}/partitions/zones/0"),
             method="GET",
         )
 
@@ -195,7 +195,7 @@ class TotalConnectLocation:
                 f"Response: {response}. "
             )
             raise
-        return bool(response["IsDuplicate"])
+        return response["IsDuplicate"]
 
     def _build_partition_list(self, partition_id: int = 0) -> list[int]:
         """Build a list of partitions to use for arming/disarming."""
@@ -204,8 +204,7 @@ class TotalConnectLocation:
 
         if partition_id not in self.partitions:
             raise TotalConnectError(
-                f"Partition {partition_id} does not exist "
-                f"at location {self.location_id}"
+                f"Partition {partition_id} does not exist at location {self.location_id}"
             )
         return [partition_id]
 
@@ -218,7 +217,7 @@ class TotalConnectLocation:
         partition_list = self._build_partition_list(partition_id)
         usercode = usercode or self.usercode
         # treats usercode as int here, but str elsewhere
-        usercode_int = int(usercode) if usercode else 0
+        usercode = int(usercode)
 
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
@@ -227,27 +226,21 @@ class TotalConnectLocation:
             method="PUT",
             data={
                 "armType": arm_type.value,
-                "userCode": usercode_int,
+                "userCode": usercode,
                 "partitions": partition_list,
             },
         )
         if _ResultCode.from_response(result) == _ResultCode.COMMAND_FAILED:
-            LOGGER.warning(
-                "could not arm system; is a zone faulted?; is it already armed?"
-            )
+            LOGGER.warning("could not arm system; is a zone faulted?; is it already armed?")
         self.parent.raise_for_resultcode(result)
-        LOGGER.info(
-            f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}"
-        )
+        LOGGER.info(f"ARMED({arm_type}) partitions {partition_list} at {self.location_id}")
 
     def disarm(self, partition_id: int = 0, usercode: str = "") -> None:
         """Disarm the system. If no partition given, disarm all of them."""
         if partition_id:
             # only check the partition
             if partition_id not in self.partitions:
-                raise TotalConnectError(
-                    f"Requesting to disarm unknown partition {partition_id}"
-                )
+                raise TotalConnectError(f"Requesting to disarm unknown partition {partition_id}")
             if (
                 self.partitions[partition_id].arming_state.is_disarmed()
                 or self.partitions[partition_id].arming_state.is_disarming()
@@ -267,19 +260,17 @@ class TotalConnectLocation:
         partition_list = self._build_partition_list(partition_id)
         usercode = usercode or self.usercode
         # treats usercode as int here, but str elsewere
-        usercode_int = int(usercode) if usercode else 0
+        usercode = int(usercode)
 
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
                 f"api/v3/locations/{self.location_id}/devices/{self.security_device_id}/partitions/disArm"
             ),
             method="PUT",
-            data={"userCode": usercode_int, "partitions": partition_list},
+            data={"userCode": usercode, "partitions": partition_list},
         )
         self.parent.raise_for_resultcode(result)
-        LOGGER.info(
-            f"DISARMED partitions {partition_list} at location {self.location_id}"
-        )
+        LOGGER.info(f"DISARMED partitions {partition_list} at location {self.location_id}")
 
     def zone_bypass(self, zone_id: int) -> None:
         """Bypass a zone."""
@@ -302,9 +293,7 @@ class TotalConnectLocation:
     def _bypass_zones(self, zone_list: list[int]) -> None:
         """Bypass the given list of zones."""
         if not zone_list:
-            LOGGER.info(
-                "Bypass request stopped because no zones are available to bypass"
-            )
+            LOGGER.info("Bypass request stopped because no zones are available to bypass")
             return
 
         # Validate zones before attempting bypass
@@ -315,14 +304,10 @@ class TotalConnectLocation:
                 LOGGER.warning(f"Zone {zone_id} not found, skipping bypass")
                 continue
             if not zone.can_be_bypassed:
-                LOGGER.warning(
-                    f"Zone {zone_id} ({zone.description}) cannot be bypassed"
-                )
+                LOGGER.warning(f"Zone {zone_id} ({zone.description}) cannot be bypassed")
                 continue
             if not zone.is_faulted():
-                LOGGER.warning(
-                    f"Zone {zone_id} ({zone.description}) is not faulted, cannot bypass"
-                )
+                LOGGER.warning(f"Zone {zone_id} ({zone.description}) is not faulted, cannot bypass")
                 continue
             valid_zones.append(zone_id)
 
@@ -340,10 +325,7 @@ class TotalConnectLocation:
             data={"ZoneIds": valid_zones, "UserCode": int(self.usercode)},
         )
 
-        if (
-            self.parent.raise_for_resultcode(result)
-            == _ResultCode.FAILED_TO_BYPASS_ZONE
-        ):
+        if self.parent.raise_for_resultcode(result) == _ResultCode.FAILED_TO_BYPASS_ZONE:
             raise FailedToBypassZone(f"Failed to bypass zone: {result}")
 
         # Check if zones were actually bypassed
@@ -438,9 +420,7 @@ class TotalConnectLocation:
             LOGGER.error(
                 f"unknown location ArmingState {astate} in {result}: please report at {PROJECT_URL}/issues"
             )
-            raise TotalConnectError(
-                f"unknown location ArmingState {astate} in {result}"
-            ) from None
+            raise TotalConnectError(f"unknown location ArmingState {astate} in {result}") from None
 
     def _update_partitions(self, partitions: dict[str, Any]) -> None:
         """Update partition info from Partitions."""
@@ -458,9 +438,7 @@ class TotalConnectLocation:
     def _update_zones(self, zones: dict[str, Any]) -> None:
         """Update zone info from Zones."""
         if not zones:
-            LOGGER.error(
-                "no zones found: sync your panel using TotalConnect app or website"
-            )
+            LOGGER.error("no zones found: sync your panel using TotalConnect app or website")
             raise TotalConnectError("no zones found: panel sync required")
 
         for zonedata in zones:
@@ -472,11 +450,7 @@ class TotalConnectLocation:
                 zone = TotalConnectZone(zonedata, self)
                 self.zones[zone_id] = zone
 
-            if (
-                zone.is_low_battery()
-                and zone.can_be_bypassed
-                and self.auto_bypass_low_battery
-            ):
+            if zone.is_low_battery() and zone.can_be_bypassed and self.auto_bypass_low_battery:
                 self.zone_bypass(zone_id)
 
     def sync_panel(self) -> None:
