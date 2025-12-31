@@ -86,7 +86,10 @@ class TotalConnectZone:
 
     def __init__(self, zone: dict[str, Any], parent_location: "TotalConnectLocation") -> None:
         """Initialize."""
-        self.zoneid: int | None = zone.get("ZoneID")
+        zone_id = zone.get("ZoneID")
+        if zone_id is None:
+            raise TotalConnectError("ZoneID is required")
+        self.zoneid: int = zone_id
         self._parent_location: "TotalConnectLocation" = parent_location
         self.partition: int = 0
         self.status: ZoneStatus = ZoneStatus.NORMAL
@@ -225,10 +228,14 @@ class TotalConnectZone:
         self.description = zone.get("ZoneDescription")
         # ZoneInfo gives 'PartitionID' but
         # ZoneStatusInfoWithPartitionId gives 'PartitionId'
-        self.partition = zone.get("PartitionId") or zone.get("PartitionID")
+        partition_value = zone.get("PartitionId") or zone.get("PartitionID")
+        self.partition = partition_value if partition_value is not None else 0
 
         try:
-            status = ZoneStatus(zone.get("ZoneStatus"))
+            zone_status_value = zone.get("ZoneStatus")
+            if zone_status_value is None:
+                raise ValueError("ZoneStatus is required")
+            status = ZoneStatus(zone_status_value)
             if status & ~ZoneStatus.KNOWN > 0:
                 LOGGER.warning(
                     f"unknown ZoneStatus {zone.get('ZoneStatus')} in {zone}: please report at {PROJECT_URL}/issues"
