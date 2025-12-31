@@ -14,7 +14,7 @@ import json
 import logging
 import time
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import requests
 import requests.adapters
@@ -280,7 +280,7 @@ class TotalConnectClient:
                     raise RetryableTotalConnectError(
                         f"Server temporarily unavailable. Status code: {response.status_code}"
                     )
-            return response.json()
+            return cast(dict[str, Any], response.json())
 
         args = {**(params or {}), **(data or {})}
         return self._request_with_retries(_do_http_request, f"{method} {endpoint} ({args})")
