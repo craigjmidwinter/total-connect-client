@@ -84,7 +84,9 @@ class ZoneType(Enum):
 class TotalConnectZone:
     """Do not create instances of this class yourself."""
 
-    def __init__(self, zone: dict[str, Any], parent_location: "TotalConnectLocation") -> None:
+    def __init__(
+        self, zone: dict[str, Any], parent_location: "TotalConnectLocation"
+    ) -> None:
         """Initialize."""
         zone_id = zone.get("ZoneID")
         if zone_id is None:
@@ -137,7 +139,9 @@ class TotalConnectZone:
 
     def is_tampered(self) -> bool:
         """Return true if zone is tampered."""
-        return (self.status & ZoneStatus.TROUBLE > 0) or (self.status & ZoneStatus.TAMPER > 0)
+        return (self.status & ZoneStatus.TROUBLE > 0) or (
+            self.status & ZoneStatus.TAMPER > 0
+        )
 
     def is_low_battery(self) -> bool:
         """Return true if low battery."""
