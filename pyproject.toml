@@ -40,7 +40,7 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=9.0.2", "pytest-sugar>=1.1.1", "requests_mock>=1.12.1", "pyjwt>=2.10.1"]
 type = ["mypy>=1.15.0", "types-requests>=2.23.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
-lint = ["ruff>=0.9.7", "coverage>=7.6.12", "total-connect-client[test]"]
+lint = ["ruff>=0.9.7", "coverage>=7.6.12", "pytest>=9.0.2"]
 dev = ["total-connect-client[test,type,lint]", "tox>=4.32.0"]
 
 [tool.setuptools.package-data]
