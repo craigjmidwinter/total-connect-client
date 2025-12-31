@@ -284,25 +284,51 @@ class TotalConnectLocation:
 
     def zone_bypass_all(self) -> None:
         """Bypass all faulted zones."""
-        faulted_zones = []
+        bypassable_faulted_zones = []
         for zone_id, zone in self.zones.items():
             if zone.is_faulted():
-                faulted_zones.append(zone_id)
+                if not zone.can_be_bypassed:
+                    LOGGER.warning(
+                        f"Zone {zone_id} ({zone.description}) is faulted but cannot be bypassed"
+                    )
+                    continue
+                bypassable_faulted_zones.append(zone_id)
 
-        self._bypass_zones(faulted_zones)
+        self._bypass_zones(bypassable_faulted_zones)
 
     def _bypass_zones(self, zone_list: List[int]) -> None:
         """Bypass the given list of zones."""
         if not zone_list:
-            LOGGER.info("Bypass request stopped because no zones are faulted")
+            LOGGER.info("Bypass request stopped because no zones are available to bypass")
             return
 
+        # Validate zones before attempting bypass
+        valid_zones = []
+        for zone_id in zone_list:
+            zone = self.zones.get(zone_id)
+            if not zone:
+                LOGGER.warning(f"Zone {zone_id} not found, skipping bypass")
+                continue
+            if not zone.can_be_bypassed:
+                LOGGER.warning(f"Zone {zone_id} ({zone.description}) cannot be bypassed")
+                continue
+            if not zone.is_faulted():
+                LOGGER.warning(f"Zone {zone_id} ({zone.description}) is not faulted, cannot bypass")
+                continue
+            valid_zones.append(zone_id)
+
+        if not valid_zones:
+            LOGGER.info("No valid zones found for bypass")
+            return
+
+        LOGGER.info(f"Attempting to bypass zones: {valid_zones}")
+        
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
                 f"api/v1/locations/{self.location_id}/devices/{self.security_device_id}/bypass"
             ),
             method="PUT",
-            data={"ZoneIds": zone_list, "UserCode": int(self.usercode)},
+            data={"ZoneIds": valid_zones, "UserCode": int(self.usercode)},
         )
 
         if (
@@ -311,7 +337,20 @@ class TotalConnectLocation:
         ):
             raise FailedToBypassZone(f"Failed to bypass zone: {result}")
 
-        # TODO: use ZoneStatusResult to update zone status
+        # Check if zones were actually bypassed
+        if "Zones" in result:
+            for zone_data in result["Zones"]:
+                zone_id = zone_data["ZoneID"]
+                returned_status = zone_data["ZoneStatus"]
+                if returned_status == ZoneStatus.BYPASSED:
+                    LOGGER.info(f"Zone {zone_id} successfully bypassed")
+                else:
+                    LOGGER.warning(
+                        f"Zone {zone_id} was not bypassed. Returned status: {returned_status} "
+                        f"(expected {ZoneStatus.BYPASSED})"
+                    )
+        else:
+            LOGGER.warning("No zone status information returned from bypass API")
 
     def clear_bypass(self) -> None:
         """Clear all bypassed zones."""
