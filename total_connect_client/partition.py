@@ -18,7 +18,10 @@ class TotalConnectPartition:
     def __init__(self, details: dict[str, Any], parent: "TotalConnectLocation"):
         """Initialize Partition based on PartitionDetails."""
         self.parent: "TotalConnectLocation" = parent
-        self.partitionid: int | None = details.get("PartitionID")
+        partition_id = details.get("PartitionID")
+        if partition_id is None:
+            raise TotalConnectError("PartitionID is required")
+        self.partitionid: int = partition_id
         self.name: str | None = details.get("PartitionName")
         self.is_stay_armed: bool | None = details.get("IsStayArmed")
         self.is_fire_enabled: bool | None = details.get("IsFireEnabled")
