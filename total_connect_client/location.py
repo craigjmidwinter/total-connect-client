@@ -51,7 +51,7 @@ class TotalConnectLocation:
 
         dib = location_info_basic.get("DeviceList") or []
         tcdevs = [TotalConnectDevice(d) for d in dib]
-        self.devices: dict[str, TotalConnectDevice] = {tcdev.deviceid: tcdev for tcdev in tcdevs}
+        self.devices: dict[str, TotalConnectDevice] = {tcdev.deviceid: tcdev for tcdev in tcdevs if tcdev.deviceid is not None}
 
     def __str__(self) -> str:  # pragma: no cover
         """Return a text string that is printable."""
@@ -80,8 +80,8 @@ class TotalConnectLocation:
             partitions += str(status) + "\n"
 
         zones = f"ZONES: {len(self.zones)}\n\n"
-        for status in self.zones.values():
-            zones += str(status)
+        for zone in self.zones.values():
+            zones += str(zone)
 
         return data + devices + partitions + zones
 
@@ -195,7 +195,7 @@ class TotalConnectLocation:
                 f"Response: {response}. "
             )
             raise
-        return response["IsDuplicate"]
+        return bool(response["IsDuplicate"])
 
     def _build_partition_list(self, partition_id: int = 0) -> list[int]:
         """Build a list of partitions to use for arming/disarming."""
@@ -218,7 +218,7 @@ class TotalConnectLocation:
         partition_list = self._build_partition_list(partition_id)
         usercode = usercode or self.usercode
         # treats usercode as int here, but str elsewhere
-        usercode = int(usercode)
+        usercode_int = int(usercode) if usercode else 0
 
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
@@ -227,7 +227,7 @@ class TotalConnectLocation:
             method="PUT",
             data={
                 "armType": arm_type.value,
-                "userCode": usercode,
+                "userCode": usercode_int,
                 "partitions": partition_list,
             },
         )
@@ -267,14 +267,14 @@ class TotalConnectLocation:
         partition_list = self._build_partition_list(partition_id)
         usercode = usercode or self.usercode
         # treats usercode as int here, but str elsewere
-        usercode = int(usercode)
+        usercode_int = int(usercode) if usercode else 0
 
         result = self.parent.http_request(
             endpoint=make_http_endpoint(
                 f"api/v3/locations/{self.location_id}/devices/{self.security_device_id}/partitions/disArm"
             ),
             method="PUT",
-            data={"userCode": usercode, "partitions": partition_list},
+            data={"userCode": usercode_int, "partitions": partition_list},
         )
         self.parent.raise_for_resultcode(result)
         LOGGER.info(
