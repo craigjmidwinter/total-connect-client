@@ -1,30 +1,30 @@
 """Tests TotalConnectLocation."""
 
 from unittest.mock import Mock
+
 import requests_mock
 from common import create_http_client
 from const import (
     LOCATION_ID,
+    PANEL_STATUS_ARMED_AWAY,
+    PANEL_STATUS_DISARMED,
+    RESPONSE_DISARM_SUCCESS,
     RESPONSE_UNKNOWN,
     REST_RESULT_FULL_STATUS,
     REST_RESULT_PARTITIONS_CONFIG,
     REST_RESULT_PARTITIONS_ZONES,
     REST_RESULT_SESSION_DETAILS,
     REST_RESULT_VALIDATE_USER_LOCATIONS,
-    PANEL_STATUS_DISARMED,
-    PANEL_STATUS_ARMED_AWAY,
-    RESPONSE_DISARM_SUCCESS,
 )
 from pytest import raises
 
-from total_connect_client.const import ArmingState, ArmType
+from total_connect_client.const import ArmingState, ArmType, make_http_endpoint
 from total_connect_client.exceptions import (
     FeatureNotSupportedError,
     PartialResponseError,
     TotalConnectError,
 )
 from total_connect_client.location import TotalConnectLocation
-from total_connect_client.const import make_http_endpoint
 
 RESULT_LOCATION = REST_RESULT_SESSION_DETAILS["SessionDetailsResult"]["Locations"][0]
 result_num_zones = len(REST_RESULT_PARTITIONS_ZONES["ZoneStatus"]["Zones"])

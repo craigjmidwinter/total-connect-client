@@ -13,13 +13,14 @@ import base64
 import json
 import logging
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import requests
+import requests.adapters
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 from oauthlib.oauth2 import LegacyApplicationClient, OAuth2Error
-import requests.adapters
 from requests_oauthlib import OAuth2Session
 
 from .const import (

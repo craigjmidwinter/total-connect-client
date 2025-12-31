@@ -2,7 +2,7 @@
 
 import logging
 from enum import Enum, IntFlag
-from typing import Any, Final, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Final
 
 from .const import PROJECT_URL
 from .exceptions import TotalConnectError
@@ -92,7 +92,7 @@ class TotalConnectZone:
         if zone_id is None:
             raise TotalConnectError("ZoneID is required")
         self.zoneid: int = zone_id
-        self._parent_location: "TotalConnectLocation" = parent_location
+        self._parent_location: TotalConnectLocation = parent_location
         self.partition: int = 0
         self.status: ZoneStatus = ZoneStatus.NORMAL
         self.zone_type_id: ZoneType | int | None = None

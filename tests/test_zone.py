@@ -7,17 +7,17 @@ import pytest
 from const import (
     ZONE_LOW_BATTERY,
     ZONE_STATUS_LYRIC_CONTACT,
-    ZONE_STATUS_LYRIC_LOCAL_ALARM,
     ZONE_STATUS_LYRIC_KEYPAD,
+    ZONE_STATUS_LYRIC_LOCAL_ALARM,
     ZONE_STATUS_LYRIC_MOTION,
     ZONE_STATUS_LYRIC_POLICE,
     ZONE_STATUS_LYRIC_TEMP,
     ZS_NORMAL,
 )
 
-from total_connect_client.zone import ZoneStatus, ZoneType
-from total_connect_client.zone import TotalConnectZone as tcz
 from total_connect_client.exceptions import TotalConnectError
+from total_connect_client.zone import TotalConnectZone as tcz
+from total_connect_client.zone import ZoneStatus, ZoneType
 
 ZONE_BYPASSED = {
     "ZoneDescription": "Bypassed",

@@ -1,7 +1,7 @@
 """Total Connect Partition."""
 
 import logging
-from typing import Any, Final, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Final
 
 from .const import PROJECT_URL, ArmingState, ArmType
 from .exceptions import PartialResponseError, TotalConnectError
@@ -17,7 +17,7 @@ class TotalConnectPartition:
 
     def __init__(self, details: dict[str, Any], parent: "TotalConnectLocation"):
         """Initialize Partition based on PartitionDetails."""
-        self.parent: "TotalConnectLocation" = parent
+        self.parent: TotalConnectLocation = parent
         partition_id = details.get("PartitionID")
         if partition_id is None:
             raise TotalConnectError("PartitionID is required")

@@ -1,7 +1,7 @@
 """Total Connect Location."""
 
 import logging
-from typing import Any, Final, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Final
 
 from .const import PROJECT_URL, ArmingState, ArmType, _ResultCode, make_http_endpoint
 from .device import TotalConnectDevice
@@ -34,7 +34,7 @@ class TotalConnectLocation:
             x.split("=") for x in location_info_basic["LocationModuleFlags"].split(",")
         )
         self.security_device_id: str = location_info_basic["SecurityDeviceID"]
-        self.parent: "TotalConnectClient" = parent
+        self.parent: TotalConnectClient = parent
         self.ac_loss: bool | None = None
         self.low_battery: bool | None = None
         self.cover_tampered: bool | None = None

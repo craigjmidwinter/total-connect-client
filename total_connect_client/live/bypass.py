@@ -49,50 +49,50 @@ TC: Final[TotalConnectClient] = TotalConnectClient(USERNAME, PASSWORD, USERCODES
 for location_id in TC.locations:
     location = TC.locations[location_id]
     print(f"\n=== Testing bypass for location {location_id} ({location.location_name}) ===")
-    
+
     # Get current zone status
     location.get_zone_details()
-    
+
     print(f"Found {len(location.zones)} zones")
-    
+
     # Show faulted zones
     faulted_zones: list[int] = []
     for zone_id, zone in location.zones.items():
         if zone.is_faulted():
             faulted_zones.append(zone_id)
             print(f"Zone {zone_id} ({zone.description}) is faulted")
-    
+
     if not faulted_zones:
         print("No faulted zones found. Cannot test bypass functionality.")
         continue
-    
+
     print(f"\nAttempting to bypass {len(faulted_zones)} faulted zones: {faulted_zones}")
-    
+
     try:
         # Bypass all faulted zones
         location.zone_bypass_all()
         print("Successfully initiated bypass for all faulted zones")
-        
+
         # Wait for system to process
         print(f"Waiting {BYPASS_WAIT_TIME} seconds...")
         time.sleep(BYPASS_WAIT_TIME)
-        
+
         # Refresh zone status
         location.get_zone_details()
-        
+
         # Show bypassed zones
         bypassed_zones: list[int] = []
         for zone_id, zone in location.zones.items():
             if zone.is_bypassed():
                 bypassed_zones.append(zone_id)
                 print(f"Zone {zone_id} ({zone.description}) is bypassed")
-        
+
         print(f"\nAttempting to clear bypass for {len(bypassed_zones)} bypassed zones")
-        
+
         # Clear all bypassed zones
         location.clear_bypass()
         print("Successfully cleared all bypassed zones")
-        
+
     except Exception as e:
         print(f"Error during bypass test: {e}")
         logging.exception("Error during bypass test")

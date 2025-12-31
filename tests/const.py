@@ -1,9 +1,10 @@
 """Testing constants."""
 
 import copy
+
 import jwt
 
-from total_connect_client import ArmingState, ZoneType, ZoneStatus
+from total_connect_client import ArmingState, ZoneStatus, ZoneType
 from total_connect_client.const import _ResultCode
 
 PASSWORD_BAD = "none"
