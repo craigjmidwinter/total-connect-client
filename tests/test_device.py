@@ -15,3 +15,17 @@ def tests_panel():
     panel = TotalConnectDevice(device_list[0])
     assert panel.deviceid == SECURITY_DEVICE_ID
     assert panel.is_doorbell() is False
+
+
+def tests_model():
+    """Test model info."""
+    panel = TotalConnectDevice(device_list[0])
+    model, model_id = panel.model_info()
+    assert model == "ProA7"
+    assert model_id == "Plus"
+
+    # unknown info
+    panel.class_id = 666
+    model, model_id = panel.model_info()
+    assert model == "Unknown model"
+    assert model_id == "Unknown model ID"
