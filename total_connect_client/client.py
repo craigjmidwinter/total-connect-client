@@ -319,19 +319,30 @@ class TotalConnectClient:
 
     def _get_configuration(self) -> None:
         """Retrieve application configuration for TotalConnect REST API."""
-        response = self._raw_http_session.get(AUTH_CONFIG_ENDPOINT, timeout=self.TIMEOUT)
-        if not response.ok:
-            raise ServiceUnavailable(
-                f"Service configuration is not available at {AUTH_CONFIG_ENDPOINT}"
-            )
-        config = response.json()
-        key = config["AppConfig"][0]["tc2APIKey"]
-        self._client_id = config["AppConfig"][0]["tc2ClientId"]
-        self._app_id = next(
-            info for info in config["brandInfo"] if info["BrandName"] == "totalconnect"
-        )["AppID"]
-        self._app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
-        self._key_pem = "-----BEGIN PUBLIC KEY-----\n" + key + "\n-----END PUBLIC KEY-----"
+
+        def _do_request() -> dict[str, Any]:
+            response = self._raw_http_session.get(AUTH_CONFIG_ENDPOINT, timeout=self.TIMEOUT)
+            if not response.ok:
+                raise ServiceUnavailable(
+                    f"Service configuration is not available at {AUTH_CONFIG_ENDPOINT}"
+                )
+            try:
+                return cast(dict[str, Any], response.json())
+            except (KeyError, IndexError, ValueError) as err:
+                raise ServiceUnavailable(f"Unexpected configuration response: {err}") from err
+
+        config = self._request_with_retries(_do_request, f"GET {AUTH_CONFIG_ENDPOINT}")
+
+        try:
+            key = config["AppConfig"][0]["tc2APIKey"]
+            self._client_id = config["AppConfig"][0]["tc2ClientId"]
+            self._app_id = next(
+                info for info in config["brandInfo"] if info["BrandName"] == "totalconnect"
+            )["AppID"]
+            self._app_version = config["RevisionNumber"] + "." + config["version"].split(".")[-1]
+            self._key_pem = "-----BEGIN PUBLIC KEY-----\n" + key + "\n-----END PUBLIC KEY-----"
+        except (KeyError, IndexError, ValueError) as err:
+            raise ServiceUnavailable(f"Unexpected configuration response: {err}") from err
 
     def _request_token(self) -> None:
         """Request a token using OAuth2."""
