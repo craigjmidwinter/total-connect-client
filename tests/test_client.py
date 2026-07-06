@@ -8,11 +8,11 @@ from const import (
     HTTP_RESPONSE_TOKEN,
     LOCATION_ID,
     PANEL_STATUS_DISARMED,
+    RESPONSE_UNKNOWN,
     REST_RESULT_LOGOUT,
     REST_RESULT_PARTITIONS_CONFIG,
     REST_RESULT_PARTITIONS_ZONES,
     REST_RESULT_SESSION_DETAILS,
-    RESPONSE_UNKNOWN,
     SECURITY_DEVICE_ID,
 )
 from pytest import raises
@@ -90,7 +90,5 @@ def test_get_configuration_connection_reset_then_success():
             json=PANEL_STATUS_DISARMED,
         )
 
-        client = TotalConnectClient(
-            "username", "password", {LOCATION_ID: "1234"}, retry_delay=0
-        )
+        client = TotalConnectClient("username", "password", {LOCATION_ID: "1234"}, retry_delay=0)
         assert client.is_logged_in() is True
