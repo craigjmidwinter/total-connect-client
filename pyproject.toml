@@ -1,7 +1,7 @@
 # total_connect_client packaging file
 
 [build-system]
-requires = ["setuptools>=75.0", "wheel"]
+requires = ["setuptools>=83.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -39,7 +39,7 @@ dependencies = [
 
 [dependency-groups]
 test = ["pytest>=9.1.1", "pytest-sugar>=1.1.1", "requests_mock>=1.12.1", "pyjwt>=2.13.0"]
-type = ["mypy>=2.1.0", "types-requests>=2.32.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
+type = ["mypy>=2.1.0", "types-requests>=2.32.0", "types-oauthlib>=3.3.0", "types-requests-oauthlib>=2.0.0"]
 lint = ["ruff>=0.15.0"]
 coverage = ["coverage>=7.15.0", {include-group = "test"}]
 dev = [
