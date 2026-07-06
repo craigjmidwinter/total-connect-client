@@ -38,12 +38,12 @@ dependencies = [
 "Bug Tracker" = "https://github.com/craigjmidwinter/total-connect-client/issues"
 
 [dependency-groups]
-test = ["pytest>=9.0.2", "pytest-sugar>=1.1.1", "requests_mock>=1.12.1", "pyjwt>=2.10.1"]
-type = ["mypy>=1.15.0", "types-requests>=2.23.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
-lint = ["ruff>=0.9.7"]
-coverage = ["coverage>=7.6.12", {include-group = "test"}]
+test = ["pytest>=9.1.1", "pytest-sugar>=1.1.1", "requests_mock>=1.12.1", "pyjwt>=2.13.0"]
+type = ["mypy>=2.1.0", "types-requests>=2.32.0", "types-oauthlib>=3.2.0", "types-requests-oauthlib>=2.0.0"]
+lint = ["ruff>=0.15.0"]
+coverage = ["coverage>=7.15.0", {include-group = "test"}]
 dev = [
-    "tox>=4.32.0",
+    "tox>=4.56.1",
     {include-group = "test"},
     {include-group = "type"},
     {include-group = "lint"},
