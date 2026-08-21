@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "Topic :: Home Automation",
     "Topic :: Security",
@@ -90,12 +91,8 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 
-[[tool.mypy.overrides]]
-module = ["pytest", "requests_mock"]
-ignore_missing_imports = true
-
 [tool.tox]
-env_list = ["py{310,311,312,313}", "type", "lint", "coverage"]
+env_list = ["py{310,311,312,313,314}", "type", "lint", "coverage"]
 
 [tool.tox.env_run_base]
 description = "Run tests under {base_python}"
@@ -118,7 +115,7 @@ allowlist_externals = ["mypy"]
 commands = [["mypy", "-p", "total_connect_client"]]
 
 [tool.tox.env.coverage]
-description = "Run type checking on code base"
+description = "Run tests under coverage and report line/branch coverage"
 dependency_groups = ["coverage"]
 allowlist_externals = ["coverage"]
 commands = [

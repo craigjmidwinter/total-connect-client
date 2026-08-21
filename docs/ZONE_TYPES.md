@@ -1,5 +1,28 @@
 # Zone Types
 
+**Mode:** Reference (empirical). Resideo does not publish what each
+`ZoneTypeId` means in practice. The raw API response below and the
+device-to-zone-type mapping under "Information on devices found through
+testing" were both recovered by testing against real panels and sensors, not
+from vendor documentation — see the "See" links at the bottom for the closest
+thing to a public spec (third-party Vista/Honeywell installer guides, not
+Resideo's).
+
+**How to read this page:** `total_connect_client.zone.ZoneType` (see
+[`api-reference.md`](api-reference.md#zonetype-enum-and-zone-type-predicates))
+only encodes the "standard" values also listed in the raw API response below.
+A zone's real `zone_type_id` can be a raw `int` not in that enum — this page
+is where you look up what an unfamiliar raw value has been observed to mean.
+
+**Worked example:**
+
+```python
+for zone in location.zones.values():
+    print(zone.zoneid, zone.description, zone.zone_type_id)
+    # 1  Front Door   -> ZoneType.ENTRY_EXIT1 (matches "Zone Type # 1" below: Lyric and 5800MINI)
+    # 12 Basement Sump -> ZoneType.MONITOR (matches "Zone Type # 12" below: Lyric "Temperature", ProSixFlood)
+```
+
 ## Zone Types returned by REST API
 
 Request: https://rs.alarmnet.com/TC2API.TCResource/api/v1/SecuritySystem/ZoneTypes
@@ -39,8 +62,12 @@ Zone Type # | Type | Notes
 89 | tbd | Lyric "local alarm"
 90-93 | Vista configurable | (not yet seen in the wild)
 
-See 
-- https://www.alarmliquidators.com/content/Vista%2021IP-%20Programming%20Guide.pdf
-- http://techresource.online/training/ssnw/honeywell/zone-types
-- http://www.honeywellmanual.com/pdf/vista20p.pdf
+Sources for the Vista zone-type numbering (both verified reachable
+2026-08-21):
+
+- <https://www.alarmliquidators.com/content/Vista%2021IP-%20Programming%20Guide.pdf>
+- <http://www.honeywellmanual.com/pdf/vista20p.pdf>
+
+A third source previously listed here, `techresource.online`, no longer
+resolves and has been removed.
 

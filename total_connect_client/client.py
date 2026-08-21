@@ -289,7 +289,8 @@ class TotalConnectClient:
         # Load the key from the PEM file
         key = RSA.importKey(self._key_pem)
 
-        # Create a cipher object using PKCS1_OAEP padding
+        # Create a cipher object using PKCS#1 v1.5 padding, which is what the
+        # TotalConnect server requires. Not OAEP.
         cipher = PKCS1_v1_5.new(key)
 
         # Encrypt the message

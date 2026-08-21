@@ -7,9 +7,37 @@ import pytest
 from const import PARTITION_DETAILS_1, PARTITION_DISARMED
 
 from total_connect_client.client import ArmingHelper
-from total_connect_client.const import ArmingState
+from total_connect_client.const import ArmingState, ArmType
 from total_connect_client.exceptions import PartialResponseError, TotalConnectError
 from total_connect_client.partition import TotalConnectPartition
+
+
+def test_partition_init_raises_when_partition_id_missing():
+    """A partition cannot be constructed without a PartitionID."""
+    with pytest.raises(TotalConnectError):
+        TotalConnectPartition({"PartitionName": "no id"}, None)
+
+
+def test_partition_arm_delegates_to_parent_location_with_partition_id():
+    """partition.arm() calls through to the parent location's arm(), scoped to this
+    partition's ID -- so per-partition arming actually arms only that partition."""
+    location = Mock()
+    partition = TotalConnectPartition(PARTITION_DETAILS_1, location)
+
+    partition.arm(ArmType.STAY_NIGHT, usercode="4321")
+
+    location.arm.assert_called_once_with(ArmType.STAY_NIGHT, partition.partitionid, "4321")
+
+
+def test_partition_disarm_delegates_to_parent_location_with_partition_id():
+    """partition.disarm() calls through to the parent location's disarm(), scoped to
+    this partition's ID."""
+    location = Mock()
+    partition = TotalConnectPartition(PARTITION_DETAILS_1, location)
+
+    partition.disarm(usercode="4321")
+
+    location.disarm.assert_called_once_with(partition.partitionid, "4321")
 
 
 def tests_partition():
