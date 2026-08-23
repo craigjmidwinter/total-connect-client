@@ -1,0 +1,50 @@
+name: Feature Request
+description: Suggest new capability for total_connect_client.
+title: "[FEATURE]: <short description>"
+labels: [enhancement, needs-triage]
+assignees: [austinmroczek]
+projects: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Please provide as much detail as possible.
+
+  - type: input
+    id: feature-summary
+    attributes:
+      label: Feature Summary
+      description: A brief description of the feature you'd like to see.
+      placeholder: "e.g., 'Support for reading garage door status'"
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Hardware
+      description: Your alarm hardware model/version, if relevant to this feature.
+      placeholder: "ProA7, Lynx Touch, Vista 21, etc"
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: What are you trying to do, and how would this feature help?
+      placeholder: "e.g., 'I want Home Assistant to show whether my garage door is open.'"
+
+  - type: textarea
+    id: api-info
+    attributes:
+      label: TotalConnect API details (if known)
+      description: >-
+        If you've found the relevant TotalConnect API call or response field
+        (e.g. from the mobile app's network traffic, or the REST API docs),
+        share it here. Remove any username, password, usercode, or
+        account/device ID before posting — see SECURITY.md for what to scrub.
+      render: json
+
+  - type: textarea
+    id: other
+    attributes:
+      label: Other information
+      description: Anything else that might help, such as related issues or PRs.

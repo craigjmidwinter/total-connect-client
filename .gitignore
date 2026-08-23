@@ -16,3 +16,11 @@ total_connect_client.egg-info/
 
 # emacs backups
 *~
+
+# virtualenvs (CONTRIBUTING.md's setup creates .venv)
+.venv/
+
+# uv resolves a lockfile on `uv sync`; this project does not commit one --
+# CI resolves fresh through tox, so a committed lock would be a second
+# source of truth that nothing verifies.
+uv.lock

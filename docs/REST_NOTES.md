@@ -1,5 +1,17 @@
 # Notes from early development with the new REST API
 
+**Mode:** Explanation, kept close to its raw field-note form on purpose. This
+is the working log from reverse-engineering the REST API this library talks
+to (see [`architecture.md`](architecture.md) for the polished, current
+description of the auth flow and retry model). It's included here — largely
+verbatim, un-sanitized DEBUG output and all — because the reasoning behind
+*why* the client retries what it retries, and *why* certain calls need a
+usercode even when marked optional, is easier to trust when you can see the
+actual traffic that led to it. If you're looking for current, authoritative
+behavior, start with [`architecture.md`](architecture.md) or
+[`api-reference.md`](api-reference.md) instead; come here when you want the
+evidence.
+
 ## General notes
 
 Watch the HTTP type (GET, PUT, etc) in the request and ensure the request parameters are in the right place.  For GET use `params` but for POST use `data`.

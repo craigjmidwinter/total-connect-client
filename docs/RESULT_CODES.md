@@ -1,6 +1,36 @@
 # Result Code information
 
-Information on ResultCodes returned from Total Connect.
+**Mode:** Reference (empirical). Resideo's
+[generated API reference](https://rs.alarmnet.com/TC2API.TCResource/) omits
+many `ResultCode` semantics. Every row below was recovered by testing against
+real TotalConnect accounts and panels, or reported by users in linked GitHub
+issues — not from a complete vendor catalogue. Treat "Notes" as the best
+explanation available, not a guarantee; the same numeric code has been
+observed meaning slightly different things on different panels.
+
+**How to read this table:** every TotalConnect API response carries a
+`ResultCode` (and often a matching `ResultData` string). This library's
+`total_connect_client.const._ResultCode` enum and
+`TotalConnectClient.raise_for_resultcode()` turn a subset of these into
+specific exceptions — see
+[`api-reference.md`'s exceptions section](api-reference.md#exceptions) for
+that mapping. If you're debugging a raw response body and see a `ResultCode`
+you don't recognize, look it up here first.
+
+**Worked example** — if `location.arm(ArmType.AWAY)` raises
+`BadResultCodeError`, look at the underlying response:
+
+```python
+from total_connect_client.exceptions import BadResultCodeError
+
+try:
+    location.arm(ArmType.AWAY)
+except BadResultCodeError as err:
+    response = err.args[1]  # the response dict passed when the exception was raised
+    print(response["ResultCode"], response.get("ResultData"))
+    # -4502 Command failed. Please try again.
+    # -> matches the -4502 row below: "is a zone faulted?"
+```
 
 ResultCode | ResultData | Notes
 ------------ | - | - 
