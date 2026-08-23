@@ -1,8 +1,10 @@
 # Device information
 
-**Mode:** Reference (empirical). Resideo does not publish a device/panel
-catalogue. Every row below was recovered from real accounts by contributors
-(see the `@austinmroczek` attributions and linked issues) — this is the raw
+**Mode:** Reference (empirical). Resideo's
+[generated API reference](https://rs.alarmnet.com/TC2API.TCResource/) does not
+include a complete device/panel catalogue. Every row below was recovered from
+real accounts by contributors (see the `@austinmroczek` attributions and linked
+issues) — this is the raw
 data behind `total_connect_client.device.TotalConnectDevice.model_info()`'s
 `MODEL_LOOKUP` table (see
 [`api-reference.md`](api-reference.md#totalconnectdevice)). If your hardware

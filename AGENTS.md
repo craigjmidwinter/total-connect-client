@@ -6,8 +6,12 @@
   `total-connect-client`. It requires Python 3.10 or newer; CI covers 3.10
   through 3.14.
 - `TotalConnectClient` authenticates during construction and normally talks to
-  the undocumented Total Connect 2 REST service. Do not use real accounts,
-  panels, credentials, or usercodes for automated verification.
+  the Total Connect 2 REST service. Resideo publishes an
+  [incomplete generated reference](https://rs.alarmnet.com/TC2API.TCResource/),
+  but it omits many endpoint details and result-code semantics and provides no
+  verified third-party SDK or compatibility contract. The client therefore
+  relies on reverse-engineered behavior. Do not use real accounts, panels,
+  credentials, or usercodes for automated verification.
 - Home Assistant's `totalconnect` integration is the primary downstream
   consumer. Treat exports from `total_connect_client/__init__.py`, public
   classes and methods, return types, and the exception hierarchy in

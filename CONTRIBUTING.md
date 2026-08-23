@@ -177,9 +177,9 @@ change" narrower than it looks:
   from `tests/const.py` and mocks HTTP with `requests_mock` — follow that
   pattern rather than adding a test that needs a real account.
 - **New `_ResultCode` values need a `docs/RESULT_CODES.md` entry.** That
-  table is the only documentation TotalConnect's numeric codes get; a code
-  handled in `const.py` or `client.py` without a matching table row is a code
-  nobody else can look up when they hit it.
+  table is the project's maintained documentation for TotalConnect's numeric
+  codes; a code handled in `const.py` or `client.py` without a matching table
+  row is a code nobody else can look up when they hit it.
 - **Nothing under `total_connect_client/live/` runs in CI, ever.** Those
   scripts arm, disarm, bypass, or trigger a real panel. If your change
   touches that directory, double-check it's still unreachable from `pytest`,

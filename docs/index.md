@@ -6,11 +6,14 @@ These docs mostly follow [Diátaxis](https://diataxis.fr/) — tutorial, how-to,
 reference, and explanation kept separate. Two places where they deliberately
 don't, stated plainly:
 
-1. **Most of this directory is field notes on an undocumented vendor API, not
-   product documentation.** Resideo/Total Connect 2 publishes no public API
-   reference. Everything in `RESULT_CODES.md`, `ZONE_TYPES.md`, `DEVICES.md`,
-   and `DOORBELL.md` was recovered by testing against real panels and reading
-   traffic — not from a spec. That makes them reference pages in *shape*
+1. **Most of this directory is field notes supplementing an incomplete vendor
+   reference, not product documentation.** Resideo publishes an
+   [incomplete generated reference](https://rs.alarmnet.com/TC2API.TCResource/),
+   but it omits many endpoint details and result-code semantics and provides
+   no verified third-party SDK or compatibility contract. Everything in
+   `RESULT_CODES.md`, `ZONE_TYPES.md`, `DEVICES.md`, and `DOORBELL.md` was
+   recovered by testing against real panels and reading traffic — not from a
+   complete spec. That makes them reference pages in *shape*
    (tables you look things up in) but their provenance is empirical, not
    authoritative, and each page now says so at the top. We are not pretending
    Resideo published this; we are telling you where it actually came from and
@@ -42,7 +45,7 @@ this repo. These pages render as plain Markdown on GitHub.
 | [`DEVICES.md`](DEVICES.md) | Reference (empirical) | A developer mapping `DeviceClassID`/`PanelType`/`PanelVariant` to real hardware |
 | [`DOORBELL.md`](DOORBELL.md) | Reference (empirical, thin/TBD) | A developer investigating Skybell/doorbell device calls |
 | [`architecture.md`](architecture.md) | Explanation | Anyone who wants to understand the auth flow, the retry/reauth model, and why the client is shaped this way before changing or debugging it |
-| [`REST_NOTES.md`](REST_NOTES.md) | Explanation (raw field notes) | A developer debugging an unusual response who wants to see prior undocumented-API discoveries, largely verbatim |
+| [`REST_NOTES.md`](REST_NOTES.md) | Explanation (raw field notes) | A developer debugging an unusual response who wants to see prior reverse-engineered API discoveries, largely verbatim |
 | [`VERSIONS.md`](VERSIONS.md) | Reference (status page) | Anyone trying to correlate a `total-connect-client` release with a Home Assistant release |
 
 For the full history of what changed release to release, see

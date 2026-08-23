@@ -1,9 +1,10 @@
 # Result Code information
 
-**Mode:** Reference (empirical). Resideo does not publish a `ResultCode`
-catalogue. Every row below was recovered by testing against real
-TotalConnect accounts and panels, or reported by users in linked GitHub
-issues — not from vendor documentation. Treat "Notes" as the best
+**Mode:** Reference (empirical). Resideo's
+[generated API reference](https://rs.alarmnet.com/TC2API.TCResource/) omits
+many `ResultCode` semantics. Every row below was recovered by testing against
+real TotalConnect accounts and panels, or reported by users in linked GitHub
+issues — not from a complete vendor catalogue. Treat "Notes" as the best
 explanation available, not a guarantee; the same numeric code has been
 observed meaning slightly different things on different panels.
 

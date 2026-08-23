@@ -1,12 +1,12 @@
 # Zone Types
 
-**Mode:** Reference (empirical). Resideo does not publish what each
-`ZoneTypeId` means in practice. The raw API response below and the
-device-to-zone-type mapping under "Information on devices found through
-testing" were both recovered by testing against real panels and sensors, not
-from vendor documentation — see the "See" links at the bottom for the closest
-thing to a public spec (third-party Vista/Honeywell installer guides, not
-Resideo's).
+**Mode:** Reference (empirical). Resideo's
+[generated API reference](https://rs.alarmnet.com/TC2API.TCResource/) does not
+fully explain what each `ZoneTypeId` means in practice. The raw API response
+below and the device-to-zone-type mapping under "Information on devices found
+through testing" were both recovered by testing against real panels and
+sensors, not from a complete vendor specification — see the "See" links at the
+bottom for additional third-party Vista/Honeywell installer guides.
 
 **How to read this page:** `total_connect_client.zone.ZoneType` (see
 [`api-reference.md`](api-reference.md#zonetype-enum-and-zone-type-predicates))
@@ -70,4 +70,3 @@ Sources for the Vista zone-type numbering (both verified reachable
 
 A third source previously listed here, `techresource.online`, no longer
 resolves and has been removed.
-

@@ -7,10 +7,13 @@ or debug it. For exact signatures, see [`api-reference.md`](api-reference.md).
 
 ## Why this shape at all
 
-TotalConnect 2 has no published API for third parties. This library talks to
-the same REST backend the official mobile/web apps use
-(`rs.alarmnet.com`), reverse-engineered by watching real traffic (see
-`REST_NOTES.md`). That backend requires a specific multi-step login sequence
+Resideo publishes an
+[incomplete generated reference](https://rs.alarmnet.com/TC2API.TCResource/)
+for Total Connect 2, but it omits many endpoint details and result-code
+semantics and provides no verified third-party SDK or compatibility contract.
+This library talks to the same REST backend the official mobile/web apps use
+(`rs.alarmnet.com`), filling those gaps by reverse-engineering real traffic
+(see `REST_NOTES.md`). That backend requires a specific multi-step login sequence
 before it will answer anything else, and its errors are reported as HTTP-200
 responses with a `ResultCode` field rather than as HTTP status codes for most
 failure modes — both of which drive the shape of `TotalConnectClient`.

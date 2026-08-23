@@ -2,15 +2,12 @@
 
 ## Reporting a vulnerability
 
-As of this writing (checked via the GitHub API on 2026-08-21), this
-repository does **not** have GitHub's private vulnerability reporting
-enabled (`private-vulnerability-reporting` returns `"enabled": false`), so
-the usual "Security" tab → "Report a vulnerability" flow is not available
-here yet.
+Please report a suspected vulnerability privately through the repository's
+[Security advisory form](https://github.com/craigjmidwinter/total-connect-client/security/advisories/new).
+GitHub private vulnerability reporting is the preferred channel.
 
-Until that's turned on, please report a suspected vulnerability by emailing
-the package maintainer directly, using the address listed as the `authors`
-contact in `pyproject.toml`:
+If you cannot use the advisory form, email the package maintainer at the
+address listed as the `authors` contact in `pyproject.toml`:
 
 **craig.j.midwinter@gmail.com**
 
@@ -22,12 +19,7 @@ Include:
   integration, which depends on this package.
 
 Please don't open a public GitHub issue for a suspected vulnerability until
-the maintainers have had a chance to look at it. Once private vulnerability
-reporting is enabled for this repository, the security advisories page will
-be at
-`https://github.com/craigjmidwinter/total-connect-client/security/advisories`
-and that will become the preferred channel — this document will be updated
-when that changes.
+the maintainers have had a chance to look at it.
 
 ## Scope
 
@@ -81,8 +73,8 @@ when troubleshooting.
   request TotalConnect made on your behalf.** A real run of the documented
   command produced a 4,461-byte `test.log` containing exactly that.
 
-**Before attaching any log, `test.log`, or command output to a GitHub
-issue or emailing it to a maintainer, scrub:**
+**Before attaching any log, `test.log`, or command output to a GitHub issue or
+private security report, or emailing it to a maintainer, scrub:**
 
 - Your TotalConnect username and password.
 - Every alarm usercode.

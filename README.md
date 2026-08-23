@@ -2,7 +2,7 @@
 
 **A Python client for Total Connect 2 (Resideo/Honeywell) alarm systems — arm, disarm, bypass zones, and read panel/zone status.**
 
-Resideo publishes no public API and ships no Python client for Total Connect 2. This library reverse-engineers the REST backend the official web and mobile apps use, and is the library the Home Assistant `totalconnect` integration is built on.
+Resideo publishes an [incomplete generated API reference](https://rs.alarmnet.com/TC2API.TCResource/) for Total Connect 2, but it omits many endpoint details and result-code semantics and provides no verified third-party SDK or compatibility contract. This library reverse-engineers the REST backend the official web and mobile apps use, and is the library the Home Assistant `totalconnect` integration is built on.
 
 [![CI](https://github.com/craigjmidwinter/total-connect-client/actions/workflows/python-package.yml/badge.svg)](https://github.com/craigjmidwinter/total-connect-client/actions/workflows/python-package.yml)
 [![PyPI](https://img.shields.io/pypi/v/total-connect-client)](https://pypi.org/project/total-connect-client/)
@@ -11,7 +11,7 @@ Resideo publishes no public API and ships no Python client for Total Connect 2. 
 
 ## Why this exists
 
-Total Connect 2 has no published API for third parties, and Resideo doesn't ship an SDK. Home Assistant's `totalconnect` integration needs one anyway, so this library reverse-engineers the same REST backend the official web and mobile apps talk to (`rs.alarmnet.com`) — reading real traffic, testing against real panels, and writing down what was found. The result-code catalogue in [`docs/RESULT_CODES.md`](docs/RESULT_CODES.md), the zone-type table in [`docs/ZONE_TYPES.md`](docs/ZONE_TYPES.md), and the device/model table in [`docs/DEVICES.md`](docs/DEVICES.md) exist because Resideo's own documentation doesn't cover them — this project's users submitted the data from their own accounts and hardware.
+Resideo's [generated Total Connect 2 API reference](https://rs.alarmnet.com/TC2API.TCResource/) is incomplete: it omits many endpoint details and result-code semantics and provides no verified third-party SDK or compatibility contract. Home Assistant's `totalconnect` integration needs a client anyway, so this library reverse-engineers the same REST backend the official web and mobile apps talk to (`rs.alarmnet.com`) — reading real traffic, testing against real panels, and writing down what was found. The result-code catalogue in [`docs/RESULT_CODES.md`](docs/RESULT_CODES.md), the zone-type table in [`docs/ZONE_TYPES.md`](docs/ZONE_TYPES.md), and the device/model table in [`docs/DEVICES.md`](docs/DEVICES.md) fill gaps in that generated reference with data this project's users submitted from their own accounts and hardware.
 
 Started by [@craigjmidwinter](https://github.com/craigjmidwinter) to add alarm support to his own Home Assistant setup; actively maintained today by [@austinmroczek](https://github.com/austinmroczek) with contributions from others. Ships on [PyPI as `total-connect-client`](https://pypi.org/project/total-connect-client/), currently at `2026.7`.
 
@@ -53,7 +53,7 @@ total_connect_client.exceptions.AuthenticationError: ('AUTHENTICATION_FAILED', {
 - **Zone bypass** — single zone, all faulted zones, or clear all bypasses. `tests/test_location.py::test_zone_bypass_sends_zone_id_and_usercode`, `test_zone_bypass_all_only_bypasses_faulted_zones_that_allow_it`, `test_clear_bypass_sends_usercode_when_zones_are_bypassed`.
 - **Device and panel model lookup** — maps raw `DeviceClassID`/`PanelType`/`PanelVariant` values to real hardware model names, from [`docs/DEVICES.md`](docs/DEVICES.md)'s field-tested table. `tests/test_device.py`.
 - **Automatic retry and reauthentication** — transient failures and expired sessions are retried and re-authenticated inside the library, without you writing that logic. Documented in [`docs/architecture.md#retry-and-reauthentication-model`](docs/architecture.md#retry-and-reauthentication-model); `tests/test_client.py::test_get_panel_meta_data_reauthenticates_after_invalid_session_then_succeeds`, `test_http_request_retries_on_retryable_result_code_then_succeeds`.
-- **A result-code catalogue nobody else has written down** — [`docs/RESULT_CODES.md`](docs/RESULT_CODES.md), built from real accounts because Resideo's own API documentation doesn't cover its status codes.
+- **An empirical result-code catalogue** — [`docs/RESULT_CODES.md`](docs/RESULT_CODES.md), built from real accounts because Resideo's generated API reference omits result-code semantics.
 
 Not built: a camera-streaming client (device metadata for cameras is read, streaming is not implemented), custom-arming profiles (`arm_custom()` and `get_custom_arm_settings()` exist as placeholders and unconditionally raise), and anything beyond the endpoints listed above — there is no general-purpose TotalConnect API wrapper here, only what arm/disarm/status/bypass/cameras/panic needs.
 
@@ -69,7 +69,7 @@ Not built: a camera-streaming client (device metadata for cameras is read, strea
 |---|---|
 | [Home Assistant `totalconnect` integration](https://www.home-assistant.io/integrations/totalconnect/) | You just want your alarm in Home Assistant and don't want to write Python — the integration already wraps this library for you. |
 | [Total Connect 2 web portal](https://totalconnect2.com) / the Total Connect mobile app | You want a supported, vendor-backed interface and have no need for programmatic access. |
-| Direct REST calls against TotalConnect's API, using this project's [`docs/`](docs/index.md) as a map | You need an endpoint this library doesn't wrap (its coverage is arm/disarm/status/bypass/zone-bypass/cameras/panic — see [`docs/api-reference.md`](docs/api-reference.md)), and you're willing to work from reverse-engineered field notes instead of a vendor spec. |
+| Direct REST calls against TotalConnect's API, using this project's [`docs/`](docs/index.md) as a map | You need an endpoint this library doesn't wrap (its coverage is arm/disarm/status/bypass/zone-bypass/cameras/panic — see [`docs/api-reference.md`](docs/api-reference.md)), and you're willing to work from reverse-engineered field notes alongside an incomplete vendor reference. |
 
 ## Install
 
@@ -211,7 +211,7 @@ Contributions are welcome, especially fixture data from panels the maintainers d
 
 ## Status
 
-Actively maintained. Latest release is `2026.7` (2026-07-06); releases follow a CalVer-style scheme (`YYYY.M[.patch]`), not semantic versioning, and there is no 1.0 milestone planned — the project has been in continuous use since 2020. As measured on a clean checkout (2026-08-21): 106 tests pass, `ruff check`/`ruff format --check` are clean, `mypy --strict` is clean, and test coverage is 92% (`location.py`, the module holding arm/disarm/panel status, is at 92%; `client.py` at 88% is the weakest library module, and the `__main__.py` CLI script is untested). API stability matters here more than the version scheme implies: Home Assistant's `totalconnect` integration imports this package's public classes and exception types directly, so breaking changes are called out explicitly rather than shipped quietly (see [`CONTRIBUTING.md`'s invariants](CONTRIBUTING.md#invariants-a-pr-must-not-break)). Total Connect 2's own backend is an undocumented, unversioned vendor API this library reverse-engineers — it can and has changed without notice, which is why this project keeps asking users for diagnostic output rather than working from a fixed spec.
+Actively maintained. Latest release is `2026.7` (2026-07-06); releases follow a CalVer-style scheme (`YYYY.M[.patch]`), not semantic versioning, and there is no 1.0 milestone planned — the project has been in continuous use since 2020. As measured on a clean checkout (2026-08-21): 106 tests pass, `ruff check`/`ruff format --check` are clean, `mypy --strict` is clean, and test coverage is 92% (`location.py`, the module holding arm/disarm/panel status, is at 92%; `client.py` at 88% is the weakest library module, and the `__main__.py` CLI script is untested). API stability matters here more than the version scheme implies: Home Assistant's `totalconnect` integration imports this package's public classes and exception types directly, so breaking changes are called out explicitly rather than shipped quietly (see [`CONTRIBUTING.md`'s invariants](CONTRIBUTING.md#invariants-a-pr-must-not-break)). Total Connect 2's backend has an incomplete generated vendor reference but no stated third-party compatibility contract, so this library still reverse-engineers omitted details; the backend can and has changed without notice, which is why this project keeps asking users for diagnostic output rather than working from a complete spec.
 
 ## License and credits
 
