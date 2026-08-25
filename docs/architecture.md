@@ -72,8 +72,23 @@ call and:
    `requests.RequestException`) just sleeps `retry_delay` seconds and retries
    the same request.
 4. This repeats up to `MAX_RETRY_ATTEMPTS = 5` times (a class constant, not
-   parameterized). If attempts are exhausted, the failure surfaces as
-   `ServiceUnavailable`.
+   parameterized). **What surfaces when attempts are exhausted depends on
+   which failure exhausted them** — there is no single exception to catch:
+
+   | what failed | what escapes after the last attempt |
+   | --- | --- |
+   | a retryable `ResultCode` from step 2, or a retryable HTTP status | the original `RetryableTotalConnectError` (or subclass), re-raised unchanged |
+   | a transport error (`requests.RequestException`) | `ServiceUnavailable` |
+   | a session/OAuth error (`InvalidSessionError`, `OAuth2Error`, `ValueError`) | `ServiceUnavailable` |
+
+   So catching only `ServiceUnavailable` will **not** cover exhausted
+   retries of `CONNECTION_ERROR`, `FAILED_TO_CONNECT`, `CANNOT_CONNECT`,
+   `BAD_OBJECT_REFERENCE`, or a persistent 429/500/502/503/504 — those reach
+   you as `RetryableTotalConnectError`. Catch both, or catch
+   `TotalConnectError`, which is the common base. (Re-raising the specific
+   type is deliberate: it preserves what actually went wrong. Earlier
+   revisions of this page claimed exhaustion always produced
+   `ServiceUnavailable`, which was wrong for the first row.)
 
 `requests.adapters.Retry` is also configured on the underlying
 `requests.Session` (`max_retries=5`, `status_forcelist=[429, 500, 502, 503,

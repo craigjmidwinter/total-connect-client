@@ -174,6 +174,32 @@ def test_raise_for_resultcode_arm_success_does_not_raise():
     client.raise_for_resultcode({"ResultCode": _ResultCode.ARM_SUCCESS.value})
 
 
+def test_raise_for_resultcode_treats_an_absent_result_code_as_success():
+    """A response carrying no ResultCode is success, not an error.
+
+    Not every TotalConnect call returns a ResultCode. `_ResultCode.from_response`
+    reads "ResultCode" then "error", and treats a falsy result as SUCCESS --
+    the behaviour documented in docs/RESULT_CODES.md ("if there is no ResultCode
+    and no error, then there was success") and the answer to issue #228
+    ("Handle ResponseCode is None").
+
+    Nothing pinned it. A refactor tightening this into an error would break
+    every endpoint that legitimately omits the field, and the failure would
+    appear as spurious exceptions on calls that had always worked.
+
+    Note the deliberate consequence: an empty response is also SUCCESS. Callers
+    are expected to raise PartialResponseError when data they need is missing,
+    which is the layer that actually catches an unusable response.
+    """
+    client = create_http_client()
+
+    for response in ({"ResultData": "Success"}, {"ResultCode": None}, {"ResultCode": 0}, {}):
+        client.raise_for_resultcode(response)  # must not raise
+
+    assert _ResultCode.from_response({}) is _ResultCode.SUCCESS
+    assert _ResultCode.from_response({"ResultCode": None}) is _ResultCode.SUCCESS
+
+
 def test_raise_for_resultcode_bad_user_or_password_raises_authentication_error():
     """BAD_USER_OR_PASSWORD maps to AuthenticationError."""
     client = create_http_client()
@@ -228,6 +254,23 @@ def test_raise_for_resultcode_unknown_code_raises_bad_result_code_error():
     client = create_http_client()
     with raises(BadResultCodeError):
         client.raise_for_resultcode(RESPONSE_UNKNOWN)
+
+
+def test_raise_for_resultcode_invalid_parameter_is_named_not_unknown():
+    """INVALID_PARAMETER is in the enum but has no dedicated handler.
+
+    -501 takes a different path from a genuinely unknown code: from_response()
+    resolves it to a _ResultCode, then raise_for_resultcode() falls through every
+    specific branch to the generic BadResultCodeError. Enum membership is what
+    makes the message the code's name instead of "unknown result code -501", and
+    that message is the only observable difference — so it is what this pins.
+    Without it, deleting the enum member would look like a no-op.
+    """
+    client = create_http_client()
+    with raises(BadResultCodeError) as excinfo:
+        client.raise_for_resultcode({"ResultCode": _ResultCode.INVALID_PARAMETER.value})
+
+    assert excinfo.value.args[0] == "INVALID_PARAMETER"
 
 
 def test_raise_for_resultcode_invalid_session_raises_invalid_session_error():
