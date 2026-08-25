@@ -268,8 +268,8 @@ class TotalConnectClient:
             )
             if not response.ok:
                 LOGGER.debug(
-                    f"Received HTTP error code {response.status_code} with response:",
-                    response.content,
+                    f"Received HTTP error code {response.status_code} "
+                    f"with response: {response.content!r}"
                 )
                 # If we get a status code indicating that the server has a problem, force a retry
                 if response.status_code == 401:
