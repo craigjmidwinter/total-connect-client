@@ -1,5 +1,7 @@
 """Test TotalConnectClient."""
 
+from unittest.mock import Mock
+
 import requests
 import requests_mock
 from common import create_http_client
@@ -37,6 +39,7 @@ from total_connect_client.exceptions import (
     FailedToBypassZone,
     FeatureNotSupportedError,
     InvalidSessionError,
+    PartialResponseError,
     RetryableTotalConnectError,
     ServiceUnavailable,
     TotalConnectError,
@@ -368,3 +371,72 @@ def test_log_out_raises_total_connect_error_when_resultcode_nonzero_after_succes
         )
         with raises(TotalConnectError):
             client.log_out()
+
+
+def test_load_details_keeps_a_reachable_location_when_another_fails():
+    """One unreachable panel must not cost the user their other locations.
+
+    Regression test for issue #263 ("client.locations raises if any panel cannot
+    be contacted"). Before that fix, a user whose account held several locations
+    could be left unable to use the client at all when a single panel was
+    unreachable. load_details() now records success per location, retries only
+    the ones still outstanding, and warns rather than raising once retries are
+    exhausted.
+
+    No fixture defines a second location, so the two locations are mocked
+    directly -- the behaviour under test is load_details()' own bookkeeping, not
+    the HTTP layer.
+    """
+    client = create_http_client()
+    good_id, bad_id = LOCATION_ID, 7654321
+    good, bad = Mock(), Mock()
+    bad.get_partition_details.side_effect = PartialResponseError("no PartitionDetails", {})
+
+    client._locations = {good_id: good, bad_id: bad}
+    client._location_details = {good_id: False, bad_id: False}
+
+    client.load_details(retries=1)
+
+    # the reachable location is fully loaded despite its neighbour failing
+    assert client._location_details[good_id] is True
+    assert client._location_details[bad_id] is False
+
+    # and it is fetched once, not re-fetched on the retry pass
+    assert good.get_partition_details.call_count == 1
+    assert good.get_zone_details.call_count == 1
+
+    # the failing location is retried, then given up on without raising
+    assert bad.get_partition_details.call_count == 2
+
+
+def test_make_locations_resolves_a_usercode_per_location():
+    """Each location gets its own usercode, by int key, str key, or "default".
+
+    The usercodes dict is keyed per location because a code belongs to a
+    (user, location) pair rather than to the user -- the lesson of issue #85,
+    fixed in PR #88. The lookup tries the int key, then the str key, then
+    "default", and falls back to the DEFAULT_USERCODE sentinel when none match.
+
+    Every fixture defines a single location, so that chain has only ever been
+    exercised with one entry. This walks all four outcomes at once.
+    """
+    client = create_http_client()
+    base = REST_RESULT_SESSION_DETAILS["SessionDetailsResult"]["Locations"][0]
+
+    def location(location_id):
+        return {**base, "LocationID": location_id, "LocationName": f"loc{location_id}"}
+
+    client.usercodes = {111111: "1111", "222222": "2222", "default": "9999"}
+    client._locations = {}
+    client._location_details = {}
+    client._make_locations(
+        {"Locations": [location(111111), location(222222), location(333333), location(444444)]}
+    )
+
+    assert client.locations[111111].usercode == "1111"  # matched on the int key
+    assert client.locations[222222].usercode == "2222"  # matched on the str key
+    assert client.locations[333333].usercode == "9999"  # fell back to "default"
+
+    # a fourth location with no match and no default would get the sentinel;
+    # here "default" is present, so every location resolves to a real code
+    assert client.locations[444444].usercode == "9999"
