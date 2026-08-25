@@ -153,7 +153,7 @@ Measured 2026-08-21 on macOS with a warm `uv` cache: creating a venv and install
    python3 -m total_connect_client you@example.com
    ```
 
-   You'll be prompted for your password interactively (not echoed to the terminal, not passed as an argument — see the security note below on why the argument form is worth avoiding).
+   You'll be prompted for your password interactively — not echoed to the terminal, and not passed as an argument. **Avoid the `username password` form the usage line advertises:** a password given on the command line is written to your shell history file and is visible in the process list (`ps aux`) to every other account on the machine while the command runs. If you need to run this non-interactively, redirect the password in on stdin instead — `python3 -m total_connect_client you@example.com < /path/to/passwordfile` — which works and exposes neither. Details in [`SECURITY.md`](SECURITY.md).
 
 3. **Expected output on success:** the library authenticates, loads every location's partitions/zones/panel status, then `TotalConnectClient.__str__` prints your username, `Password: [hidden]`, a usercodes dict (empty for this CLI — it constructs the client without usercodes), and a listing of your locations, devices, partitions, and zones, followed by a `times_as_string()` breakdown of how long each phase took. We are not reproducing a captured example of that output here — we have no real account to capture it from — but the shape above is exactly what `total_connect_client/client.py`'s `__str__` method produces; nothing is hidden from you beyond the password.
 

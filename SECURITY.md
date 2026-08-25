@@ -72,6 +72,35 @@ when troubleshooting.
   access and refresh tokens, session cookies, and the full contents of every
   request TotalConnect made on your behalf.** A real run of the documented
   command produced a 4,461-byte `test.log` containing exactly that.
+- **Three entry points accept your account password as a command-line
+  argument, including the main diagnostic command.**
+  `python3 -m total_connect_client` (`__main__.py`),
+  `total_connect_client/live/experimental.py`, and
+  `total_connect_client/live/sleepy.py` all prompt with `getpass` when given
+  one argument, but take the password from `sys.argv[2]` when given two —
+  and each one's usage text advertises that second form. Unlike everything
+  else on this page, **this exposure has nothing to do with logging**, so
+  redacting a log file does not address it. A password passed on the command
+  line is written to your shell history file, and is visible in the process
+  list (`ps aux`, Activity Monitor) to every other account on the machine
+  for as long as the process runs. For `sleepy.py` that window is not
+  brief — it loops 10,000 times with a 30-second sleep, holding your
+  password in the process table for roughly **83 hours**, about three and a
+  half days, unless you stop it early.
+
+  Earlier versions of `docs/troubleshooting.md` recommended this form as the
+  way to run non-interactively. That advice was wrong and has been withdrawn.
+  It is also unnecessary: with no terminal attached, `getpass` falls back to
+  reading **stdin** and works, so
+  `python3 -m total_connect_client username < /path/to/passwordfile` does the
+  same job with the password in neither your shell history nor the process
+  list. Use a `chmod 600` file; a literal `echo "pw" | ...` would land in
+  history too.
+
+  Prefer the one-argument form and let it prompt. If you have already used
+  the two-argument form, remove the line from your shell history
+  (`~/.zsh_history`, `~/.bash_history`) and change your TotalConnect
+  password.
 
 **Before attaching any log, `test.log`, or command output to a GitHub issue or
 private security report, or emailing it to a maintainer, scrub:**
@@ -82,6 +111,9 @@ private security report, or emailing it to a maintainer, scrub:**
   specific panel/account, not a security secret by themselves, but there's
   no reason to publish them).
 - Any OAuth token or session ID values that appear in logged responses.
+- The command line itself, if you are pasting a shell transcript — see the
+  `sys.argv[2]` note above; your password may be sitting in the command you
+  are about to paste.
 
 If you're not sure whether a value is sensitive, redact it — a maintainer
 can always ask for it back if it turns out to matter, and it's much easier

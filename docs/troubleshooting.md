@@ -120,14 +120,50 @@ python3 -m total_connect_client username
 ```
 
 You'll be prompted for your password interactively (it isn't echoed to the
-terminal) — this only works with a real terminal attached. If you run this
-same command with no terminal attached — piped from a script, a cron job, or
-CI, with no password supplied another way — it does not print a clean
-"provide a password" message; it crashes with a low-level `termios.error` (or
-`EOFError`, depending on exactly how stdin is closed) before it ever reaches
-the network. If you need this non-interactively, pass the password as the
-optional second argument instead: `python3 -m total_connect_client username
-password`.
+terminal). With no terminal attached — a script, a cron job, CI — `getpass`
+cannot control echo, so it prints a `GetPassWarning` and falls back to
+reading stdin. That fallback works: it reads the password and continues. It
+only fails if stdin is closed entirely (`command < /dev/null`), which raises
+`EOFError` before it reaches the network.
+
+So **if you need this non-interactively, feed the password on stdin**:
+
+```bash
+python3 -m total_connect_client username < /path/to/passwordfile
+```
+
+Use a file with restrictive permissions (`chmod 600`), or pipe from a
+secret manager or an environment variable you set without typing it
+literally. The file works with or without a trailing newline.
+
+**You will see this, and it is expected — your password was not echoed:**
+
+```
+GetPassWarning: Can not control echo on the terminal.
+Warning: Password input may be echoed.
+Password:
+```
+
+That is `getpass` reporting it cannot turn terminal echo *off*, because
+there is no terminal — not a report that anything was displayed. Your
+password came from the file and was never printed. Don't let this warning
+push you back to putting the password on the command line; that is the
+genuinely unsafe option, and this one is not.
+
+> **Do not pass the password as the second argument.** The command accepts
+> `python3 -m total_connect_client username password`, and earlier versions
+> of this page recommended it — that advice was wrong and is withdrawn. A
+> password on the command line is written to your shell history file and is
+> visible in the process list (`ps aux`) to every other account on the
+> machine for as long as the command runs. The stdin form above solves the
+> same problem without either exposure. The same applies to
+> `live/experimental.py` and `live/sleepy.py`, which accept a password the
+> same way. If you have already used that form, clear the entry from your
+> shell history and change your TotalConnect password — see
+> [`../SECURITY.md`](../SECURITY.md).
+
+Note that a literal `echo "mypassword" | ...` still puts the password in
+your shell history; that is why the example above redirects from a file.
 
 Run with no arguments at all, or with more than two, and the tool fails
 cleanly instead — this check happens before anything else:

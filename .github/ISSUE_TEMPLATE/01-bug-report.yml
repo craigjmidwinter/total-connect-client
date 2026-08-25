@@ -41,11 +41,33 @@ body:
       description: Version of the software you chose above (Home Assistant or total_connect_client).
       placeholder: "e.g., 2025.9.2"
 
+  - type: markdown
+    attributes:
+      value: |
+        > ⚠️ **Scrub the log output below before you post it.** This issue is
+        > public. Logs from this package can contain your **TotalConnect
+        > username**, **OAuth access/refresh tokens**, and — depending on how
+        > the client was used — your **alarm usercode**.
+        >
+        > A `test.log` from `python3 -m total_connect_client` contains the
+        > username and tokens. It will *not* contain a usercode, because that
+        > command never supplies one. A usercode reaches the logs when your
+        > own code constructs the client **with** usercodes, or when one is
+        > rejected — `validate_usercode()` logs the rejected code at `ERROR`.
+        > Note that `ERROR` and the username's `WARNING` are both visible
+        > without debug logging enabled.
+        >
+        > Remove: username, password, every usercode, OAuth/session tokens,
+        > and location/device/zone IDs. When in doubt, redact it — a
+        > maintainer can ask for it back. See
+        > [SECURITY.md](https://github.com/craigjmidwinter/total-connect-client/blob/master/SECURITY.md)
+        > for the full list.
+
   - type: textarea
     id: logs
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      label: Relevant log output (scrubbed — see the warning above)
+      description: Paste the relevant log output, with credentials and identifiers removed. This is automatically formatted as code, so no backticks needed.
       render: shell
 
   - type: textarea
