@@ -109,8 +109,14 @@ usercode = (
   `{123456: "1234"}` works even though the declared type is `dict[str, str]`.
   A `str(location_id)` key (`{"123456": "1234"}`) also works. Mixing styles in
   one dict is fine — each location is looked up independently.
-- `"default"` is used only if neither the int nor the str key for that
-  specific location is present.
+- `"default"` is used if neither the int nor the str key for that specific
+  location holds a **truthy** value. Note that is truthiness, not presence:
+  the lookup is an `or` chain, so a key that *is* present but empty falls
+  through. `{123456: "", "default": "9999"}` gives location `123456` the
+  code `"9999"`, and `{123456: None, ...}` behaves the same. If you build
+  this dict programmatically — say `{loc: cfg.get(loc, "") for loc in ...}`
+  alongside a `"default"` entry — every location you meant to leave uncoded
+  silently receives the default instead.
 - **If none of the three match, the usercode is *not* an error.** The location
   silently gets `location.usercode = "-1"` (the `DEFAULT_USERCODE` sentinel
   string), and only a `LOGGER.debug` line notes it. Any subsequent
@@ -189,7 +195,7 @@ never construct one yourself; you get instances from `client.locations`.
 | `zones` | `dict[int, TotalConnectZone]` | Keyed by zone ID. Empty until `get_zone_details()` or `get_panel_meta_data()` runs. |
 | `devices` | `dict[str, TotalConnectDevice]` | Keyed by device ID, populated at construction from the location's device list. |
 | `usercode` | `str` | The usercode this location will use for arm/disarm/bypass calls when no per-call `usercode` argument is given. Set from the client's `usercodes` dict (see above) or defaulted to the `"-1"` sentinel. |
-| `auto_bypass_low_battery` | `bool` | Copied from the client's `auto_bypass_battery` constructor argument. |
+| `auto_bypass_low_battery` | `bool` | Copied from the client's `auto_bypass_battery` constructor argument — **a one-time copy, not a live link.** `_make_locations()` reads the client's value once while building locations, and that runs only from `TotalConnectClient.__init__`. Setting `client.auto_bypass_low_battery` afterwards changes nothing, silently: the bypass check reads *this* attribute, on the location. To change it on a live client, set it per location (`location.auto_bypass_low_battery = True`), which does work. |
 
 ### Methods that fetch/refresh state
 
