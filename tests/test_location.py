@@ -9,6 +9,7 @@ from const import (
     LOCATION_ID,
     PANEL_STATUS_ARMED_AWAY,
     PANEL_STATUS_DISARMED,
+    RESPONSE_CAMERA_LIST_UNICORN,
     RESPONSE_DISARM_SUCCESS,
     RESPONSE_UNKNOWN,
     REST_RESULT_FULL_STATUS,
@@ -17,12 +18,14 @@ from const import (
     REST_RESULT_SECURITY_SYNCHRONIZE,
     REST_RESULT_SESSION_DETAILS,
     REST_RESULT_VALIDATE_USER_LOCATIONS,
+    UNICORN_DEVICE_ID,
     panel_with_status,
 )
 from pytest import raises
 
 from total_connect_client.client import ArmingHelper
 from total_connect_client.const import ArmingState, ArmType, _ResultCode, make_http_endpoint
+from total_connect_client.device import TotalConnectDevice
 from total_connect_client.exceptions import (
     FailedToBypassZone,
     FeatureNotSupportedError,
@@ -820,3 +823,27 @@ def test_get_cameras_attaches_doorbell_and_video_info_to_matching_devices():
         "IsExistingDoorBellUser": 1,
     }
     assert location.devices[device_id].video_info == {"DeviceID": device_id, "SomeVideoKey": "x"}
+
+
+def test_get_cameras_populates_unicorn_info_from_recorded_shape():
+    """get_cameras() reads the real GetLocationAllCameraListEx nesting.
+
+    Regression test for `_get_unicorn()`, which guarded on "UnicornList" and
+    then indexed "UnicornsList". Against the recorded response in
+    RESPONSE_CAMERA_LIST_UNICORN the guard passes -- UnicornList genuinely is
+    nested inside UnicornList -- so the mismatched index raised
+    KeyError('UnicornsList') and get_cameras() blew up for anyone owning a
+    Unicorn camera. Shape recovered from issue #216.
+    """
+    client = create_http_client()
+    location = client.locations[LOCATION_ID]
+    location.devices[UNICORN_DEVICE_ID] = TotalConnectDevice(
+        {"DeviceID": UNICORN_DEVICE_ID, "DeviceName": "FRONT DOOR"}
+    )
+    client.http_request = Mock(return_value=RESPONSE_CAMERA_LIST_UNICORN)
+
+    location.get_cameras()
+
+    device = location.devices[UNICORN_DEVICE_ID]
+    assert device.unicorn_info["DeviceVariant"] == "home.dv.doorbell"
+    assert device.is_doorbell() is True

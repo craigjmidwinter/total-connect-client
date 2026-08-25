@@ -451,17 +451,41 @@ come from `location.devices`, never construct one yourself.
 | `flags` | `dict[str, str]` | Parsed `DeviceFlags`, including `PanelType`/`PanelVariant` used by `model_info()`. |
 | `doorbell_info` | `dict[str, Any]` (property) | Set internally when `location.get_cameras()` finds a matching doorbell. Read/write both operate on the same internal field. |
 | `video_info` | `dict[str, Any]` (property) | Same pattern, for VideoPIR devices. |
-| `unicorn_info` | `dict[str, Any]` (property) | **Do not rely on reading this property.** The setter stores into a private `_unicorn_info` field, but the getter returns `_video_info` instead — reading `device.unicorn_info` gives you the device's video info, not what was last set via the `unicorn_info` setter. This is a source bug, not intended behavior; it is called out here so you don't lose time to it. |
+| `unicorn_info` | `dict[str, Any]` (property) | Same pattern, for Unicorn-class devices. Read/write both operate on `_unicorn_info`. **Behavior change:** before the fix in this property, the getter returned `_video_info`, so reading it gave you the device's VideoPIR info. If you worked around that, remove the workaround. Note that `location.get_cameras()` does not currently populate unicorn data (see below), so this normally reads as `{}`. |
 
 ```python
 def is_doorbell(self) -> bool
 ```
 
 Returns `True` if `doorbell_info["IsExistingDoorBellUser"] == 1`, **or** if
-the device's raw (private) unicorn info has `DeviceVariant ==
-"home.dv.doorbell"`. Note this checks the private field directly, not the
-buggy `unicorn_info` property, so `is_doorbell()` itself is not affected by
-the bug above.
+the device's unicorn info has `DeviceVariant == "home.dv.doorbell"`.
+
+> **Fixed — `get_cameras()` used to raise on Unicorn cameras.**
+>
+> `TotalConnectLocation._get_unicorn()` guarded on the key `"UnicornList"`
+> and then read `"UnicornsList"`, which does not exist in the response. The
+> guard passes, because `GetLocationAllCameraListEx` genuinely nests
+> `UnicornList` inside `UnicornList`:
+>
+> ```
+> AccountAllCameraList → UnicornList → UnicornList → UnicornInfo → [ … ]
+> ```
+>
+> so the mismatched index raised `KeyError('UnicornsList')`. Anyone with a
+> Unicorn camera got that exception out of `get_cameras()` — it did not fail
+> quietly. `unicorn_info` now populates, and the `DeviceVariant` branch of
+> `is_doorbell()` works.
+>
+> The shape was recovered from a real response posted in
+> [issue #216](https://github.com/craigjmidwinter/total-connect-client/issues/216)
+> and is pinned by `RESPONSE_CAMERA_LIST_UNICORN` in `tests/const.py`, the
+> first camera fixture this project has had.
+>
+> The doorbell path is **correct as written** — that same capture contains
+> `WiFiDoorbellList`, matching the code. `DEVICES.md`'s "Camera stuff" table
+> records `WifiDoorbellList` (lowercase `i`) for the `Ex` column, which is a
+> transcription slip in the doc, not a bug in the code; the same table's
+> closing line already notes both endpoints return the same thing.
 
 ```python
 def model_info(self) -> tuple[str, str]

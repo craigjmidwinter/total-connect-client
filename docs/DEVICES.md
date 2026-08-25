@@ -61,7 +61,7 @@ for device in location.devices.values():
 
 | Device            | GetAllRSIDeviceStatus | GetLocationAllCameraList | GetLocationAllCameraListEx | GetLocationCameraList | GetPartnerCameraStatus | GetVideoPIRLocationDeviceList |
 | ----------------- | --------------------- | ------------------------ | -------------------------- | --------------------- | ---------------------- | ----------------------------- |
-| Skybell HD        | No                    | WiFiDoorbellList         | WifiDoorbellList           | No                    | wifidoorbellinfo       | No                            |
+| Skybell HD        | No                    | WiFiDoorbellList         | WiFiDoorbellList           | No                    | wifidoorbellinfo       | No                            |
 | ProA7Plus builtin | No                    | No                       | No                         | No                    | No                     | VideoPIRInfo                  |
 
 GetLocationCameraList doesn't return anything

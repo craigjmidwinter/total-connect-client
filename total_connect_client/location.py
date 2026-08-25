@@ -498,11 +498,14 @@ class TotalConnectLocation:
                 self.devices[id].doorbell_info = doorbell
 
     def _get_unicorn(self, data: dict[str, Any]) -> None:
-        """Find uniforn info."""
+        """Find unicorn info."""
         if not data or "UnicornList" not in data:
             return
 
-        unicorns = data["UnicornsList"]
+        # GetLocationAllCameraListEx nests UnicornList inside UnicornList; the
+        # caller has already unwrapped one level. See tests/const.py's
+        # RESPONSE_CAMERA_LIST_UNICORN for the recorded shape.
+        unicorns = data["UnicornList"]
         if "UnicornInfo" not in unicorns:
             return
 

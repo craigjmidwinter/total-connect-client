@@ -1486,3 +1486,34 @@ def panel_with_status(state: ArmingState):
 PANEL_STATUS_DISARMED = panel_with_status(ArmingState.DISARMED)
 PANEL_STATUS_ARMED_AWAY = panel_with_status(ArmingState.ARMED_AWAY)
 PANEL_STATUS_ARMED_STAY = panel_with_status(ArmingState.ARMED_STAY)
+
+# Recorded GetLocationAllCameraListEx response for a location with a Unicorn
+# camera, from issue #216. Identifiers replaced with placeholders; the point
+# of this fixture is the *shape*, in particular that UnicornList is nested
+# inside UnicornList rather than inside a pluralized "UnicornsList".
+UNICORN_DEVICE_ID = 2233445
+
+RESPONSE_CAMERA_LIST_UNICORN = {
+    "AccountAllCameraList": {
+        "PartnerCameraList": {"NotificationFlag": 0, "PartnerCamerasList": None},
+        "WiFiDoorbellList": None,
+        "MotionViewerList": None,
+        "DoorBellList": None,
+        "UnicornList": {
+            "UnicornList": {
+                "UnicornInfo": [
+                    {
+                        "DeviceID": UNICORN_DEVICE_ID,
+                        "DeviceName": "FRONT DOOR",
+                        "DeviceType": "home.dt.unicorn",
+                        "DeviceVariant": "home.dv.doorbell",
+                        "PartitionId": 1,
+                    }
+                ]
+            }
+        },
+        "VideoPirList": None,
+    },
+    "ResultCode": 0,
+    "ResultData": "Success",
+}

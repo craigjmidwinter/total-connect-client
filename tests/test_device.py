@@ -65,13 +65,46 @@ def test_is_doorbell_true_when_doorbell_info_flags_existing_user():
 def test_is_doorbell_true_when_unicorn_variant_is_doorbell():
     """is_doorbell() is also True for a Unicorn-class device whose DeviceVariant marks
     it as a doorbell.
-
-    NOTE: this only exercises the unicorn_info *setter* and is_doorbell()'s own
-    (correct) use of self._unicorn_info. It deliberately does not assert on the
-    unicorn_info *property getter*, which has a bug: it returns
-    self._video_info instead of self._unicorn_info. Asserting on it here would
-    lock that bug in place.
     """
     panel = TotalConnectDevice(device_list[0])
     panel.unicorn_info = {"DeviceVariant": "home.dv.doorbell"}
     assert panel.is_doorbell() is True
+    assert panel.unicorn_info == {"DeviceVariant": "home.dv.doorbell"}
+
+
+def test_unicorn_info_roundtrips_through_its_own_attribute():
+    """The unicorn_info getter returns what its setter stored.
+
+    Regression test: the getter previously returned self._video_info while the
+    setter wrote self._unicorn_info, so unicorn data was unreachable through
+    the public property and callers silently saw VideoPIR data instead.
+    """
+    panel = TotalConnectDevice(device_list[0])
+    panel.unicorn_info = {"DeviceID": 987654, "DeviceVariant": "home.dv.unicorn"}
+
+    assert panel.unicorn_info == {
+        "DeviceID": 987654,
+        "DeviceVariant": "home.dv.unicorn",
+    }
+
+
+def test_unicorn_info_and_video_info_are_independent():
+    """unicorn_info and video_info are separate stores, not aliases.
+
+    The original bug made unicorn_info an alias of video_info; this pins them
+    apart so a future refactor cannot quietly re-merge them.
+    """
+    panel = TotalConnectDevice(device_list[0])
+    panel.video_info = {"DeviceID": 111111, "source": "videopir"}
+    panel.unicorn_info = {"DeviceID": 222222, "source": "unicorn"}
+
+    assert panel.video_info == {"DeviceID": 111111, "source": "videopir"}
+    assert panel.unicorn_info == {"DeviceID": 222222, "source": "unicorn"}
+
+
+def test_unicorn_info_defaults_to_empty_dict():
+    """A device with no unicorn data reports an empty dict, not video data."""
+    panel = TotalConnectDevice(device_list[0])
+    panel.video_info = {"DeviceID": 111111, "source": "videopir"}
+
+    assert panel.unicorn_info == {}

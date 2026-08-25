@@ -116,7 +116,7 @@ class TotalConnectDevice:
     @property
     def unicorn_info(self) -> dict[str, Any]:
         """Unicorn info."""
-        return self._video_info
+        return self._unicorn_info
 
     @unicorn_info.setter
     def unicorn_info(self, data: dict[str, Any]) -> None:

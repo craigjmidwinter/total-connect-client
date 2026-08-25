@@ -17,8 +17,28 @@ semantic versioning.
 
 ## [Unreleased]
 
-Documentation, tests, and tooling only. **No library behavior, public API,
-logging, or dependency changes.**
+Mostly documentation, tests, and tooling. **One public API behavior change**
+— the `TotalConnectDevice.unicorn_info` property, described under "Changed"
+below. No logging or dependency changes.
+
+### Fixed
+- **`get_cameras()` no longer raises for Unicorn cameras.**
+  `TotalConnectLocation._get_unicorn()` guarded on the key `"UnicornList"`
+  and then read `"UnicornsList"`, which the API does not return — so
+  `get_cameras()` raised `KeyError('UnicornsList')` for anyone owning one.
+  The real response nests `UnicornList` inside `UnicornList`; the shape was
+  recovered from issue #216 and is now pinned by the project's first camera
+  fixture, `RESPONSE_CAMERA_LIST_UNICORN`.
+
+### Changed
+- **`TotalConnectDevice.unicorn_info` now returns unicorn info rather than
+  video info.** Its getter returned `_video_info` while its setter wrote
+  `_unicorn_info`, so reading the property gave you the device's VideoPIR
+  data. **If you read `device.unicorn_info` and relied on receiving video
+  data, switch to `device.video_info`.** Together with the `_get_unicorn()`
+  fix above, unicorn data is now both retrieved and readable — previously
+  neither worked. `is_doorbell()` was unaffected; it read the private field
+  directly and was always correct.
 
 ### Added
 - `CONTRIBUTING.md`, this `CHANGELOG.md`, and `SECURITY.md`.
