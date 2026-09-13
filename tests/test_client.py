@@ -1,5 +1,7 @@
 """Test TotalConnectClient."""
 
+from unittest.mock import patch
+
 import requests
 import requests_mock
 from common import create_http_client
@@ -21,8 +23,11 @@ from const import (
     SECURITY_DEVICE_ID,
 )
 from pytest import raises
+from requests_oauthlib import OAuth2Session
 
-from total_connect_client.client import TotalConnectClient
+from total_connect_client.client import (
+    TotalConnectClient,
+)
 from total_connect_client.const import (
     AUTH_CONFIG_ENDPOINT,
     AUTH_TOKEN_ENDPOINT,
@@ -368,3 +373,51 @@ def test_log_out_raises_total_connect_error_when_resultcode_nonzero_after_succes
         )
         with raises(TotalConnectError):
             client.log_out()
+
+
+def test_every_request_carries_the_timeout():
+    """No request may be left without one, including the token fetch.
+
+    requests blocks indefinitely when no timeout is given, so a socket that is
+    accepted and never answered leaves the caller stuck with nothing to catch.
+    fetch_token and refresh_token declare timeout as a named parameter and
+    forward it explicitly, so it arrives as None rather than absent; treating
+    None as omitted is what covers them.
+    """
+    with requests_mock.Mocker() as rm:
+        rm.get(AUTH_CONFIG_ENDPOINT, json=HTTP_RESPONSE_CONFIG)
+        rm.post(AUTH_TOKEN_ENDPOINT, json=HTTP_RESPONSE_TOKEN)
+        rm.get(
+            HTTP_API_SESSION_DETAILS_ENDPOINT,
+            json=REST_RESULT_SESSION_DETAILS,
+        )
+        TotalConnectClient(
+            "username", "password", usercodes={LOCATION_ID: "1234"}, auto_bypass_battery=False
+        )
+        timeouts = [r.timeout for r in rm.request_history]
+
+    assert timeouts, "no requests were made"
+    assert timeouts == [TotalConnectClient.TIMEOUT] * len(timeouts)
+
+
+def test_explicit_timeout_is_not_overridden():
+    """A caller that passes its own timeout keeps it."""
+    client = create_http_client()
+    seen = {}
+
+    def capture(self, *args, **kwargs):
+        seen.update(kwargs)
+
+        class _Resp:
+            ok = True
+            status_code = 200
+
+            @staticmethod
+            def json():
+                return {}
+
+        return _Resp()
+
+    with patch.object(OAuth2Session, "request", capture):
+        client._oauth_session.request("GET", "https://example.invalid/", timeout=5)
+    assert seen["timeout"] == 5
