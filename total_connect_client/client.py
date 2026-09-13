@@ -51,6 +51,29 @@ DEFAULT_USERCODE = "-1"
 LOGGER = logging.getLogger(__name__)
 
 
+class _TimeoutOAuth2Session(OAuth2Session):
+    """OAuth2Session that applies a default I/O timeout to every request.
+
+    requests blocks indefinitely when no timeout is passed, so a connection that
+    is accepted and then never answered leaves the caller stuck rather than
+    raising. Applying the timeout here rather than at each call site also covers
+    the token fetch and the automatic refresh. Both declare timeout as a named
+    parameter and forward it explicitly, so it arrives as None rather than being
+    absent; the override treats None the same as omitted.
+    """
+
+    def __init__(self, *args: Any, timeout: float, **kwargs: Any) -> None:
+        """Store the default timeout and initialize the session."""
+        super().__init__(*args, **kwargs)
+        self._default_timeout = timeout
+
+    def request(self, *args: Any, **kwargs: Any) -> Any:
+        """Send a request, defaulting the timeout when omitted or passed as None."""
+        if kwargs.get("timeout") is None:
+            kwargs["timeout"] = self._default_timeout
+        return super().request(*args, **kwargs)
+
+
 class TotalConnectClient:
     """Client for Total Connect."""
 
@@ -357,12 +380,13 @@ class TotalConnectClient:
             LOGGER.debug("Session token was auto-refreshed")
 
         self._oauth_client = LegacyApplicationClient(client_id=self._client_id)
-        self._oauth_session = OAuth2Session(
+        self._oauth_session = _TimeoutOAuth2Session(
             client_id=self._client_id,
             client=self._oauth_client,
             auto_refresh_url=AUTH_TOKEN_ENDPOINT,
             auto_refresh_kwargs={"client_id": self._client_id},
             token_updater=token_updater,
+            timeout=self.TIMEOUT,
         )
         try:
             self._oauth_session.fetch_token(

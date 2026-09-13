@@ -17,8 +17,12 @@ semantic versioning.
 
 ## [Unreleased]
 
-Documentation, tests, and tooling only. **No library behavior, public API,
-logging, or dependency changes.**
+### Fixed
+
+- Every request now carries the 60-second `TIMEOUT`. Previously only the
+  configuration fetch had one, so the token request and every authenticated API
+  call could block indefinitely on a socket that was accepted and never
+  answered.
 
 ### Added
 - `CONTRIBUTING.md`, this `CHANGELOG.md`, and `SECURITY.md`.
