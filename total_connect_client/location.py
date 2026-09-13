@@ -347,7 +347,7 @@ class TotalConnectLocation:
                 f"api/v2/locations/{self.location_id}/devices/{self.security_device_id}/clearBypass"
             ),
             method="PUT",
-            data={"userCode": int(self.usercode)},
+            data={"userCode": int(self.usercode), "partitions": self._partition_list},
         )
 
         self.parent.raise_for_resultcode(result)
